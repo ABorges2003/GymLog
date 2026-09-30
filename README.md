@@ -94,7 +94,7 @@ GymLog/
  
 ## 🗺️ Roadmap
  
-- [ ] Phase 0: Project setup (Expo + TypeScript + Expo Router)
+- [X] Phase 0: Project setup (Expo + TypeScript + Expo Router)
 - [ ] Phase 1: Database schema, migrations and seed of built-in exercises
 - [ ] Phase 2: Exercise library and custom exercises
 - [ ] Phase 3: Workout logging and history → **MVP**
