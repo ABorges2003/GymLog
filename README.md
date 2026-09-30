@@ -92,16 +92,17 @@ GymLog/
 | workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps, weight_kg |
 | body_weight_entries | id, date (unique), weight_kg |
 
+### Workouts and exercises
+
 ```mermaid
 erDiagram
-    exercises {
-        TEXT id PK
-        TEXT name
-        TEXT muscle_group
-        TEXT equipment
-        INTEGER is_custom
-        INTEGER is_archived
-    }
+    routines ||--o{ routine_exercises : "has"
+    routines |o--o{ workouts : "template for"
+    exercises ||--o{ routine_exercises : "used in"
+    exercises ||--o{ workout_exercises : "used in"
+    workouts ||--o{ workout_exercises : "has"
+    workout_exercises ||--o{ workout_sets : "has"
+
     routines {
         TEXT id PK
         TEXT name
@@ -115,12 +116,20 @@ erDiagram
         INTEGER target_sets
         INTEGER target_reps
     }
+    exercises {
+        TEXT id PK
+        TEXT name
+        TEXT muscle_group
+        TEXT equipment
+        INTEGER is_custom
+        INTEGER is_archived
+    }
     workouts {
         TEXT id PK
         TEXT started_at
         TEXT finished_at
         TEXT notes
-        TEXT routine_id FK "optional"
+        TEXT routine_id FK
     }
     workout_exercises {
         TEXT id PK
@@ -132,25 +141,28 @@ erDiagram
         TEXT id PK
         TEXT workout_exercise_id FK
         INTEGER position
-        TEXT set_type "warmup | feeder | top | backoff"
+        TEXT set_type
         INTEGER reps
         REAL weight_kg
     }
+```
+
+- `workouts.routine_id` is optional: a workout can be started without a routine.
+- `workout_sets.set_type` is one of `warmup`, `feeder`, `top` or `backoff`.
+- Deleting a workout deletes its exercises and sets. An exercise already used in a workout cannot be deleted, only archived.
+
+### Body weight
+
+Independent from the workout tables: one entry per day.
+
+```mermaid
+erDiagram
     body_weight_entries {
         TEXT id PK
         TEXT date UK "YYYY-MM-DD"
         REAL weight_kg
     }
-
-    routines ||--o{ routine_exercises : "has"
-    exercises ||--o{ routine_exercises : "used in"
-    routines |o--o{ workouts : "template for"
-    workouts ||--o{ workout_exercises : "has"
-    exercises ||--o{ workout_exercises : "used in"
-    workout_exercises ||--o{ workout_sets : "has"
 ```
-
-`body_weight_entries` is independent of the workout tables.
  
 ## 🗺️ Roadmap
  
