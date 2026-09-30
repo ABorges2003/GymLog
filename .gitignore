@@ -51,3 +51,6 @@ Thumbs.db
 # Misc
 *.orig.*
 *.pem
+
+# Local Claude Code instructions (not committed)
+CLAUDE.md

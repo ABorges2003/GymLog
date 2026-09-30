@@ -62,17 +62,18 @@ I'm building it for my own training: I wanted a simple, fast app that works even
  
 ```
 GymLog/
-├── app/                → screens (Expo Router)
-│   ├── (tabs)/         → Workout, History, Body weight, Exercises, Settings
-│   └── ...
-├── components/         → reusable UI components
-├── db/
-│   ├── schema.ts       → table definitions
-│   ├── migrations.ts   → schema migrations
-│   ├── seed.ts         → built-in exercises
-│   └── repositories/   → data access functions (one file per entity)
-├── lib/                → calculations (1RM, moving average, PRs), backup logic
-├── types/              → shared TypeScript types
+├── src/
+│   ├── app/                → screens (Expo Router)
+│   │   ├── (tabs)/         → Workout, History, Body weight, Exercises, Settings
+│   │   └── ...
+│   ├── components/         → reusable UI components
+│   ├── db/
+│   │   ├── schema.ts       → table definitions
+│   │   ├── migrations.ts   → schema migrations
+│   │   ├── seed.ts         → built-in exercises
+│   │   └── repositories/   → data access functions (one file per entity)
+│   ├── lib/                → calculations (1RM, moving average, PRs), backup logic
+│   └── types/              → shared TypeScript types
 ├── assets/
 ├── app.json
 ├── eas.json
