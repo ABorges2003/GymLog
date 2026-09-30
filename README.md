@@ -89,8 +89,68 @@ GymLog/
 | routine_exercises | id, routine_id, exercise_id, position, target_sets, target_reps |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
 | workout_exercises | id, workout_id, exercise_id, position |
-| workout_sets | id, workout_exercise_id, position, reps, weight_kg, is_warmup |
+| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps, weight_kg |
 | body_weight_entries | id, date (unique), weight_kg |
+
+```mermaid
+erDiagram
+    exercises {
+        TEXT id PK
+        TEXT name
+        TEXT muscle_group
+        TEXT equipment
+        INTEGER is_custom
+        INTEGER is_archived
+    }
+    routines {
+        TEXT id PK
+        TEXT name
+        TEXT created_at
+    }
+    routine_exercises {
+        TEXT id PK
+        TEXT routine_id FK
+        TEXT exercise_id FK
+        INTEGER position
+        INTEGER target_sets
+        INTEGER target_reps
+    }
+    workouts {
+        TEXT id PK
+        TEXT started_at
+        TEXT finished_at
+        TEXT notes
+        TEXT routine_id FK "optional"
+    }
+    workout_exercises {
+        TEXT id PK
+        TEXT workout_id FK
+        TEXT exercise_id FK
+        INTEGER position
+    }
+    workout_sets {
+        TEXT id PK
+        TEXT workout_exercise_id FK
+        INTEGER position
+        TEXT set_type "warmup | feeder | top | backoff"
+        INTEGER reps
+        REAL weight_kg
+    }
+    body_weight_entries {
+        TEXT id PK
+        TEXT date UK "YYYY-MM-DD"
+        REAL weight_kg
+    }
+
+    routines ||--o{ routine_exercises : "has"
+    exercises ||--o{ routine_exercises : "used in"
+    routines |o--o{ workouts : "template for"
+    workouts ||--o{ workout_exercises : "has"
+    exercises ||--o{ workout_exercises : "used in"
+    workout_exercises ||--o{ workout_sets : "has"
+```
+
+`body_weight_entries` is independent of the workout tables.
  
 ## 🗺️ Roadmap
  
