@@ -72,6 +72,14 @@ const migrations: Migration[] = [
       CREATE INDEX idx_workout_sets_workout_exercise ON workout_sets (workout_exercise_id);
     `);
   },
+
+  // v2: favorite exercises
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE exercises
+        ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0 CHECK (is_favorite IN (0, 1));
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

@@ -12,8 +12,8 @@ import {
 } from "@/db/repositories/diagnostics";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
 
-// Temporary screen to check the database setup (Phase 1).
-export default function Index() {
+// For now this only shows database diagnostics (Phase 1).
+export default function SettingsScreen() {
   const db = useSQLiteContext();
   const [info, setInfo] = useState<DatabaseInfo | null>(null);
   const [tables, setTables] = useState<TableInfo[]>([]);

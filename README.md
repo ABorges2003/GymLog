@@ -28,8 +28,9 @@ I'm building it for my own training: I wanted a simple, fast app that works even
  
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| Exercise library | Built-in exercises grouped by muscle group | MVP |
+| Exercise library | Built-in exercises grouped by muscle group, with search and filter | MVP |
 | Custom exercises | Create, edit and archive my own exercises | MVP |
+| Favorite exercises | Star exercises so they appear first in lists | MVP |
 | Workout logging | Add exercises to a workout and record sets (reps + weight) | MVP |
 | Workout history | List of past workouts with full details | MVP |
 | Body weight log | One entry per day | MVP |
@@ -65,14 +66,15 @@ GymLog/
 ├── src/
 │   ├── app/                → screens (Expo Router)
 │   │   ├── (tabs)/         → Workout, History, Body weight, Exercises, Settings
-│   │   └── ...
+│   │   └── exercise/[id]   → exercise details
 │   ├── components/         → reusable UI components
+│   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
 │   │   ├── migrations.ts   → schema migrations
 │   │   ├── seed.ts         → built-in exercises
 │   │   └── repositories/   → data access functions (one file per entity)
-│   ├── lib/                → calculations (1RM, moving average, PRs), backup logic
+│   ├── lib/                → pure logic: search, grouping, labels, 1RM, PRs, backup
 │   └── types/              → shared TypeScript types
 ├── assets/
 ├── app.json
@@ -84,7 +86,7 @@ GymLog/
  
 | Table | Main fields |
 |-------|-------------|
-| exercises | id, name, muscle_group, equipment, is_custom, is_archived |
+| exercises | id, name, muscle_group, equipment, is_custom, is_archived, is_favorite |
 | routines | id, name, created_at |
 | routine_exercises | id, routine_id, exercise_id, position, target_sets, target_reps |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
@@ -123,6 +125,7 @@ erDiagram
         TEXT equipment
         INTEGER is_custom
         INTEGER is_archived
+        INTEGER is_favorite
     }
     workouts {
         TEXT id PK

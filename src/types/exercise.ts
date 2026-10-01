@@ -31,4 +31,5 @@ export type Exercise = {
   equipment: Equipment | null;
   isCustom: boolean;
   isArchived: boolean;
+  isFavorite: boolean;
 };

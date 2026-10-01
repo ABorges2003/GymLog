@@ -6,7 +6,10 @@ import { DATABASE_NAME, initDatabase } from "@/db/database";
 export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
-      <Stack />
+      <Stack>
+        {/* The tabs have their own header, so hide the stack one. */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
     </SQLiteProvider>
   );
 }
