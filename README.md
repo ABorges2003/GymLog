@@ -1,13 +1,13 @@
 # 🏋️ GymLog
  
-![Status](https://img.shields.io/badge/status-planning-yellow?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-in_progress-blue?style=for-the-badge)
 ![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![Expo](https://img.shields.io/badge/expo-1C1E24?style=for-the-badge&logo=expo&logoColor=%23D04A37)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
  
-> 🚧 **This project is in its early planning stage.**
+> 🚧 **This project is under active development.**
  
 **GymLog** is a personal Android app to log gym workouts and body weight. It runs **fully offline**: there is no server and no login, and all data is stored locally on the phone with SQLite.
  
@@ -167,7 +167,7 @@ erDiagram
 ## 🗺️ Roadmap
  
 - [X] Phase 0: Project setup (Expo + TypeScript + Expo Router)
-- [ ] Phase 1: Database schema, migrations and seed of built-in exercises
+- [X] Phase 1: Database schema, migrations and seed of built-in exercises
 - [ ] Phase 2: Exercise library and custom exercises
 - [ ] Phase 3: Workout logging and history → **MVP**
 - [ ] Phase 4: Body weight log and chart → **MVP**
