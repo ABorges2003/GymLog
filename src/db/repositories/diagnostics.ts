@@ -1,5 +1,7 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
+import type { MuscleGroup } from "@/types/exercise";
+
 import { TABLES, type TableName } from "../schema";
 
 export type DatabaseInfo = {
@@ -56,4 +58,21 @@ export async function getTableInfo(db: SQLiteDatabase): Promise<TableInfo[]> {
     result.push({ name, exists: true, rowCount: count?.n ?? 0 });
   }
   return result;
+}
+
+export type MuscleGroupCount = {
+  muscleGroup: MuscleGroup;
+  count: number;
+};
+
+export async function getBuiltInExerciseCounts(
+  db: SQLiteDatabase,
+): Promise<MuscleGroupCount[]> {
+  return db.getAllAsync<MuscleGroupCount>(
+    `SELECT muscle_group AS muscleGroup, COUNT(*) AS count
+     FROM exercises
+     WHERE is_custom = 0
+     GROUP BY muscle_group
+     ORDER BY muscle_group`,
+  );
 }

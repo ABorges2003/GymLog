@@ -3,49 +3,65 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 
 import {
+  getBuiltInExerciseCounts,
   getDatabaseInfo,
   getTableInfo,
   type DatabaseInfo,
+  type MuscleGroupCount,
   type TableInfo,
 } from "@/db/repositories/diagnostics";
+import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
 
 // Temporary screen to check the database setup (Phase 1).
 export default function Index() {
   const db = useSQLiteContext();
   const [info, setInfo] = useState<DatabaseInfo | null>(null);
   const [tables, setTables] = useState<TableInfo[]>([]);
+  const [exerciseCounts, setExerciseCounts] = useState<MuscleGroupCount[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([getDatabaseInfo(db), getTableInfo(db)])
-      .then(([dbInfo, tableInfo]) => {
+    Promise.all([
+      getDatabaseInfo(db),
+      getTableInfo(db),
+      getBuiltInExerciseCounts(db),
+    ])
+      .then(([dbInfo, tableInfo, counts]) => {
         setInfo(dbInfo);
         setTables(tableInfo);
+        setExerciseCounts(counts);
       })
       .catch((e: unknown) => setError(String(e)));
   }, [db]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Database</Text>
+      <Text style={styles.title}>Base de dados</Text>
       {error && <Text style={styles.error}>{error}</Text>}
-      {!info && !error && <Text style={styles.row}>Loading...</Text>}
+      {!info && !error && <Text style={styles.row}>A carregar...</Text>}
       {info && (
         <>
-          <Text style={styles.row}>SQLite version: {info.sqliteVersion}</Text>
-          <Text style={styles.row}>Schema version: {info.schemaVersion}</Text>
+          <Text style={styles.row}>Versão do SQLite: {info.sqliteVersion}</Text>
+          <Text style={styles.row}>Versão do schema: {info.schemaVersion}</Text>
           <Text style={styles.row}>
-            Foreign keys: {info.foreignKeysEnabled ? "ON" : "OFF"}
+            Chaves estrangeiras: {info.foreignKeysEnabled ? "ON" : "OFF"}
           </Text>
-          <Text style={styles.row}>Journal mode: {info.journalMode}</Text>
+          <Text style={styles.row}>Modo do journal: {info.journalMode}</Text>
 
-          <Text style={styles.title}>Tables</Text>
+          <Text style={styles.title}>Tabelas</Text>
           {tables.map((table) => (
             <Text
               key={table.name}
               style={[styles.row, !table.exists && styles.error]}
             >
-              {table.exists ? "✓" : "✗"} {table.name} ({table.rowCount} rows)
+              {table.exists ? "✓" : "✗"} {table.name} ({table.rowCount} linhas)
+            </Text>
+          ))}
+
+          <Text style={styles.title}>Exercícios pré-definidos</Text>
+          {exerciseCounts.map((group) => (
+            <Text key={group.muscleGroup} style={styles.row}>
+              {MUSCLE_GROUP_LABELS[group.muscleGroup]}: {group.count}
             </Text>
           ))}
         </>

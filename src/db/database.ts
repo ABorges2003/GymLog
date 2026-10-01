@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { migrate } from "./migrations";
+import { seedExercises } from "./seed";
 
 export const DATABASE_NAME = "gymlog.db";
 
@@ -11,4 +12,5 @@ export async function initDatabase(db: SQLiteDatabase): Promise<void> {
     PRAGMA foreign_keys = ON;
   `);
   await migrate(db);
+  await seedExercises(db);
 }
