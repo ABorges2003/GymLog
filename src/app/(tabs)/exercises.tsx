@@ -35,10 +35,9 @@ type ExerciseRowProps = {
 };
 
 function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
-  const details = [
-    exercise.equipment ? EQUIPMENT_LABELS[exercise.equipment] : null,
-    exercise.isCustom ? "Criado por mim" : null,
-  ].filter(Boolean);
+  const details = exercise.equipment
+    ? EQUIPMENT_LABELS[exercise.equipment]
+    : null;
 
   return (
     <View style={styles.row}>
@@ -52,9 +51,7 @@ function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
           accessibilityRole="button"
         >
           <Text style={styles.name}>{exercise.name}</Text>
-          {details.length > 0 && (
-            <Text style={styles.details}>{details.join(" · ")}</Text>
-          )}
+          {details && <Text style={styles.details}>{details}</Text>}
         </Pressable>
       </Link>
       <Pressable
@@ -135,12 +132,26 @@ export default function ExercisesScreen() {
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
-          <Text style={styles.empty}>Nenhum exercício encontrado</Text>
+          <Text style={styles.empty}>
+            {exercises.length === 0
+              ? "Ainda não tens exercícios.\nToca em + para criar o primeiro."
+              : "Nenhum exercício encontrado"}
+          </Text>
         }
         stickySectionHeadersEnabled
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        contentContainerStyle={styles.listContent}
       />
+      <Link href="/exercise/new" asChild>
+        <Pressable
+          style={styles.fab}
+          accessibilityRole="button"
+          accessibilityLabel="Criar exercício"
+        >
+          <Ionicons name="add" size={32} color="white" />
+        </Pressable>
+      </Link>
     </View>
   );
 }
@@ -148,6 +159,22 @@ export default function ExercisesScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  // Leaves room at the bottom so the last row is not hidden by the + button.
+  listContent: {
+    paddingBottom: 96,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1f2937",
+    elevation: 4,
   },
   empty: {
     fontSize: 16,

@@ -5,13 +5,18 @@ import { useCallback, useState } from "react";
 import {
   countWorkoutsWithExercise,
   getExerciseById,
+  isExerciseInUse,
+  removeExercise,
   setExerciseFavorite,
+  type RemoveResult,
 } from "@/db/repositories/exercises";
 import type { Exercise } from "@/types/exercise";
 
 type ExerciseDetail = {
   exercise: Exercise;
   workoutCount: number;
+  // Used in a workout or routine: removing it archives instead of deleting.
+  inUse: boolean;
 };
 
 // Loads one exercise (and how many workouts use it). Reloads on focus so
@@ -25,11 +30,15 @@ export function useExercise(id: string) {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      Promise.all([getExerciseById(db, id), countWorkoutsWithExercise(db, id)])
-        .then(([exercise, workoutCount]) => {
+      Promise.all([
+        getExerciseById(db, id),
+        countWorkoutsWithExercise(db, id),
+        isExerciseInUse(db, id),
+      ])
+        .then(([exercise, workoutCount, inUse]) => {
           if (!active) return;
           if (exercise) {
-            setDetail({ exercise, workoutCount });
+            setDetail({ exercise, workoutCount, inUse });
           } else {
             setNotFound(true);
           }
@@ -61,5 +70,10 @@ export function useExercise(id: string) {
     });
   }, [db, id, detail, setFavoriteInState]);
 
-  return { detail, notFound, error, toggleFavorite };
+  const remove = useCallback(
+    (): Promise<RemoveResult> => removeExercise(db, id),
+    [db, id],
+  );
+
+  return { detail, notFound, error, toggleFavorite, remove };
 }

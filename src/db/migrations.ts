@@ -80,6 +80,20 @@ const migrations: Migration[] = [
         ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0 CHECK (is_favorite IN (0, 1));
     `);
   },
+
+  // v3: no more built-in exercises; every exercise is created by the user.
+  // Removes the old built-in ones, unless already used (those become the user's).
+  // is_custom stays in the table but is no longer used.
+  async (db) => {
+    await db.execAsync(`
+      DELETE FROM exercises
+      WHERE is_custom = 0
+        AND id NOT IN (SELECT exercise_id FROM workout_exercises)
+        AND id NOT IN (SELECT exercise_id FROM routine_exercises);
+
+      UPDATE exercises SET is_custom = 1 WHERE is_custom = 0;
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

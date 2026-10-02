@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 
 import {
-  getBuiltInExerciseCounts,
+  getExerciseCountsByMuscleGroup,
   getDatabaseInfo,
   getTableInfo,
   type DatabaseInfo,
@@ -24,7 +24,7 @@ export default function SettingsScreen() {
     Promise.all([
       getDatabaseInfo(db),
       getTableInfo(db),
-      getBuiltInExerciseCounts(db),
+      getExerciseCountsByMuscleGroup(db),
     ])
       .then(([dbInfo, tableInfo, counts]) => {
         setInfo(dbInfo);
@@ -58,7 +58,7 @@ export default function SettingsScreen() {
             </Text>
           ))}
 
-          <Text style={styles.title}>Exercícios pré-definidos</Text>
+          <Text style={styles.title}>Exercícios por grupo muscular</Text>
           {exerciseCounts.map((group) => (
             <Text key={group.muscleGroup} style={styles.row}>
               {MUSCLE_GROUP_LABELS[group.muscleGroup]}: {group.count}

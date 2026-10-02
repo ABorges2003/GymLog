@@ -11,7 +11,9 @@ export type DatabaseInfo = {
   journalMode: string;
 };
 
-export async function getDatabaseInfo(db: SQLiteDatabase): Promise<DatabaseInfo> {
+export async function getDatabaseInfo(
+  db: SQLiteDatabase,
+): Promise<DatabaseInfo> {
   const sqlite = await db.getFirstAsync<{ version: string }>(
     "SELECT sqlite_version() AS version",
   );
@@ -65,13 +67,12 @@ export type MuscleGroupCount = {
   count: number;
 };
 
-export async function getBuiltInExerciseCounts(
+export async function getExerciseCountsByMuscleGroup(
   db: SQLiteDatabase,
 ): Promise<MuscleGroupCount[]> {
   return db.getAllAsync<MuscleGroupCount>(
     `SELECT muscle_group AS muscleGroup, COUNT(*) AS count
      FROM exercises
-     WHERE is_custom = 0
      GROUP BY muscle_group
      ORDER BY muscle_group`,
   );

@@ -28,8 +28,8 @@ I'm building it for my own training: I wanted a simple, fast app that works even
  
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| Exercise library | Built-in exercises grouped by muscle group, with search and filter | MVP |
-| Custom exercises | Create, edit and archive my own exercises | MVP |
+| Exercise library | My exercises grouped by muscle group, with search and filter | MVP |
+| Manage exercises | Create, edit and archive my own exercises (the list starts empty) | MVP |
 | Favorite exercises | Star exercises so they appear first in lists | MVP |
 | Workout logging | Add exercises to a workout and record sets (reps + weight) | MVP |
 | Workout history | List of past workouts with full details | MVP |
@@ -72,7 +72,6 @@ GymLog/
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
 │   │   ├── migrations.ts   → schema migrations
-│   │   ├── seed.ts         → built-in exercises
 │   │   └── repositories/   → data access functions (one file per entity)
 │   ├── lib/                → pure logic: search, grouping, labels, 1RM, PRs, backup
 │   └── types/              → shared TypeScript types
@@ -86,7 +85,7 @@ GymLog/
  
 | Table | Main fields |
 |-------|-------------|
-| exercises | id, name, muscle_group, equipment, is_custom, is_archived, is_favorite |
+| exercises | id, name, muscle_group, equipment, is_custom (unused), is_archived, is_favorite |
 | routines | id, name, created_at |
 | routine_exercises | id, routine_id, exercise_id, position, target_sets, target_reps |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
@@ -123,7 +122,7 @@ erDiagram
         TEXT name
         TEXT muscle_group
         TEXT equipment
-        INTEGER is_custom
+        INTEGER is_custom "unused"
         INTEGER is_archived
         INTEGER is_favorite
     }
@@ -171,7 +170,7 @@ erDiagram
  
 - [X] Phase 0: Project setup (Expo + TypeScript + Expo Router)
 - [X] Phase 1: Database schema, migrations and seed of built-in exercises
-- [ ] Phase 2: Exercise library and custom exercises
+- [X] Phase 2: Exercise library and custom exercises
 - [ ] Phase 3: Workout logging and history → **MVP**
 - [ ] Phase 4: Body weight log and chart → **MVP**
 - [ ] Phase 5: Backup export / import → **MVP**
@@ -184,6 +183,12 @@ erDiagram
 ```bash
 npm install
 npx expo start
+```
+
+Run the tests:
+
+```bash
+npm test
 ```
  
 Open with a development build or Expo Go on the phone.

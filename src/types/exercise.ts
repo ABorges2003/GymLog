@@ -29,7 +29,13 @@ export type Exercise = {
   name: string;
   muscleGroup: MuscleGroup;
   equipment: Equipment | null;
-  isCustom: boolean;
   isArchived: boolean;
   isFavorite: boolean;
+};
+
+// What the user fills in when creating or editing an exercise.
+export type ExerciseInput = {
+  name: string;
+  muscleGroup: MuscleGroup | null;
+  equipment: Equipment | null;
 };

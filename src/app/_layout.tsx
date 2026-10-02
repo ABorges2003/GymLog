@@ -9,6 +9,14 @@ export default function RootLayout() {
       <Stack>
         {/* The tabs have their own header, so hide the stack one. */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="exercise/new"
+          options={{ title: "Novo exercício", presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="exercise/edit/[id]"
+          options={{ title: "Editar exercício", presentation: "modal" }}
+        />
       </Stack>
     </SQLiteProvider>
   );

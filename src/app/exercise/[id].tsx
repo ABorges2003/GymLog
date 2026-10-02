@@ -1,7 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -28,7 +29,8 @@ function workoutCountLabel(count: number): string {
 
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { detail, notFound, error, toggleFavorite } = useExercise(id);
+  const router = useRouter();
+  const { detail, notFound, error, toggleFavorite, remove } = useExercise(id);
 
   if (error || notFound) {
     return (
@@ -50,13 +52,41 @@ export default function ExerciseDetailScreen() {
     );
   }
 
-  const { exercise, workoutCount } = detail;
+  const { exercise, workoutCount, inUse } = detail;
+
+  // Unused exercises are deleted; used ones are archived (see removeExercise).
+  function confirmRemove() {
+    const title = inUse ? "Arquivar exercício?" : "Apagar exercício?";
+    const message = inUse
+      ? `"${exercise.name}" já foi usado em treinos. Vai deixar de aparecer nas listas, mas o histórico mantém-se.`
+      : `"${exercise.name}" vai ser apagado. Esta ação não pode ser desfeita.`;
+
+    Alert.alert(title, message, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: inUse ? "Arquivar" : "Apagar",
+        style: "destructive",
+        onPress: () => {
+          remove()
+            .then(() => router.back())
+            .catch(() =>
+              Alert.alert("Erro", "Não foi possível remover o exercício."),
+            );
+        },
+      },
+    ]);
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Stack.Screen options={{ title: "Exercício" }} />
 
       <Text style={styles.name}>{exercise.name}</Text>
+      {exercise.isArchived && (
+        <Text style={styles.archived}>
+          Arquivado: não aparece nas listas, só no histórico.
+        </Text>
+      )}
 
       <View style={styles.card}>
         <InfoRow
@@ -68,10 +98,6 @@ export default function ExerciseDetailScreen() {
           value={
             exercise.equipment ? EQUIPMENT_LABELS[exercise.equipment] : "—"
           }
-        />
-        <InfoRow
-          label="Origem"
-          value={exercise.isCustom ? "Criado por mim" : "App"}
         />
         <InfoRow label="Usado em" value={workoutCountLabel(workoutCount)} />
       </View>
@@ -91,10 +117,34 @@ export default function ExerciseDetailScreen() {
         </Text>
       </Pressable>
 
-      {!exercise.isCustom && (
-        <Text style={styles.note}>
-          Os exercícios da app não podem ser editados nem apagados.
-        </Text>
+      <Link
+        href={{
+          pathname: "/exercise/edit/[id]",
+          params: { id: exercise.id },
+        }}
+        asChild
+      >
+        <Pressable style={styles.button} accessibilityRole="button">
+          <Ionicons name="create-outline" size={22} color="#1f2937" />
+          <Text style={styles.buttonText}>Editar</Text>
+        </Pressable>
+      </Link>
+
+      {!exercise.isArchived && (
+        <Pressable
+          onPress={confirmRemove}
+          style={[styles.button, styles.buttonDanger]}
+          accessibilityRole="button"
+        >
+          <Ionicons
+            name={inUse ? "archive-outline" : "trash-outline"}
+            size={22}
+            color="#dc2626"
+          />
+          <Text style={[styles.buttonText, styles.buttonDangerText]}>
+            {inUse ? "Arquivar" : "Apagar"}
+          </Text>
+        </Pressable>
       )}
     </ScrollView>
   );
@@ -160,9 +210,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
   },
-  note: {
-    fontSize: 14,
+  buttonDanger: {
+    borderColor: "#fca5a5",
+    marginTop: 16,
+  },
+  buttonDangerText: {
+    color: "#dc2626",
+  },
+  archived: {
+    fontSize: 15,
     color: "gray",
-    textAlign: "center",
   },
 });
