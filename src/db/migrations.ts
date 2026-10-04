@@ -94,6 +94,59 @@ const migrations: Migration[] = [
       UPDATE exercises SET is_custom = 1 WHERE is_custom = 0;
     `);
   },
+
+  // v4: set structure of each exercise in a routine (e.g. W, F, F, T, B).
+  // Exercises already in routines get the default structure.
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE routine_sets (
+        id TEXT PRIMARY KEY NOT NULL,
+        routine_exercise_id TEXT NOT NULL REFERENCES routine_exercises (id) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        set_type TEXT NOT NULL CHECK (set_type IN ('warmup', 'feeder', 'top', 'backoff'))
+      );
+
+      CREATE INDEX idx_routine_sets_routine_exercise ON routine_sets (routine_exercise_id);
+
+      -- Random v4 UUIDs generated in SQL.
+      INSERT INTO routine_sets (id, routine_exercise_id, position, set_type)
+      SELECT
+        lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' ||
+          substr(lower(hex(randomblob(2))), 2) || '-' ||
+          substr('89ab', 1 + abs(random()) % 4, 1) ||
+          substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6))),
+        re.id,
+        d.position,
+        d.set_type
+      FROM routine_exercises re
+      CROSS JOIN (
+        SELECT 1 AS position, 'warmup' AS set_type
+        UNION ALL SELECT 2, 'feeder'
+        UNION ALL SELECT 3, 'feeder'
+        UNION ALL SELECT 4, 'top'
+        UNION ALL SELECT 5, 'backoff'
+      ) d;
+    `);
+  },
+
+  // v5: planned reps and weight for each set of a routine (both optional).
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE routine_sets
+        ADD COLUMN reps INTEGER CHECK (reps IS NULL OR reps > 0);
+      ALTER TABLE routine_sets
+        ADD COLUMN weight_kg REAL CHECK (weight_kg IS NULL OR weight_kg >= 0);
+    `);
+  },
+
+  // v6: note for the next time an exercise of a routine is done:
+  // keep the weight or increase it. NULL means no note.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE routine_exercises
+        ADD COLUMN progression TEXT CHECK (progression IS NULL OR progression IN ('keep', 'increase'));
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

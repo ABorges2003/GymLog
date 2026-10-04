@@ -93,7 +93,7 @@ describe("groupExercisesByMuscleGroup", () => {
 });
 
 describe("filterExercises", () => {
-  const noFilter = { query: "", muscleGroup: null };
+  const noFilter = { query: "", muscleGroups: [] };
 
   it("returns everything with an empty filter", () => {
     expect(filterExercises(all, noFilter)).toHaveLength(all.length);
@@ -121,14 +121,20 @@ describe("filterExercises", () => {
   });
 
   it("filters by muscle group", () => {
-    expect(filterExercises(all, { query: "", muscleGroup: "back" })).toEqual([
-      pulldown,
-    ]);
+    expect(filterExercises(all, { query: "", muscleGroups: ["back"] })).toEqual(
+      [pulldown],
+    );
+  });
+
+  it("filters by several muscle groups at once", () => {
+    expect(
+      filterExercises(all, { query: "", muscleGroups: ["back", "biceps"] }),
+    ).toEqual([pulldown, bicepsCurl]);
   });
 
   it("combines query and muscle group", () => {
     expect(
-      filterExercises(all, { query: "halteres", muscleGroup: "chest" }),
+      filterExercises(all, { query: "halteres", muscleGroups: ["chest"] }),
     ).toEqual([dumbbellPress]);
   });
 });

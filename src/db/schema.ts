@@ -4,6 +4,7 @@ export const TABLES = [
   "exercises",
   "routines",
   "routine_exercises",
+  "routine_sets",
   "workouts",
   "workout_exercises",
   "workout_sets",

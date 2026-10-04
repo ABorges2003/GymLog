@@ -83,7 +83,10 @@ export default function ExercisesScreen() {
   const sections = useMemo(
     () =>
       groupExercisesByMuscleGroup(
-        filterExercises(exercises ?? [], { query, muscleGroup }),
+        filterExercises(exercises ?? [], {
+          query,
+          muscleGroups: muscleGroup ? [muscleGroup] : [],
+        }),
       ),
     [exercises, query, muscleGroup],
   );

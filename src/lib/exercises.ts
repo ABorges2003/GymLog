@@ -50,19 +50,23 @@ export function normalizeForSearch(text: string): string {
 
 export type ExerciseFilter = {
   query: string;
-  muscleGroup: MuscleGroup | null;
+  // Empty means every muscle group.
+  muscleGroups: MuscleGroup[];
 };
 
 // Every word of the query must appear in the exercise name, muscle group or
 // equipment, in any order: "supino halteres" matches "Supino Plano com Halteres".
 export function filterExercises(
   exercises: Exercise[],
-  { query, muscleGroup }: ExerciseFilter,
+  { query, muscleGroups }: ExerciseFilter,
 ): Exercise[] {
   const terms = normalizeForSearch(query).split(/\s+/).filter(Boolean);
 
   return exercises.filter((exercise) => {
-    if (muscleGroup && exercise.muscleGroup !== muscleGroup) {
+    if (
+      muscleGroups.length > 0 &&
+      !muscleGroups.includes(exercise.muscleGroup)
+    ) {
       return false;
     }
     const searchable = normalizeForSearch(
