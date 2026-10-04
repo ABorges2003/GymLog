@@ -13,6 +13,7 @@ import {
   deleteWorkoutSet,
   finishWorkout,
   getActiveWorkout,
+  getFinishedExerciseEntries,
   getWorkoutDetail,
   startWorkoutFromRoutine,
   updateWorkoutSet,
@@ -161,6 +162,30 @@ describe("workouts repository", () => {
     const second = await startWorkoutFromRoutine(db, routineId);
 
     expect(await benchValues(second)).toEqual(raised);
+  });
+
+  it("lists exercises of finished workouts only, for the progress history", async () => {
+    const finished = await startWorkoutFromRoutine(
+      db,
+      routineId,
+      new Date("2026-10-01T18:00:00.000Z"),
+    );
+    await finishWorkout(db, finished);
+    await startWorkoutFromRoutine(db, routineId); // still in progress
+
+    const entries = await getFinishedExerciseEntries(db);
+
+    expect(entries.map((entry) => entry.exerciseName)).toEqual([
+      "Supino",
+      "Press Militar",
+    ]);
+    expect(entries[0]).toMatchObject({
+      workoutId: finished,
+      startedAt: "2026-10-01T18:00:00.000Z",
+      routineName: "Push",
+      exerciseId: "bench",
+      sets: benchSets,
+    });
   });
 
   it("never has two active workouts", async () => {

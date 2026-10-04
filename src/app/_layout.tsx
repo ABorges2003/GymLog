@@ -33,6 +33,10 @@ export default function RootLayout() {
           name="routine/sets/[id]"
           options={{ title: "Séries", presentation: "modal" }}
         />
+        <Stack.Screen
+          name="workout/summary/[id]"
+          options={{ title: "Resumo", presentation: "modal" }}
+        />
       </Stack>
     </SQLiteProvider>
   );

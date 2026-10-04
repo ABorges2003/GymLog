@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -30,6 +31,7 @@ export default function WorkoutScreen() {
     setProgression,
   } = useActiveWorkout();
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   // Keeps the set being typed in visible above the keyboard (see the routine
   // set editor for the same idea).
@@ -80,13 +82,26 @@ export default function WorkoutScreen() {
   }
 
   function confirmFinish() {
-    Alert.alert("Terminar treino?", "O treino fica guardado no histórico.", [
-      { text: "Continuar a treinar", style: "cancel" },
-      {
-        text: "Terminar",
-        onPress: () => run(finish, "Não foi possível terminar o treino."),
-      },
-    ]);
+    if (!detail) return;
+    const workoutId = detail.workout.id;
+    Alert.alert(
+      "Terminar treino?",
+      "As cargas que fizeste passam para a rotina.",
+      [
+        { text: "Continuar a treinar", style: "cancel" },
+        {
+          text: "Terminar",
+          onPress: () =>
+            run(async () => {
+              await finish();
+              router.push({
+                pathname: "/workout/summary/[id]",
+                params: { id: workoutId },
+              });
+            }, "Não foi possível terminar o treino."),
+        },
+      ],
+    );
   }
 
   function confirmCancel() {

@@ -119,6 +119,19 @@ export default function ExerciseDetailScreen() {
 
       <Link
         href={{
+          pathname: "/exercise/progress/[id]",
+          params: { id: exercise.id },
+        }}
+        asChild
+      >
+        <Pressable style={styles.button} accessibilityRole="button">
+          <Ionicons name="trending-up" size={22} color="#1f2937" />
+          <Text style={styles.buttonText}>Ver progresso</Text>
+        </Pressable>
+      </Link>
+
+      <Link
+        href={{
           pathname: "/exercise/edit/[id]",
           params: { id: exercise.id },
         }}

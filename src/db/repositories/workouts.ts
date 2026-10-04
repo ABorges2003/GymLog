@@ -8,6 +8,7 @@ import {
   updateRoutineSetValues,
 } from "@/db/repositories/routines";
 import { setTypeHasReps } from "@/lib/sets";
+import type { ExerciseEntry } from "@/lib/progress";
 import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
 import type { PlannedSet, SetType } from "@/types/set";
@@ -273,4 +274,56 @@ export async function deleteWorkout(
   id: string,
 ): Promise<void> {
   await db.runAsync("DELETE FROM workouts WHERE id = ?", id);
+}
+
+// Every exercise done in a finished workout, with its sets, to work out
+// progressions (see buildProgressHistory).
+export async function getFinishedExerciseEntries(
+  db: SQLiteDatabase,
+): Promise<ExerciseEntry[]> {
+  const rows = await db.getAllAsync<{
+    workout_exercise_id: string;
+    workout_id: string;
+    started_at: string;
+    routine_name: string | null;
+    exercise_id: string;
+    exercise_name: string;
+  }>(
+    `SELECT we.id AS workout_exercise_id, w.id AS workout_id, w.started_at,
+            r.name AS routine_name, e.id AS exercise_id, e.name AS exercise_name
+     FROM workout_exercises we
+     JOIN workouts w ON w.id = we.workout_id
+     JOIN exercises e ON e.id = we.exercise_id
+     LEFT JOIN routines r ON r.id = w.routine_id
+     WHERE w.finished_at IS NOT NULL
+     ORDER BY w.started_at, we.position`,
+  );
+  const sets = await db.getAllAsync<WorkoutSetRow>(
+    `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg
+     FROM workout_sets ws
+     JOIN workout_exercises we ON we.id = ws.workout_exercise_id
+     JOIN workouts w ON w.id = we.workout_id
+     WHERE w.finished_at IS NOT NULL
+     ORDER BY ws.position`,
+  );
+
+  const setsByExercise = new Map<string, PlannedSet[]>();
+  for (const set of sets) {
+    const list = setsByExercise.get(set.workout_exercise_id) ?? [];
+    list.push({
+      setType: set.set_type,
+      reps: set.reps,
+      weightKg: set.weight_kg,
+    });
+    setsByExercise.set(set.workout_exercise_id, list);
+  }
+
+  return rows.map((row) => ({
+    workoutId: row.workout_id,
+    startedAt: row.started_at,
+    routineName: row.routine_name,
+    exerciseId: row.exercise_id,
+    exerciseName: row.exercise_name,
+    sets: setsByExercise.get(row.workout_exercise_id) ?? [],
+  }));
 }

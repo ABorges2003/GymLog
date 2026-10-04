@@ -31,14 +31,15 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 | Exercise library | My exercises grouped by muscle group, with search and filter | MVP |
 | Manage exercises | Create, edit and archive my own exercises (the list starts empty) | MVP |
 | Favorite exercises | Star exercises so they appear first in lists | MVP |
-| Workout logging | Add exercises to a workout and record sets (reps + weight) | MVP |
-| Workout history | List of past workouts with full details | MVP |
+| Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps) | MVP |
+| Note for next week | Per exercise: green "keep the weight" or red "increase the weight" | MVP |
+| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets | MVP |
+| Progress history | Only the exercises that went up or down since the last time (top set weight, or reps at the same weight) | MVP |
+| Workout summary | After finishing: exercises, sets, volume and progressions | MVP |
 | Body weight log | One entry per day | MVP |
 | Body weight chart | Daily values plus a 7-day moving average | MVP |
 | Backup | Export all data to a JSON file and import it back | MVP |
-| Previous performance | Show last session's sets while logging an exercise | High |
-| Routines | Reusable workout templates (e.g. "Push day", "Legs") | High |
-| Exercise progress | Chart of weight / estimated 1RM over time per exercise | High |
+| Exercise progress | Chart of the top set weight over time per exercise | MVP |
 | Personal records | Automatic detection of new PRs | High |
 | Rest timer | Countdown between sets | Nice to have |
 | Statistics | Weekly volume, training frequency, muscle groups trained | Nice to have |
@@ -66,14 +67,17 @@ GymLog/
 ├── src/
 │   ├── app/                → screens (Expo Router)
 │   │   ├── (tabs)/         → Workout, History, Body weight, Exercises, Settings
-│   │   └── exercise/[id]   → exercise details
+│   │   ├── exercise/       → exercise details, create/edit, progress chart
+│   │   ├── routine/        → routine, rename, add exercises, planned sets
+│   │   └── workout/        → workout summary
 │   ├── components/         → reusable UI components
 │   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
-│   │   ├── migrations.ts   → schema migrations
-│   │   └── repositories/   → data access functions (one file per entity)
-│   ├── lib/                → pure logic: search, grouping, labels, 1RM, PRs, backup
+│   │   ├── migrations.ts   → schema migrations (v1 to v7)
+│   │   └── repositories/   → data access functions (one file per entity, + tests)
+│   ├── lib/                → pure logic: search, labels, sets, progress, dates (+ tests)
+│   ├── test-utils/         → in-memory SQLite for repository tests
 │   └── types/              → shared TypeScript types
 ├── assets/
 ├── app.json
@@ -183,13 +187,14 @@ erDiagram
 - [X] Phase 0: Project setup (Expo + TypeScript + Expo Router)
 - [X] Phase 1: Database schema, migrations and seed of built-in exercises
 - [X] Phase 2: Exercise library and custom exercises
-- [ ] Phase 3: Workout logging and history → **MVP**
+- [X] Phase 3: Routines, workout logging, progress history and charts → **MVP**
 - [ ] Phase 4: Body weight log and chart → **MVP**
 - [ ] Phase 5: Backup export / import → **MVP**
 - [ ] Phase 6: First APK build installed on my phone
-- [ ] Phase 7: Routines and previous performance
-- [ ] Phase 8: Progress charts and personal records
-- [ ] Phase 9: Rest timer, statistics and polish
+- [ ] Phase 7: Personal records
+- [ ] Phase 8: Rest timer, statistics and polish
+
+Routines, "last time" values and progress charts (planned for phases 7 and 8) were done in phase 3.
 ## 📖 How to run (development)
  
 ```bash

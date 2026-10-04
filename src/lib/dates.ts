@@ -35,3 +35,17 @@ export function formatLongDate(iso: string, today: Date = new Date()): string {
       : `${text} de ${date.getFullYear()}`;
   return withYear.charAt(0).toUpperCase() + withYear.slice(1);
 }
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+// Local clock time of an ISO timestamp, e.g. "18:32".
+export function formatClockTime(iso: string): string {
+  const date = new Date(iso);
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+// Short local date, e.g. "4/10".
+export function formatShortDate(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getDate()}/${date.getMonth() + 1}`;
+}
