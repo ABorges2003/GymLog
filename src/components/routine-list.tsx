@@ -24,8 +24,16 @@ function routineDetails(routine: RoutineSummary): string {
   return `${count} · ${muscles}`;
 }
 
-// The user's routines, with a button to create a new one.
-export function RoutineList() {
+type Props = {
+  // Starts a workout from the routine.
+  onStart: (routineId: string) => void;
+  // True while a workout is being started (disables the buttons).
+  starting: boolean;
+};
+
+// The user's routines, each with a button to start a workout, and a button
+// to create a new routine.
+export function RoutineList({ onStart, starting }: Props) {
   const { routines, error } = useRoutines();
 
   if (error) {
@@ -48,23 +56,35 @@ export function RoutineList() {
       )}
 
       {routines.map((routine) => (
-        <Link
-          key={routine.id}
-          href={{ pathname: "/routine/[id]", params: { id: routine.id } }}
-          asChild
-        >
-          <Pressable
-            style={styles.card}
-            android_ripple={{ color: "#e5e7eb" }}
-            accessibilityRole="button"
+        <View key={routine.id} style={styles.card}>
+          <Link
+            href={{ pathname: "/routine/[id]", params: { id: routine.id } }}
+            asChild
           >
-            <View style={styles.cardText}>
+            <Pressable
+              style={styles.cardText}
+              android_ripple={{ color: "#e5e7eb" }}
+              accessibilityRole="button"
+              accessibilityHint="Abrir a rotina para editar"
+            >
               <Text style={styles.cardName}>{routine.name}</Text>
               <Text style={styles.cardDetails}>{routineDetails(routine)}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
+            </Pressable>
+          </Link>
+          <Pressable
+            onPress={() => onStart(routine.id)}
+            disabled={starting || routine.exerciseCount === 0}
+            style={[
+              styles.startButton,
+              (starting || routine.exerciseCount === 0) && styles.disabled,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Começar treino ${routine.name}`}
+          >
+            <Ionicons name="play" size={20} color="white" />
+            <Text style={styles.startText}>Começar</Text>
           </Pressable>
-        </Link>
+        </View>
       ))}
 
       <Link href="/routine/new" asChild>
@@ -96,15 +116,36 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: 8,
+    paddingRight: 12,
     borderRadius: 12,
     backgroundColor: "white",
+    overflow: "hidden",
   },
   cardText: {
     flex: 1,
     gap: 2,
+    minHeight: 72,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderRadius: 24,
+    backgroundColor: "#1f2937",
+  },
+  startText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+  },
+  disabled: {
+    opacity: 0.35,
   },
   cardName: {
     fontSize: 18,

@@ -91,7 +91,7 @@ GymLog/
 | routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (optional), weight_kg (optional) |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
 | workout_exercises | id, workout_id, exercise_id, position |
-| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps, weight_kg |
+| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in) |
 | body_weight_entries | id, date (unique), weight_kg |
 
 ### Workouts and exercises
@@ -155,14 +155,14 @@ erDiagram
         TEXT workout_exercise_id FK
         INTEGER position
         TEXT set_type
-        INTEGER reps
-        REAL weight_kg
+        REAL reps "optional"
+        REAL weight_kg "optional"
     }
 ```
 
 - `workouts.routine_id` is optional: a workout can be started without a routine.
 - `workout_sets.set_type` and `routine_sets.set_type` are one of `warmup`, `feeder`, `top` or `backoff`.
-- A routine stores, for each exercise, its planned sets: type plus optional reps and weight (e.g. W 15×40, F 3×70, T 6×100, B 8×85). Workouts started from it are pre-filled with the values of the last workout of that routine, or with the planned ones the first time.
+- A routine stores, for each exercise, its planned sets: type plus optional reps and weight (e.g. W 15×40, F 3×70, T 6×100, B 8×85). Workouts started from it are pre-filled with these values; when a workout is finished, the values done are copied back into the routine (its structure does not change). Cancelling a workout changes nothing.
 - Deleting a workout deletes its exercises and sets. An exercise already used in a workout cannot be deleted, only archived.
 
 ### Body weight

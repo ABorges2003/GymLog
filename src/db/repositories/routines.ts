@@ -287,3 +287,22 @@ export async function setRoutineExerciseProgression(
     routineExerciseId,
   );
 }
+
+// Updates the reps and weight of a routine exercise's sets, matched by
+// position (1, 2, 3...). Does not change the structure. No transaction of its
+// own, so it can run inside another one.
+export async function updateRoutineSetValues(
+  db: SQLiteDatabase,
+  routineExerciseId: string,
+  sets: PlannedSet[],
+): Promise<void> {
+  for (const [index, set] of sets.entries()) {
+    await db.runAsync(
+      "UPDATE routine_sets SET reps = ?, weight_kg = ? WHERE routine_exercise_id = ? AND position = ?",
+      set.reps,
+      set.weightKg,
+      routineExerciseId,
+      index + 1,
+    );
+  }
+}

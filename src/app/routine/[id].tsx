@@ -10,9 +10,10 @@ import {
   View,
 } from "react-native";
 
+import { chooseProgression } from "@/components/choose-progression";
 import { RoutineExerciseCard } from "@/components/routine-exercise-card";
 import { useRoutine } from "@/hooks/use-routine";
-import type { Progression, RoutineExercise } from "@/types/routine";
+import type { RoutineExercise } from "@/types/routine";
 
 export default function RoutineScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,27 +31,6 @@ export default function RoutineScreen() {
 
   function handleError(message: string) {
     return () => Alert.alert("Erro", message);
-  }
-
-  // Android alerts show at most three buttons; tapping outside cancels.
-  function chooseProgression(item: RoutineExercise) {
-    const save = (progression: Progression | null) => () => {
-      setProgression(item.id, progression).catch(
-        handleError("Não foi possível guardar a nota."),
-      );
-    };
-    Alert.alert(
-      "Próxima semana",
-      item.exercise.name,
-      [
-        { text: "Não aumentar", onPress: save("keep") },
-        { text: "Aumentar", onPress: save("increase") },
-        item.progression
-          ? { text: "Tirar nota", style: "destructive", onPress: save(null) }
-          : { text: "Cancelar", style: "cancel" },
-      ],
-      { cancelable: true },
-    );
   }
 
   function confirmRemoveExercise(item: RoutineExercise) {
@@ -147,7 +127,17 @@ export default function RoutineScreen() {
             );
           }}
           onRemove={() => confirmRemoveExercise(item)}
-          onProgressionPress={() => chooseProgression(item)}
+          onProgressionPress={() =>
+            chooseProgression(
+              item.exercise.name,
+              item.progression,
+              (progression) => {
+                setProgression(item.id, progression).catch(
+                  handleError("Não foi possível guardar a nota."),
+                );
+              },
+            )
+          }
         />
       ))}
 

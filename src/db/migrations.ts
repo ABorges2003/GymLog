@@ -147,6 +147,31 @@ const migrations: Migration[] = [
         ADD COLUMN progression TEXT CHECK (progression IS NULL OR progression IN ('keep', 'increase'));
     `);
   },
+
+  // v7: workout sets may have no reps (warm-ups and feeders) and no weight
+  // yet (not filled in). SQLite cannot change column constraints, so the
+  // table is rebuilt and its rows copied.
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE workout_sets_new (
+        id TEXT PRIMARY KEY NOT NULL,
+        workout_exercise_id TEXT NOT NULL REFERENCES workout_exercises (id) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        set_type TEXT NOT NULL CHECK (set_type IN ('warmup', 'feeder', 'top', 'backoff')),
+        reps REAL CHECK (reps IS NULL OR reps > 0),
+        weight_kg REAL CHECK (weight_kg IS NULL OR weight_kg >= 0)
+      );
+
+      INSERT INTO workout_sets_new (id, workout_exercise_id, position, set_type, reps, weight_kg)
+      SELECT id, workout_exercise_id, position, set_type, reps, weight_kg
+      FROM workout_sets;
+
+      DROP TABLE workout_sets;
+      ALTER TABLE workout_sets_new RENAME TO workout_sets;
+
+      CREATE INDEX idx_workout_sets_workout_exercise ON workout_sets (workout_exercise_id);
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

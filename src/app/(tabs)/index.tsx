@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -9,13 +9,63 @@ import {
   View,
 } from "react-native";
 
+import { chooseProgression } from "@/components/choose-progression";
 import { RoutineList } from "@/components/routine-list";
+import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
 import { useActiveWorkout } from "@/hooks/use-active-workout";
+import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { formatLongDate } from "@/lib/dates";
 
 export default function WorkoutScreen() {
-  const { workout, loading, error, finish, cancel } = useActiveWorkout();
+  const {
+    detail,
+    loading,
+    error,
+    start,
+    finish,
+    cancel,
+    updateSet,
+    addSet,
+    deleteSet,
+    setProgression,
+  } = useActiveWorkout();
   const [busy, setBusy] = useState(false);
+
+  // Keeps the set being typed in visible above the keyboard (see the routine
+  // set editor for the same idea).
+  const scrollRef = useRef<ScrollView>(null);
+  const cardY = useRef(new Map<string, number>());
+  const [focusY, setFocusY] = useState<number | null>(null);
+  const keyboardHeight = useKeyboardHeight();
+
+  useEffect(() => {
+    if (focusY === null || keyboardHeight === 0) return;
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, focusY - 80),
+      animated: true,
+    });
+  }, [focusY, keyboardHeight]);
+
+  useEffect(() => {
+    if (keyboardHeight === 0) setFocusY(null);
+  }, [keyboardHeight]);
+
+  function showError(message: string) {
+    return () => Alert.alert("Erro", message);
+  }
+
+  function confirmDeleteSet(setId: string) {
+    Alert.alert("Apagar série?", undefined, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Apagar",
+        style: "destructive",
+        onPress: () => {
+          deleteSet(setId).catch(showError("Não foi possível apagar a série."));
+        },
+      },
+    ]);
+  }
 
   // Runs an action once at a time and shows an alert if it fails.
   async function run(action: () => Promise<void>, errorMessage: string) {
@@ -70,28 +120,85 @@ export default function WorkoutScreen() {
     );
   }
 
-  if (!workout) {
+  if (!detail) {
     return (
       <ScrollView contentContainerStyle={styles.noWorkout}>
-        <RoutineList />
+        <RoutineList
+          starting={busy}
+          onStart={(routineId) =>
+            run(() => start(routineId), "Não foi possível começar o treino.")
+          }
+        />
       </ScrollView>
     );
   }
 
+  const { workout, routineName, exercises } = detail;
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.headerLabel}>Treino em curso</Text>
-        <Text style={styles.headerDate}>
+        <Text style={styles.headerTitle}>{routineName ?? "Treino"}</Text>
+        <Text style={styles.headerLabel}>
           {formatLongDate(workout.startedAt)}
         </Text>
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.placeholder}>
-          Os exercícios do treino vão aparecer aqui.
-        </Text>
-      </View>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={[
+          styles.body,
+          { paddingBottom: 16 + keyboardHeight },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {exercises.map((item) => {
+          const { routineExerciseId } = item;
+          return (
+            <View
+              key={item.id}
+              onLayout={(event) =>
+                cardY.current.set(item.id, event.nativeEvent.layout.y)
+              }
+            >
+              <WorkoutExerciseCard
+                item={item}
+                onUpdateSet={(setId, values) => {
+                  updateSet(setId, values).catch(
+                    showError("Não foi possível guardar a série."),
+                  );
+                }}
+                onAddSet={() => {
+                  addSet(item.id).catch(
+                    showError("Não foi possível adicionar a série."),
+                  );
+                }}
+                onDeleteSet={confirmDeleteSet}
+                onProgressionPress={
+                  routineExerciseId
+                    ? () =>
+                        chooseProgression(
+                          item.exercise.name,
+                          item.progression,
+                          (progression) => {
+                            setProgression(
+                              routineExerciseId,
+                              progression,
+                            ).catch(
+                              showError("Não foi possível guardar a nota."),
+                            );
+                          },
+                        )
+                    : null
+                }
+                onInputFocus={(offsetY) =>
+                  setFocusY((cardY.current.get(item.id) ?? 0) + offsetY)
+                }
+              />
+            </View>
+          );
+        })}
+      </ScrollView>
 
       <View style={styles.actions}>
         <Pressable
@@ -147,8 +254,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    gap: 4,
-    paddingVertical: 20,
+    gap: 2,
+    paddingVertical: 14,
     backgroundColor: "white",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#d0d4da",
@@ -157,20 +264,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "gray",
   },
-  headerDate: {
-    fontSize: 22,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: "bold",
   },
   body: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    gap: 12,
     padding: 16,
-  },
-  placeholder: {
-    fontSize: 16,
-    color: "gray",
-    textAlign: "center",
   },
   actions: {
     flexDirection: "row",
