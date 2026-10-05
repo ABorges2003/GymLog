@@ -24,27 +24,22 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 - Track strength progress per exercise and detect personal records
 - Log body weight daily and see the real trend in a chart
 - Never lose data: easy export and import of backups
-## 📋 Planned features
+## 📋 Features
  
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Exercise library | My exercises grouped by muscle group, with search and filter | MVP |
-| Manage exercises | Create, edit and archive my own exercises (the list starts empty) | MVP |
-| Favorite exercises | Star exercises so they appear first in lists | MVP |
-| Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps) | MVP |
-| Note for next week | Per exercise: green "keep the weight" or red "increase the weight" | MVP |
-| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets | MVP |
-| Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after | MVP |
-| Workout summary | After finishing: exercises, sets, volume and progressions | MVP |
-| Body weight log | One entry per day (today or past days); saving the same day again updates it | MVP |
-| Body weight chart | Daily values plus a 7-day moving average | MVP |
-| Backup | Export all data to a JSON file and import it back | MVP |
-| Exercise progress | Chart of the top set weight over time per exercise | MVP |
-| Personal records | Automatic detection of new PRs | High |
-| Rest timer | Countdown between sets | Nice to have |
-| Statistics | Weekly volume, training frequency, muscle groups trained | Nice to have |
-| CSV export | Export history to open in Excel | Nice to have |
-| Dark mode | Light and dark themes | Nice to have |
+| Feature | Description |
+|---------|-------------|
+| Exercise library | My exercises grouped by muscle group, with search and filter |
+| Manage exercises | Create, edit and archive my own exercises (the list starts empty) |
+| Favorite exercises | Star exercises so they appear first in lists |
+| Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps) |
+| Note for next week | Per exercise: green "keep the weight" or red "increase the weight" |
+| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets |
+| Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after |
+| Workout summary | After finishing: exercises, sets, volume and progressions |
+| Body weight log | One entry per day (today or past days); saving the same day again updates it |
+| Body weight chart | Daily values plus a 7-day moving average |
+| Backup | Export all data to a JSON file and import it back |
+| Exercise progress | Chart of the top set weight over time per exercise |
  
 ## 🛠️ Tech stack
  
@@ -60,7 +55,7 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 | Build | EAS Build (Android APK) |
 | Testing | Jest |
  
-## 🏗️ Planned structure
+## 🏗️ Project structure
  
 ```
 GymLog/
@@ -193,10 +188,6 @@ erDiagram
 - [X] Phase 4: Body weight log and chart → **MVP**
 - [X] Phase 5: Backup export / import → **MVP**
 - [ ] Phase 6: First APK build installed on my phone
-- [ ] Phase 7: Personal records
-- [ ] Phase 8: Rest timer, statistics and polish
-
-Routines, "last time" values and progress charts (planned for phases 7 and 8) were done in phase 3.
 ## 📖 How to run (development)
  
 ```bash
@@ -215,9 +206,8 @@ Open with a development build or Expo Go on the phone.
 ## 📦 Build and install on Android
  
 ```bash
-npm install -g eas-cli
-eas login
-eas build -p android --profile preview
+npx eas-cli@latest login
+npx eas-cli@latest build -p android --profile preview
 ```
  
 The `preview` profile in `eas.json` is configured to generate an **APK**. Download it from the link at the end of the build and install it on the phone. Installing a new APK over the old one keeps the data.
@@ -225,6 +215,10 @@ The `preview` profile in `eas.json` is configured to generate an **APK**. Downlo
 ## 💾 Backups
  
 All data lives only on the phone. Use **Settings → Export backup** regularly and save the file to Google Drive or email. **Import backup** restores everything on a new phone or after reinstalling.
+ 
+## 📘 User guide
+ 
+New to the app? The **[user guide](docs/user-guide.md)** explains how everything works, step by step: exercises, routines, logging a workout, progress, body weight and backups.
  
 ## 📄 License
  
