@@ -34,9 +34,9 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 | Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps) | MVP |
 | Note for next week | Per exercise: green "keep the weight" or red "increase the weight" | MVP |
 | Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets | MVP |
-| Progress history | Only the exercises that went up or down since the last time (top set weight, or reps at the same weight) | MVP |
+| Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after | MVP |
 | Workout summary | After finishing: exercises, sets, volume and progressions | MVP |
-| Body weight log | One entry per day | MVP |
+| Body weight log | One entry per day (today or past days); saving the same day again updates it | MVP |
 | Body weight chart | Daily values plus a 7-day moving average | MVP |
 | Backup | Export all data to a JSON file and import it back | MVP |
 | Exercise progress | Chart of the top set weight over time per exercise | MVP |
@@ -66,7 +66,7 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 GymLog/
 ├── src/
 │   ├── app/                → screens (Expo Router)
-│   │   ├── (tabs)/         → Workout, History, Body weight, Exercises, Settings
+│   │   ├── (tabs)/         → Workout, Body weight, Exercises, Settings
 │   │   ├── exercise/       → exercise details, create/edit, progress chart
 │   │   ├── routine/        → routine, rename, add exercises, planned sets
 │   │   └── workout/        → workout summary
@@ -74,9 +74,9 @@ GymLog/
 │   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
-│   │   ├── migrations.ts   → schema migrations (v1 to v7)
+│   │   ├── migrations.ts   → schema migrations (v1 to v8)
 │   │   └── repositories/   → data access functions (one file per entity, + tests)
-│   ├── lib/                → pure logic: search, labels, sets, progress, dates (+ tests)
+│   ├── lib/                → pure logic: search, labels, sets, progress, dates, body weight, backup (+ tests)
 │   ├── test-utils/         → in-memory SQLite for repository tests
 │   └── types/              → shared TypeScript types
 ├── assets/
@@ -95,7 +95,7 @@ GymLog/
 | routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (optional), weight_kg (optional) |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
 | workout_exercises | id, workout_id, exercise_id, position |
-| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in) |
+| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in), planned_reps and planned_weight_kg (values the set started with) |
 | body_weight_entries | id, date (unique), weight_kg |
 
 ### Workouts and exercises
@@ -161,6 +161,8 @@ erDiagram
         TEXT set_type
         REAL reps "optional"
         REAL weight_kg "optional"
+        REAL planned_reps "starting value"
+        REAL planned_weight_kg "starting value"
     }
 ```
 
@@ -188,8 +190,8 @@ erDiagram
 - [X] Phase 1: Database schema, migrations and seed of built-in exercises
 - [X] Phase 2: Exercise library and custom exercises
 - [X] Phase 3: Routines, workout logging, progress history and charts → **MVP**
-- [ ] Phase 4: Body weight log and chart → **MVP**
-- [ ] Phase 5: Backup export / import → **MVP**
+- [X] Phase 4: Body weight log and chart → **MVP**
+- [X] Phase 5: Backup export / import → **MVP**
 - [ ] Phase 6: First APK build installed on my phone
 - [ ] Phase 7: Personal records
 - [ ] Phase 8: Rest timer, statistics and polish

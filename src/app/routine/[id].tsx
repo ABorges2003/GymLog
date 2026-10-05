@@ -12,6 +12,7 @@ import {
 
 import { chooseProgression } from "@/components/choose-progression";
 import { RoutineExerciseCard } from "@/components/routine-exercise-card";
+import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useRoutine } from "@/hooks/use-routine";
 import type { RoutineExercise } from "@/types/routine";
 
@@ -28,6 +29,7 @@ export default function RoutineScreen() {
     moveExercise,
     setProgression,
   } = useRoutine(id);
+  const withHistory = useExercisesWithHistory();
 
   function handleError(message: string) {
     return () => Alert.alert("Erro", message);
@@ -119,6 +121,7 @@ export default function RoutineScreen() {
         <RoutineExerciseCard
           key={item.id}
           item={item}
+          hasHistory={withHistory ? withHistory.has(item.exercise.id) : null}
           isFirst={index === 0}
           isLast={index === exercises.length - 1}
           onMove={(direction) => {

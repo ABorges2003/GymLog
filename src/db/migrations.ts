@@ -172,6 +172,17 @@ const migrations: Migration[] = [
       CREATE INDEX idx_workout_sets_workout_exercise ON workout_sets (workout_exercise_id);
     `);
   },
+
+  // v8: the values each workout set started with (copied from the routine),
+  // so even the first workout of a routine has a "before" to compare with.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE workout_sets
+        ADD COLUMN planned_reps REAL CHECK (planned_reps IS NULL OR planned_reps > 0);
+      ALTER TABLE workout_sets
+        ADD COLUMN planned_weight_kg REAL CHECK (planned_weight_kg IS NULL OR planned_weight_kg >= 0);
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

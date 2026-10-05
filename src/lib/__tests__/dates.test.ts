@@ -1,4 +1,11 @@
-import { formatClockTime, formatLongDate, formatShortDate } from "@/lib/dates";
+import {
+  addDaysToKey,
+  formatClockTime,
+  formatDayLabel,
+  formatLongDate,
+  formatShortDate,
+  toDateKey,
+} from "@/lib/dates";
 
 describe("formatLongDate", () => {
   const today = new Date(2026, 9, 4);
@@ -31,5 +38,21 @@ describe("formatShortDate", () => {
     expect(formatShortDate(new Date(2026, 9, 4, 18, 0).toISOString())).toBe(
       "4/10",
     );
+  });
+});
+
+describe("date keys", () => {
+  const today = new Date(2026, 9, 5, 12, 0);
+
+  it("converts and moves local days", () => {
+    expect(toDateKey(new Date(2026, 9, 5, 23, 59))).toBe("2026-10-05");
+    expect(addDaysToKey("2026-10-01", -1)).toBe("2026-09-30");
+    expect(addDaysToKey("2026-12-31", 1)).toBe("2027-01-01");
+  });
+
+  it("labels today, yesterday and other days", () => {
+    expect(formatDayLabel("2026-10-05", today)).toBe("Hoje");
+    expect(formatDayLabel("2026-10-04", today)).toBe("Ontem");
+    expect(formatDayLabel("2026-10-03", today)).toBe("Sábado, 3 de outubro");
   });
 });

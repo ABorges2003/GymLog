@@ -96,13 +96,17 @@ export async function startWorkoutFromRoutine(
 
       const sets = buildWorkoutSets(item.sets);
       for (const [setIndex, set] of sets.entries()) {
+        // planned_* keep the starting values, the "before" of this workout.
         await txn.runAsync(
-          `INSERT INTO workout_sets (id, workout_exercise_id, position, set_type, reps, weight_kg)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO workout_sets
+             (id, workout_exercise_id, position, set_type, reps, weight_kg, planned_reps, planned_weight_kg)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           randomUUID(),
           workoutExerciseId,
           setIndex + 1,
           set.setType,
+          set.reps,
+          set.weightKg,
           set.reps,
           set.weightKg,
         );
@@ -298,8 +302,14 @@ export async function getFinishedExerciseEntries(
      WHERE w.finished_at IS NOT NULL
      ORDER BY w.started_at, we.position`,
   );
-  const sets = await db.getAllAsync<WorkoutSetRow>(
-    `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg
+  const sets = await db.getAllAsync<
+    WorkoutSetRow & {
+      planned_reps: number | null;
+      planned_weight_kg: number | null;
+    }
+  >(
+    `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg,
+            ws.planned_reps, ws.planned_weight_kg
      FROM workout_sets ws
      JOIN workout_exercises we ON we.id = ws.workout_exercise_id
      JOIN workouts w ON w.id = we.workout_id
@@ -307,15 +317,22 @@ export async function getFinishedExerciseEntries(
      ORDER BY ws.position`,
   );
 
-  const setsByExercise = new Map<string, PlannedSet[]>();
+  const done = new Map<string, PlannedSet[]>();
+  const planned = new Map<string, PlannedSet[]>();
   for (const set of sets) {
-    const list = setsByExercise.get(set.workout_exercise_id) ?? [];
-    list.push({
-      setType: set.set_type,
-      reps: set.reps,
-      weightKg: set.weight_kg,
-    });
-    setsByExercise.set(set.workout_exercise_id, list);
+    const id = set.workout_exercise_id;
+    done.set(id, [
+      ...(done.get(id) ?? []),
+      { setType: set.set_type, reps: set.reps, weightKg: set.weight_kg },
+    ]);
+    planned.set(id, [
+      ...(planned.get(id) ?? []),
+      {
+        setType: set.set_type,
+        reps: set.planned_reps,
+        weightKg: set.planned_weight_kg,
+      },
+    ]);
   }
 
   return rows.map((row) => ({
@@ -324,6 +341,7 @@ export async function getFinishedExerciseEntries(
     routineName: row.routine_name,
     exerciseId: row.exercise_id,
     exerciseName: row.exercise_name,
-    sets: setsByExercise.get(row.workout_exercise_id) ?? [],
+    sets: done.get(row.workout_exercise_id) ?? [],
+    plannedSets: planned.get(row.workout_exercise_id) ?? [],
   }));
 }

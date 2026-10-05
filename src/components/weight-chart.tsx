@@ -5,16 +5,24 @@ import { chartScale } from "@/lib/progress";
 import { formatWeight } from "@/lib/sets";
 
 type Props = {
-  points: { label: string; weightKg: number }[];
+  // `average` (optional) is drawn as a second, dashed line without points.
+  points: { label: string; weightKg: number; average?: number }[];
 };
 
 const Y_AXIS_WIDTH = 44;
 const POINT_SPACING = 64;
 
-// Line chart of weights over time; scrolls sideways when there are many points.
+// Line chart of weights over time, with an optional average line; scrolls
+// sideways when there are many points.
 export function WeightChart({ points }: Props) {
   const { width } = useWindowDimensions();
-  const scale = chartScale(points.map((point) => point.weightKg));
+  const averages = points.flatMap((point) =>
+    point.average === undefined ? [] : [point.average],
+  );
+  const scale = chartScale([
+    ...points.map((point) => point.weightKg),
+    ...averages,
+  ]);
   // Card padding (16 × 2), screen padding (16 × 2) and the y axis labels.
   const chartWidth = width - 64 - Y_AXIS_WIDTH;
 
@@ -26,6 +34,15 @@ export function WeightChart({ points }: Props) {
           label: point.label,
           dataPointText: formatWeight(point.weightKg),
         }))}
+        data2={
+          averages.length === points.length
+            ? averages.map((value) => ({ value }))
+            : undefined
+        }
+        color2="#f59e0b"
+        thickness2={2}
+        strokeDashArray2={[6, 4]}
+        hideDataPoints2
         width={chartWidth}
         height={200}
         yAxisOffset={scale.offset}

@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { ExerciseHistoryButton } from "@/components/exercise-history-button";
 import { ProgressionNote } from "@/components/progression-note";
 import { WorkoutSetRow } from "@/components/workout-set-row";
 import { MAX_SETS_PER_EXERCISE } from "@/lib/sets";
@@ -9,6 +10,8 @@ import type { PlannedSet } from "@/types/set";
 import type { WorkoutExercise } from "@/types/workout";
 
 type Props = {
+  // Whether the exercise has history (null while loading).
+  hasHistory: boolean | null;
   item: WorkoutExercise;
   onUpdateSet: (setId: string, values: PlannedSet) => void;
   onAddSet: () => void;
@@ -23,6 +26,7 @@ type Props = {
 // next week.
 export function WorkoutExerciseCard({
   item,
+  hasHistory,
   onUpdateSet,
   onAddSet,
   onDeleteSet,
@@ -35,7 +39,14 @@ export function WorkoutExerciseCard({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.name}>{item.exercise.name}</Text>
+      <View style={styles.header}>
+        <Text style={styles.name}>{item.exercise.name}</Text>
+        <ExerciseHistoryButton
+          exerciseId={item.exercise.id}
+          exerciseName={item.exercise.name}
+          hasHistory={hasHistory}
+        />
+      </View>
 
       <View
         style={styles.sets}
@@ -97,10 +108,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: -10,
+    marginRight: -8,
+  },
   name: {
+    flex: 1,
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 2,
   },
   sets: {
     gap: 4,

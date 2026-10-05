@@ -3,6 +3,7 @@ import { Link } from "expo-router";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { ExerciseHistoryButton } from "@/components/exercise-history-button";
 import { ProgressionNote } from "@/components/progression-note";
 import { SetTypeBadge } from "@/components/set-type-badge";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/lib/labels";
@@ -10,6 +11,8 @@ import { formatSetValues } from "@/lib/sets";
 import type { RoutineExercise } from "@/types/routine";
 
 type Props = {
+  // Whether the exercise has history (null while loading).
+  hasHistory: boolean | null;
   item: RoutineExercise;
   isFirst: boolean;
   isLast: boolean;
@@ -48,6 +51,7 @@ function IconButton({
 // structure (tap to edit).
 export function RoutineExerciseCard({
   item,
+  hasHistory,
   isFirst,
   isLast,
   onMove,
@@ -70,6 +74,11 @@ export function RoutineExerciseCard({
           <Text style={styles.name}>{exercise.name}</Text>
           <Text style={styles.details}>{details}</Text>
         </View>
+        <ExerciseHistoryButton
+          exerciseId={exercise.id}
+          exerciseName={exercise.name}
+          hasHistory={hasHistory}
+        />
         <IconButton
           icon="chevron-up"
           label="Subir"

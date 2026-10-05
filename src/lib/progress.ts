@@ -59,7 +59,11 @@ export type ExerciseEntry = {
   routineName: string | null;
   exerciseId: string;
   exerciseName: string;
+  // Values done.
   sets: PlannedSet[];
+  // Values the sets started with (from the routine); empty values for
+  // workouts logged before they were stored.
+  plannedSets: PlannedSet[];
 };
 
 export type ProgressChange = {
@@ -78,8 +82,9 @@ export type ProgressGroup = {
   changes: ProgressChange[];
 };
 
-// Compares each exercise with the previous time it was done (in any routine)
-// and keeps only the workouts with progressions or regressions, newest first.
+// Compares each exercise with the previous time it was done (in any routine);
+// the first time, with the values the workout started with. Keeps only the
+// workouts with progressions or regressions, newest first.
 export function buildProgressHistory(
   entries: ExerciseEntry[],
 ): ProgressGroup[] {
@@ -93,7 +98,8 @@ export function buildProgressHistory(
     const current = bestSet(entry.sets);
     if (!current) continue;
 
-    const previous = lastBest.get(entry.exerciseId);
+    const previous =
+      lastBest.get(entry.exerciseId) ?? bestSet(entry.plannedSets);
     lastBest.set(entry.exerciseId, current);
     if (!previous) continue;
 
@@ -208,4 +214,40 @@ export function chartScale(values: number[]): ChartScale {
   const offset = Math.max(0, Math.floor(min / step) * step - step);
   const top = Math.ceil(max / step) * step + step;
   return { offset, step, sections: Math.round((top - offset) / step) };
+}
+
+// One progression or regression of a single exercise.
+export type ExerciseChange = {
+  workoutId: string;
+  startedAt: string;
+  direction: "up" | "down";
+  previous: BestSet;
+  current: BestSet;
+};
+
+// The progressions and regressions of one exercise, newest first.
+export function buildExerciseChanges(
+  entries: ExerciseEntry[],
+  exerciseId: string,
+): ExerciseChange[] {
+  return buildProgressHistory(
+    entries.filter((entry) => entry.exerciseId === exerciseId),
+  ).flatMap((group) =>
+    group.changes.map((change) => ({
+      workoutId: group.workoutId,
+      startedAt: group.startedAt,
+      direction: change.direction,
+      previous: change.previous,
+      current: change.current,
+    })),
+  );
+}
+
+// Ids of the exercises with at least one progression or regression.
+export function exercisesWithChanges(entries: ExerciseEntry[]): Set<string> {
+  return new Set(
+    buildProgressHistory(entries).flatMap((group) =>
+      group.changes.map((change) => change.exerciseId),
+    ),
+  );
 }

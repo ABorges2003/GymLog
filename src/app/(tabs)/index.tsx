@@ -14,6 +14,7 @@ import { chooseProgression } from "@/components/choose-progression";
 import { RoutineList } from "@/components/routine-list";
 import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
 import { useActiveWorkout } from "@/hooks/use-active-workout";
+import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { formatLongDate } from "@/lib/dates";
 
@@ -31,6 +32,7 @@ export default function WorkoutScreen() {
     setProgression,
   } = useActiveWorkout();
   const [busy, setBusy] = useState(false);
+  const withHistory = useExercisesWithHistory();
   const router = useRouter();
 
   // Keeps the set being typed in visible above the keyboard (see the routine
@@ -178,6 +180,9 @@ export default function WorkoutScreen() {
             >
               <WorkoutExerciseCard
                 item={item}
+                hasHistory={
+                  withHistory ? withHistory.has(item.exercise.id) : null
+                }
                 onUpdateSet={(setId, values) => {
                   updateSet(setId, values).catch(
                     showError("Não foi possível guardar a série."),

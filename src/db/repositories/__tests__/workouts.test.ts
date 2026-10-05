@@ -18,6 +18,7 @@ import {
   startWorkoutFromRoutine,
   updateWorkoutSet,
 } from "@/db/repositories/workouts";
+import { buildProgressHistory } from "@/lib/progress";
 import { createTestDatabase } from "@/test-utils/sqlite";
 import type { PlannedSet } from "@/types/set";
 
@@ -186,6 +187,33 @@ describe("workouts repository", () => {
       exerciseId: "bench",
       sets: benchSets,
     });
+  });
+
+  it("the very first workout of a routine already shows progressions", async () => {
+    // A fresh install: no workout was ever finished.
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const [, , top] = (await getWorkoutDetail(db, workoutId))!.exercises[0]
+      .sets;
+    await updateWorkoutSet(db, top.id, {
+      setType: "top",
+      reps: 5,
+      weightKg: 102.5,
+    });
+    await finishWorkout(db, workoutId);
+
+    const entries = await getFinishedExerciseEntries(db);
+    expect(entries[0].plannedSets).toEqual(benchSets);
+
+    const [group] = buildProgressHistory(entries);
+    expect(group.changes).toEqual([
+      {
+        exerciseId: "bench",
+        exerciseName: "Supino",
+        direction: "up",
+        previous: { weightKg: 100, reps: 6 },
+        current: { weightKg: 102.5, reps: 5 },
+      },
+    ]);
   });
 
   it("never has two active workouts", async () => {

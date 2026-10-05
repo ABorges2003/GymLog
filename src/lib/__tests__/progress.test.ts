@@ -1,7 +1,9 @@
 import {
   bestSet,
+  buildExerciseChanges,
   buildExerciseProgress,
   chartScale,
+  exercisesWithChanges,
   buildProgressHistory,
   compareBestSets,
   formatBestSet,
@@ -92,6 +94,7 @@ describe("buildProgressHistory", () => {
     startedAt: string,
     exerciseId: string,
     sets: PlannedSet[],
+    plannedSets: PlannedSet[] = [],
   ): ExerciseEntry => ({
     workoutId,
     startedAt,
@@ -99,6 +102,7 @@ describe("buildProgressHistory", () => {
     exerciseId,
     exerciseName: exerciseId === "bench" ? "Supino" : "Press",
     sets,
+    plannedSets,
   });
 
   const entries = [
@@ -137,6 +141,60 @@ describe("buildProgressHistory", () => {
     );
   });
 
+  it("the first time, compares with the values the workout started with", () => {
+    const history = buildProgressHistory([
+      entry(
+        "w1",
+        "2026-10-05T18:00:00Z",
+        "bench",
+        [top(102.5, 5)],
+        [top(100, 6)],
+      ),
+      entry("w1", "2026-10-05T18:00:00Z", "press", [top(60, 8)], [top(60, 8)]),
+    ]);
+    expect(history).toEqual([
+      {
+        workoutId: "w1",
+        startedAt: "2026-10-05T18:00:00Z",
+        routineName: "Push",
+        changes: [
+          {
+            exerciseId: "bench",
+            exerciseName: "Supino",
+            direction: "up",
+            previous: { weightKg: 100, reps: 6 },
+            current: { weightKg: 102.5, reps: 5 },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("after the first time, compares with the previous workout", () => {
+    const history = buildProgressHistory([
+      entry(
+        "w1",
+        "2026-10-05T18:00:00Z",
+        "bench",
+        [top(102.5, 5)],
+        [top(100, 6)],
+      ),
+      // Started with a routine value edited by hand (105), did 102.5 × 6.
+      entry(
+        "w2",
+        "2026-10-12T18:00:00Z",
+        "bench",
+        [top(102.5, 6)],
+        [top(105, 5)],
+      ),
+    ]);
+    expect(history[0].changes[0]).toMatchObject({
+      direction: "up",
+      previous: { weightKg: 102.5, reps: 5 },
+      current: { weightKg: 102.5, reps: 6 },
+    });
+  });
+
   it("skips exercises without any weight", () => {
     const history = buildProgressHistory([
       entry("w1", "2026-09-27T18:00:00Z", "bench", [top(100, 6)]),
@@ -144,6 +202,37 @@ describe("buildProgressHistory", () => {
       entry("w3", "2026-10-11T18:00:00Z", "bench", [top(100, 7)]),
     ]);
     expect(history.map((group) => group.workoutId)).toEqual(["w3"]);
+  });
+});
+
+describe("buildExerciseChanges", () => {
+  it("lists one exercise's changes, newest first", () => {
+    const sets = (weightKg: number) => [top(weightKg, 5)];
+    const entries: ExerciseEntry[] = [
+      ["w1", "2026-09-28T18:00:00Z", 100],
+      ["w2", "2026-10-05T18:00:00Z", 102.5],
+      ["w3", "2026-10-12T18:00:00Z", 102.5],
+      ["w4", "2026-10-19T18:00:00Z", 100],
+    ].map(([workoutId, startedAt, weightKg]) => ({
+      workoutId: workoutId as string,
+      startedAt: startedAt as string,
+      routineName: "Push",
+      exerciseId: "bench",
+      exerciseName: "Supino",
+      sets: sets(weightKg as number),
+      plannedSets: [],
+    }));
+    entries.push({ ...entries[1], exerciseId: "press", exerciseName: "Press" });
+
+    expect(
+      buildExerciseChanges(entries, "bench").map((change) => [
+        change.workoutId,
+        change.direction,
+      ]),
+    ).toEqual([
+      ["w4", "down"],
+      ["w2", "up"],
+    ]);
   });
 });
 
@@ -184,6 +273,7 @@ describe("buildExerciseProgress", () => {
     startedAt: string,
     exerciseId: string,
     sets: PlannedSet[],
+    plannedSets: PlannedSet[] = [],
   ): ExerciseEntry => ({
     workoutId,
     startedAt,
@@ -191,6 +281,7 @@ describe("buildExerciseProgress", () => {
     exerciseId,
     exerciseName: exerciseId,
     sets,
+    plannedSets,
   });
 
   it("lists the best set of each workout, oldest first, with the change", () => {
@@ -249,5 +340,31 @@ describe("chartScale", () => {
 
   it("works with a single value", () => {
     expect(chartScale([80])).toEqual({ offset: 79, step: 1, sections: 2 });
+  });
+});
+
+describe("exercisesWithChanges", () => {
+  it("lists only exercises that went up or down at least once", () => {
+    const entry = (
+      workoutId: string,
+      startedAt: string,
+      exerciseId: string,
+      weightKg: number,
+    ): ExerciseEntry => ({
+      workoutId,
+      startedAt,
+      routineName: "Push",
+      exerciseId,
+      exerciseName: exerciseId,
+      sets: [top(weightKg, 5)],
+      plannedSets: [],
+    });
+    const ids = exercisesWithChanges([
+      entry("w1", "2026-09-28T18:00:00Z", "bench", 100),
+      entry("w1", "2026-09-28T18:00:00Z", "press", 60),
+      entry("w2", "2026-10-05T18:00:00Z", "bench", 102.5),
+      entry("w2", "2026-10-05T18:00:00Z", "press", 60),
+    ]);
+    expect([...ids]).toEqual(["bench"]);
   });
 });

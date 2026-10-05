@@ -19,10 +19,6 @@ export default function TabsLayout() {
         options={{ title: "Treino", tabBarIcon: tabIcon("barbell-outline") }}
       />
       <Tabs.Screen
-        name="history"
-        options={{ title: "Histórico", tabBarIcon: tabIcon("calendar-outline") }}
-      />
-      <Tabs.Screen
         name="body-weight"
         options={{ title: "Peso", tabBarIcon: tabIcon("scale-outline") }}
       />
@@ -32,7 +28,10 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: "Definições", tabBarIcon: tabIcon("settings-outline") }}
+        options={{
+          title: "Definições",
+          tabBarIcon: tabIcon("settings-outline"),
+        }}
       />
     </Tabs>
   );

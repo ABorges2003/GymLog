@@ -49,3 +49,27 @@ export function formatShortDate(iso: string): string {
   const date = new Date(iso);
   return `${date.getDate()}/${date.getMonth() + 1}`;
 }
+
+// Local calendar day as "YYYY-MM-DD" (how body weight dates are stored).
+export function toDateKey(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function dateFromKey(key: string): Date {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function addDaysToKey(key: string, days: number): string {
+  const date = dateFromKey(key);
+  date.setDate(date.getDate() + days);
+  return toDateKey(date);
+}
+
+// "Hoje", "Ontem" or e.g. "Sábado, 3 de outubro".
+export function formatDayLabel(key: string, today: Date = new Date()): string {
+  const todayKey = toDateKey(today);
+  if (key === todayKey) return "Hoje";
+  if (key === addDaysToKey(todayKey, -1)) return "Ontem";
+  return formatLongDate(dateFromKey(key).toISOString(), today);
+}
