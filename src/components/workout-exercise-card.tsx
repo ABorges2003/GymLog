@@ -8,10 +8,14 @@ import { WorkoutSetRow } from "@/components/workout-set-row";
 import { MAX_SETS_PER_EXERCISE } from "@/lib/sets";
 import type { PlannedSet } from "@/types/set";
 import type { WorkoutExercise } from "@/types/workout";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
   // Whether the exercise has history (null while loading).
   hasHistory: boolean | null;
+  // Routine whose history the history icon shows.
+  routineId: string | null;
   item: WorkoutExercise;
   onUpdateSet: (setId: string, values: PlannedSet) => void;
   onAddSet: () => void;
@@ -27,12 +31,15 @@ type Props = {
 export function WorkoutExerciseCard({
   item,
   hasHistory,
+  routineId,
   onUpdateSet,
   onAddSet,
   onDeleteSet,
   onProgressionPress,
   onInputFocus,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   // Positions used to scroll a focused set above the keyboard.
   const setsY = useRef(0);
   const rowY = useRef(new Map<string, number>());
@@ -45,6 +52,7 @@ export function WorkoutExerciseCard({
           exerciseId={item.exercise.id}
           exerciseName={item.exercise.name}
           hasHistory={hasHistory}
+          routineId={routineId}
         />
       </View>
 
@@ -83,7 +91,7 @@ export function WorkoutExerciseCard({
         ]}
         accessibilityRole="button"
       >
-        <Ionicons name="add" size={20} color="#1f2937" />
+        <Ionicons name="add" size={20} color={c.text} />
         <Text style={styles.addText}>Série</Text>
       </Pressable>
 
@@ -99,48 +107,52 @@ export function WorkoutExerciseCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    gap: 8,
-    paddingTop: 14,
-    paddingHorizontal: 12,
-    paddingBottom: 4,
-    borderRadius: 12,
-    backgroundColor: "white",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: -10,
-    marginRight: -8,
-  },
-  name: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  sets: {
-    gap: 4,
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    minHeight: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#9ca3af",
-  },
-  addText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  note: {
-    marginHorizontal: -12,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      gap: 8,
+      paddingTop: 14,
+      paddingHorizontal: 12,
+      paddingBottom: 4,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: -10,
+      marginRight: -8,
+    },
+    name: {
+      flex: 1,
+      fontSize: 18,
+      fontWeight: "600",
+      color: c.text,
+    },
+    sets: {
+      gap: 4,
+    },
+    addButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      minHeight: 44,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: c.textFaint,
+    },
+    addText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+    note: {
+      marginHorizontal: -12,
+    },
+  });
+}

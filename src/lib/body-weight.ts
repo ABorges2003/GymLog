@@ -63,3 +63,15 @@ export function summarizeBodyWeight(
     weeklyChange: before ? latest.average - before.average : null,
   };
 }
+
+export type GoalStatus =
+  { kind: "reached" } | { kind: "lose" | "gain"; remainingKg: number };
+
+// How far the latest weight is from the goal (within 0.05 kg counts as reached).
+export function goalStatus(latestKg: number, goalKg: number): GoalStatus {
+  const difference = Math.round((latestKg - goalKg) * 10) / 10;
+  if (Math.abs(difference) < 0.05) return { kind: "reached" };
+  return difference > 0
+    ? { kind: "lose", remainingKg: difference }
+    : { kind: "gain", remainingKg: -difference };
+}

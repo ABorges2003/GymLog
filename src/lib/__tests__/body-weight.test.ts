@@ -1,4 +1,5 @@
 import {
+  goalStatus,
   parseBodyWeight,
   summarizeBodyWeight,
   withMovingAverage,
@@ -65,5 +66,16 @@ describe("summarizeBodyWeight", () => {
       { date: "2026-10-03", weightKg: 79 },
     ]);
     expect(summarizeBodyWeight(points)?.weeklyChange).toBeNull();
+  });
+});
+
+describe("goalStatus", () => {
+  it("says how much is left to lose or gain", () => {
+    expect(goalStatus(78.4, 75)).toEqual({ kind: "lose", remainingKg: 3.4 });
+    expect(goalStatus(70, 72.5)).toEqual({ kind: "gain", remainingKg: 2.5 });
+  });
+
+  it("is reached at the goal", () => {
+    expect(goalStatus(75.02, 75)).toEqual({ kind: "reached" });
   });
 });

@@ -9,10 +9,14 @@ import { SetTypeBadge } from "@/components/set-type-badge";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/lib/labels";
 import { formatSetValues } from "@/lib/sets";
 import type { RoutineExercise } from "@/types/routine";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
   // Whether the exercise has history (null while loading).
   hasHistory: boolean | null;
+  // Routine whose history the history icon shows.
+  routineId: string | null;
   item: RoutineExercise;
   isFirst: boolean;
   isLast: boolean;
@@ -26,14 +30,17 @@ function IconButton({
   label,
   onPress,
   disabled = false,
-  color = "#1f2937",
+  color,
 }: {
   icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  // Defaults to the text colour.
   color?: string;
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable
       onPress={onPress}
@@ -42,7 +49,7 @@ function IconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Ionicons name={icon} size={22} color={color} />
+      <Ionicons name={icon} size={22} color={color ?? c.text} />
     </Pressable>
   );
 }
@@ -52,12 +59,15 @@ function IconButton({
 export function RoutineExerciseCard({
   item,
   hasHistory,
+  routineId,
   isFirst,
   isLast,
   onMove,
   onRemove,
   onProgressionPress,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { exercise } = item;
   const details = [
     MUSCLE_GROUP_LABELS[exercise.muscleGroup],
@@ -78,6 +88,7 @@ export function RoutineExerciseCard({
           exerciseId={exercise.id}
           exerciseName={exercise.name}
           hasHistory={hasHistory}
+          routineId={routineId}
         />
         <IconButton
           icon="chevron-up"
@@ -95,7 +106,7 @@ export function RoutineExerciseCard({
           icon="close"
           label="Tirar da rotina"
           onPress={onRemove}
-          color="#dc2626"
+          color={c.danger}
         />
       </View>
 
@@ -105,7 +116,7 @@ export function RoutineExerciseCard({
       >
         <Pressable
           style={styles.setsRow}
-          android_ripple={{ color: "#e5e7eb" }}
+          android_ripple={{ color: c.ripple }}
           accessibilityRole="button"
           accessibilityLabel="Editar séries"
         >
@@ -124,7 +135,7 @@ export function RoutineExerciseCard({
             )}
           </View>
           <Text style={styles.editSets}>Séries</Text>
-          <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+          <Ionicons name="chevron-forward" size={18} color={c.textFaint} />
         </Pressable>
       </Link>
 
@@ -136,68 +147,72 @@ export function RoutineExerciseCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 12,
-    backgroundColor: "white",
-    overflow: "hidden",
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 64,
-    paddingLeft: 16,
-    paddingVertical: 8,
-  },
-  setsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 48,
-    paddingHorizontal: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e5e7eb",
-  },
-  badges: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    paddingVertical: 8,
-  },
-  setChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingRight: 6,
-  },
-  setValues: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  editSets: {
-    fontSize: 15,
-    color: "gray",
-  },
-  text: {
-    flex: 1,
-    gap: 2,
-  },
-  name: {
-    fontSize: 17,
-    fontWeight: "500",
-  },
-  details: {
-    fontSize: 14,
-    color: "gray",
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconDisabled: {
-    opacity: 0.25,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: 12,
+      backgroundColor: c.card,
+      overflow: "hidden",
+    },
+    topRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      minHeight: 64,
+      paddingLeft: 16,
+      paddingVertical: 8,
+    },
+    setsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 48,
+      paddingHorizontal: 16,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.ripple,
+    },
+    badges: {
+      flex: 1,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+      paddingVertical: 8,
+    },
+    setChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingRight: 6,
+    },
+    setValues: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: c.text,
+    },
+    editSets: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    text: {
+      flex: 1,
+      gap: 2,
+    },
+    name: {
+      fontSize: 17,
+      fontWeight: "500",
+      color: c.text,
+    },
+    details: {
+      fontSize: 14,
+      color: c.textMuted,
+    },
+    iconButton: {
+      width: 44,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconDisabled: {
+      opacity: 0.25,
+    },
+  });
+}

@@ -22,6 +22,8 @@ import {
   type ExerciseInput,
   type MuscleGroup,
 } from "@/types/exercise";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 const MUSCLE_GROUP_OPTIONS: ChipOption<MuscleGroup | null>[] =
   MUSCLE_GROUPS.map((muscleGroup) => ({
@@ -56,6 +58,8 @@ export function ExerciseForm({
   submitLabel,
   onSubmit,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const [input, setInput] = useState<ExerciseInput>(initialValues);
   const [errors, setErrors] = useState<ExerciseInputErrors>({});
   const [saving, setSaving] = useState(false);
@@ -85,7 +89,7 @@ export function ExerciseForm({
           value={input.name}
           onChangeText={(name) => update({ name })}
           placeholder="Ex.: Remada Baixa Unilateral"
-          placeholderTextColor="gray"
+          placeholderTextColor={c.textMuted}
           maxLength={EXERCISE_NAME_MAX_LENGTH}
           autoCapitalize="words"
           autoFocus={!initialValues.name}
@@ -123,7 +127,7 @@ export function ExerciseForm({
         accessibilityRole="button"
       >
         {saving ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator color={c.onPrimary} />
         ) : (
           <Text style={styles.buttonText}>{submitLabel}</Text>
         )}
@@ -132,47 +136,51 @@ export function ExerciseForm({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 24,
-  },
-  field: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: 12,
-    fontSize: 17,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  error: {
-    fontSize: 14,
-    color: "red",
-  },
-  button: {
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      gap: 24,
+    },
+    field: {
+      gap: 8,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    input: {
+      minHeight: 48,
+      paddingHorizontal: 12,
+      fontSize: 17,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.card,
+      color: c.text,
+    },
+    inputError: {
+      borderColor: c.danger,
+    },
+    error: {
+      fontSize: 14,
+      color: c.danger,
+    },
+    button: {
+      minHeight: 52,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+  });
+}

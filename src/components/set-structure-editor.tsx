@@ -25,6 +25,8 @@ import {
   validateSetCount,
 } from "@/lib/sets";
 import { SET_TYPES, type PlannedSet, type SetType } from "@/types/set";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 // A set while it is being edited: numbers are kept as the typed text.
 type DraftSet = {
@@ -42,6 +44,8 @@ type Props = {
 
 // Edits the planned sets (type, reps, weight) of one exercise.
 export function SetStructureEditor({ initialSets, onSave }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   // Stable keys so inputs keep focus when sets are added or removed.
   const nextKey = useRef(0);
   const toDraft = (set: PlannedSet): DraftSet => ({
@@ -195,7 +199,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
                   accessibilityRole="button"
                   accessibilityLabel={`Apagar série ${index + 1}`}
                 >
-                  <Ionicons name="trash-outline" size={22} color="#dc2626" />
+                  <Ionicons name="trash-outline" size={22} color={c.danger} />
                 </Pressable>
               </View>
 
@@ -208,7 +212,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
                   }
                   keyboardType="decimal-pad"
                   placeholder="—"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={c.textFaint}
                   maxLength={7}
                   selectTextOnFocus
                   onFocus={() => setFocusedKey(draft.key)}
@@ -227,7 +231,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
                       }
                       keyboardType="decimal-pad"
                       placeholder="—"
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={c.textFaint}
                       maxLength={5}
                       selectTextOnFocus
                       onFocus={() => setFocusedKey(draft.key)}
@@ -255,7 +259,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
             ]}
             accessibilityRole="button"
           >
-            <Ionicons name="add" size={22} color="#1f2937" />
+            <Ionicons name="add" size={22} color={c.text} />
             <Text style={styles.secondaryText}>Adicionar série</Text>
           </Pressable>
           <Pressable
@@ -263,7 +267,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
             style={styles.secondaryButton}
             accessibilityRole="button"
           >
-            <Ionicons name="refresh" size={20} color="#1f2937" />
+            <Ionicons name="refresh" size={20} color={c.text} />
             <Text style={styles.secondaryText}>
               Repor{" "}
               {DEFAULT_SETS.map(
@@ -284,7 +288,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
           accessibilityRole="button"
         >
           {saving ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={c.onPrimary} />
           ) : (
             <Text style={styles.saveText}>Guardar</Text>
           )}
@@ -294,136 +298,141 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  container: {
-    padding: 16,
-    gap: 10,
-  },
-  legend: {
-    fontSize: 14,
-    color: "gray",
-    marginBottom: 4,
-  },
-  card: {
-    paddingLeft: 12,
-    paddingBottom: 10,
-    borderRadius: 12,
-    backgroundColor: "white",
-  },
-  typeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  rowLabel: {
-    width: 24,
-    fontSize: 16,
-    color: "gray",
-  },
-  segments: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 6,
-    paddingVertical: 8,
-  },
-  segment: {
-    flex: 1,
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-  },
-  segmentText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#6b7280",
-  },
-  segmentTextSelected: {
-    color: "white",
-  },
-  removeButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  valuesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingLeft: 32,
-    paddingRight: 12,
-  },
-  input: {
-    flex: 1,
-    minHeight: 48,
-    paddingHorizontal: 8,
-    fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "#f9fafb",
-  },
-  inputError: {
-    borderColor: "red",
-    backgroundColor: "#fef2f2",
-  },
-  unit: {
-    fontSize: 15,
-    color: "gray",
-  },
-  repsPlaceholder: {
-    flex: 1,
-  },
-  buttons: {
-    gap: 10,
-    marginTop: 6,
-  },
-  secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#9ca3af",
-  },
-  secondaryText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  error: {
-    fontSize: 14,
-    color: "red",
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  saveButton: {
-    minHeight: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  saveText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    container: {
+      padding: 16,
+      gap: 10,
+    },
+    legend: {
+      fontSize: 14,
+      color: c.textMuted,
+      marginBottom: 4,
+    },
+    card: {
+      paddingLeft: 12,
+      paddingBottom: 10,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    typeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    rowLabel: {
+      width: 24,
+      fontSize: 16,
+      color: c.textMuted,
+    },
+    segments: {
+      flex: 1,
+      flexDirection: "row",
+      gap: 6,
+      paddingVertical: 8,
+    },
+    segment: {
+      flex: 1,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    segmentText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.textMuted,
+    },
+    // On the set type colour, the same in both themes.
+    segmentTextSelected: {
+      color: "#ffffff",
+    },
+    removeButton: {
+      width: 48,
+      height: 48,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    valuesRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingLeft: 32,
+      paddingRight: 12,
+    },
+    input: {
+      flex: 1,
+      minHeight: 48,
+      paddingHorizontal: 8,
+      fontSize: 20,
+      fontWeight: "600",
+      textAlign: "center",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.input,
+      color: c.text,
+    },
+    inputError: {
+      borderColor: c.danger,
+      backgroundColor: c.dangerBg,
+    },
+    unit: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    repsPlaceholder: {
+      flex: 1,
+    },
+    buttons: {
+      gap: 10,
+      marginTop: 6,
+    },
+    secondaryButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: c.textFaint,
+    },
+    secondaryText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    disabled: {
+      opacity: 0.4,
+    },
+    error: {
+      fontSize: 14,
+      color: c.danger,
+    },
+    footer: {
+      padding: 16,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      backgroundColor: c.card,
+    },
+    saveButton: {
+      minHeight: 56,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    saveText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+  });
+}

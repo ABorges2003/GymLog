@@ -4,9 +4,12 @@ import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { SetStructureEditor } from "@/components/set-structure-editor";
 import { useRoutineExercise } from "@/hooks/use-routine-exercise";
 import type { PlannedSet } from "@/types/set";
+import type { ThemeColors } from "@/theme/colors";
+import { useThemedStyles } from "@/theme/theme";
 
 // Edits the planned sets (type, reps, weight) of one exercise in a routine.
 export default function RoutineSetsScreen() {
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { item, notFound, error, saveSets } = useRoutineExercise(id);
@@ -46,16 +49,18 @@ export default function RoutineSetsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+  });
+}

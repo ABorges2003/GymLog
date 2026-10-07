@@ -9,6 +9,8 @@ import {
 } from "react-native";
 
 import { ROUTINE_NAME_MAX_LENGTH } from "@/lib/routines";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
   initialName?: string;
@@ -23,6 +25,8 @@ export function RoutineNameForm({
   submitLabel,
   onSubmit,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -45,7 +49,7 @@ export function RoutineNameForm({
           value={name}
           onChangeText={setName}
           placeholder="Ex.: Push, Pull, Pernas"
-          placeholderTextColor="gray"
+          placeholderTextColor={c.textMuted}
           maxLength={ROUTINE_NAME_MAX_LENGTH}
           autoCapitalize="words"
           autoFocus
@@ -62,7 +66,7 @@ export function RoutineNameForm({
         accessibilityRole="button"
       >
         {saving ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator color={c.onPrimary} />
         ) : (
           <Text style={styles.buttonText}>{submitLabel}</Text>
         )}
@@ -71,47 +75,51 @@ export function RoutineNameForm({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 24,
-  },
-  field: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: 12,
-    fontSize: 17,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  error: {
-    fontSize: 14,
-    color: "red",
-  },
-  button: {
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      gap: 24,
+    },
+    field: {
+      gap: 8,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    input: {
+      minHeight: 48,
+      paddingHorizontal: 12,
+      fontSize: 17,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.card,
+      color: c.text,
+    },
+    inputError: {
+      borderColor: c.danger,
+    },
+    error: {
+      fontSize: 14,
+      color: c.danger,
+    },
+    button: {
+      minHeight: 52,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+  });
+}

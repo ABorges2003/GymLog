@@ -11,8 +11,11 @@ import {
   type ExerciseInputErrors,
 } from "@/lib/exercises";
 import type { ExerciseInput } from "@/types/exercise";
+import type { ThemeColors } from "@/theme/colors";
+import { useThemedStyles } from "@/theme/theme";
 
 export default function EditExerciseScreen() {
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const router = useRouter();
@@ -77,16 +80,18 @@ export default function EditExerciseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+  });
+}

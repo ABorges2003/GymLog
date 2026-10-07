@@ -13,6 +13,8 @@ import {
 } from "@/lib/sets";
 import { SET_TYPES, type PlannedSet, type SetType } from "@/types/set";
 import type { WorkoutSet } from "@/types/workout";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
   set: WorkoutSet;
@@ -37,6 +39,8 @@ export function WorkoutSetRow({
   onDelete,
   onFocus,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   // The typed text is kept here so half-typed values ("102,") are not lost.
   const [setType, setSetType] = useState(set.setType);
   const [weightText, setWeightText] = useState(
@@ -92,7 +96,7 @@ export function WorkoutSetRow({
         onFocus={onFocus}
         keyboardType="decimal-pad"
         placeholder="—"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={c.textFaint}
         maxLength={7}
         selectTextOnFocus
         accessibilityLabel={`Kg da série ${index + 1}`}
@@ -112,7 +116,7 @@ export function WorkoutSetRow({
             onFocus={onFocus}
             keyboardType="decimal-pad"
             placeholder="—"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={c.textFaint}
             maxLength={5}
             selectTextOnFocus
             accessibilityLabel={`Reps da série ${index + 1}`}
@@ -130,46 +134,49 @@ export function WorkoutSetRow({
         accessibilityRole="button"
         accessibilityLabel={`Apagar série ${index + 1}`}
       >
-        <Ionicons name="close" size={20} color="#9ca3af" />
+        <Ionicons name="close" size={20} color={c.textFaint} />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 52,
-  },
-  input: {
-    flex: 1,
-    minHeight: 46,
-    paddingHorizontal: 6,
-    fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "#f9fafb",
-  },
-  inputError: {
-    borderColor: "red",
-    backgroundColor: "#fef2f2",
-  },
-  unit: {
-    fontSize: 15,
-    color: "gray",
-  },
-  repsPlaceholder: {
-    flex: 1.6,
-  },
-  deleteButton: {
-    width: 36,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 52,
+    },
+    input: {
+      flex: 1,
+      minHeight: 46,
+      paddingHorizontal: 6,
+      fontSize: 20,
+      fontWeight: "600",
+      textAlign: "center",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.input,
+      color: c.text,
+    },
+    inputError: {
+      borderColor: c.danger,
+      backgroundColor: c.dangerBg,
+    },
+    unit: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    repsPlaceholder: {
+      flex: 1.6,
+    },
+    deleteButton: {
+      width: 36,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });
+}

@@ -8,24 +8,35 @@ import {
   View,
 } from "react-native";
 
+import { FilterChips } from "@/components/filter-chips";
 import { WeightChart } from "@/components/weight-chart";
 import { useExerciseProgress } from "@/hooks/use-exercise-progress";
 import { formatLongDate, formatShortDate } from "@/lib/dates";
 import { formatBestSet, type Direction } from "@/lib/progress";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
-const DIRECTION_ICONS: Record<
-  Direction,
-  { name: "arrow-up" | "arrow-down" | "remove"; color: string }
-> = {
-  up: { name: "arrow-up", color: "#15803d" },
-  down: { name: "arrow-down", color: "#b91c1c" },
-  same: { name: "remove", color: "#9ca3af" },
-};
+function directionIcon(
+  direction: Direction,
+  c: ThemeColors,
+): { name: "arrow-up" | "arrow-down" | "remove"; color: string } {
+  if (direction === "up") return { name: "arrow-up", color: c.success };
+  if (direction === "down") return { name: "arrow-down", color: c.danger };
+  return { name: "remove", color: c.textFaint };
+}
 
 // Chart of an exercise's best top set over time, and the list of workouts.
+// Progress is per routine: when the exercise was done in several routines,
+// chips choose which one.
 export default function ExerciseProgressScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { exercise, points, error } = useExerciseProgress(id);
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
+  const { id, routineId: initialRoutineId } = useLocalSearchParams<{
+    id: string;
+    routineId?: string;
+  }>();
+  const { exercise, routines, routineId, selectRoutine, points, error } =
+    useExerciseProgress(id, initialRoutineId);
 
   if (error) {
     return (
@@ -47,9 +58,22 @@ export default function ExerciseProgressScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Stack.Screen options={{ title: exercise.name }} />
 
+      {routines.length > 1 && (
+        <FilterChips
+          options={routines.map((routine) => ({
+            value: routine.routineId,
+            label: routine.routineName ?? "Sem rotina",
+          }))}
+          selected={routineId}
+          onSelect={selectRoutine}
+          wrap
+        />
+      )}
+
       {points.length === 0 ? (
         <Text style={styles.empty}>
-          Ainda não há treinos terminados com este exercício.
+          Ainda não há treinos terminados com este exercício
+          {routines.length > 0 ? " nesta rotina" : ""}.
         </Text>
       ) : (
         <>
@@ -66,7 +90,7 @@ export default function ExerciseProgressScreen() {
           <View style={styles.card}>
             {[...points].reverse().map((point) => {
               const icon = point.direction
-                ? DIRECTION_ICONS[point.direction]
+                ? directionIcon(point.direction, c)
                 : null;
               return (
                 <View key={point.workoutId} style={styles.row}>
@@ -91,57 +115,61 @@ export default function ExerciseProgressScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-    padding: 16,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-  empty: {
-    fontSize: 16,
-    color: "gray",
-    textAlign: "center",
-    marginTop: 32,
-  },
-  card: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "white",
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 44,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eef0f3",
-  },
-  rowDate: {
-    flex: 1,
-    fontSize: 14,
-    color: "gray",
-  },
-  rowValue: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  rowIcon: {
-    width: 22,
-    alignItems: "center",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 12,
+      padding: 16,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+    empty: {
+      fontSize: 16,
+      color: c.textMuted,
+      textAlign: "center",
+      marginTop: 32,
+    },
+    card: {
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 44,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.subtle,
+    },
+    rowDate: {
+      flex: 1,
+      fontSize: 14,
+      color: c.textMuted,
+    },
+    rowValue: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: c.text,
+    },
+    rowIcon: {
+      width: 22,
+      alignItems: "center",
+    },
+  });
+}

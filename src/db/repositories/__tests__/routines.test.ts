@@ -71,6 +71,29 @@ describe("routines repository", () => {
     });
   });
 
+  it("lists the routine finished most recently first", async () => {
+    const push = await createRoutine(db, "Push");
+    const pull = await createRoutine(db, "Pull");
+    await createRoutine(db, "Abdominal");
+    await db.runAsync(
+      `INSERT INTO workouts (id, started_at, finished_at, routine_id) VALUES
+         ('w1', '2026-10-01T18:00:00Z', '2026-10-01T19:00:00Z', ?),
+         ('w2', '2026-10-06T18:00:00Z', '2026-10-06T19:00:00Z', ?),
+         ('w3', '2026-10-07T18:00:00Z', NULL, ?)`,
+      push,
+      pull,
+      push,
+    );
+
+    const routines = await getRoutineSummaries(db);
+    expect(routines.map((routine) => routine.name)).toEqual([
+      "Pull",
+      "Push",
+      "Abdominal",
+    ]);
+    expect(routines[0].lastDoneAt).toBe("2026-10-06T19:00:00Z");
+  });
+
   it("deleting a routine keeps the workouts done with it", async () => {
     const id = await createRoutine(db, "Push");
     await db.runAsync(

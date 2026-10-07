@@ -11,6 +11,8 @@ import {
 import { useRoutines } from "@/hooks/use-routines";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
 import type { RoutineSummary } from "@/types/routine";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 function routineDetails(routine: RoutineSummary): string {
   if (routine.exerciseCount === 0) return "Sem exercícios";
@@ -34,6 +36,8 @@ type Props = {
 // The user's routines, each with a button to start a workout, and a button
 // to create a new routine.
 export function RoutineList({ onStart, starting }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { routines, error } = useRoutines();
 
   if (error) {
@@ -63,7 +67,7 @@ export function RoutineList({ onStart, starting }: Props) {
           >
             <Pressable
               style={styles.cardText}
-              android_ripple={{ color: "#e5e7eb" }}
+              android_ripple={{ color: c.ripple }}
               accessibilityRole="button"
               accessibilityHint="Abrir a rotina para editar"
             >
@@ -81,7 +85,7 @@ export function RoutineList({ onStart, starting }: Props) {
             accessibilityRole="button"
             accessibilityLabel={`Começar treino ${routine.name}`}
           >
-            <Ionicons name="play" size={20} color="white" />
+            <Ionicons name="play" size={20} color={c.onPrimary} />
             <Text style={styles.startText}>Começar</Text>
           </Pressable>
         </View>
@@ -89,7 +93,7 @@ export function RoutineList({ onStart, starting }: Props) {
 
       <Link href="/routine/new" asChild>
         <Pressable style={styles.newButton} accessibilityRole="button">
-          <Ionicons name="add" size={24} color="#1f2937" />
+          <Ionicons name="add" size={24} color={c.text} />
           <Text style={styles.newButtonText}>Nova rotina</Text>
         </Pressable>
       </Link>
@@ -97,77 +101,82 @@ export function RoutineList({ onStart, starting }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-  },
-  empty: {
-    fontSize: 16,
-    color: "gray",
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingRight: 12,
-    borderRadius: 12,
-    backgroundColor: "white",
-    overflow: "hidden",
-  },
-  cardText: {
-    flex: 1,
-    gap: 2,
-    minHeight: 72,
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  startButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    minHeight: 48,
-    paddingHorizontal: 14,
-    borderRadius: 24,
-    backgroundColor: "#1f2937",
-  },
-  startText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
-  },
-  disabled: {
-    opacity: 0.35,
-  },
-  cardName: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  cardDetails: {
-    fontSize: 14,
-    color: "gray",
-  },
-  newButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#9ca3af",
-  },
-  newButtonText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 12,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+    },
+    empty: {
+      fontSize: 16,
+      color: c.textMuted,
+    },
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingRight: 12,
+      borderRadius: 12,
+      backgroundColor: c.card,
+      overflow: "hidden",
+    },
+    cardText: {
+      flex: 1,
+      gap: 2,
+      minHeight: 72,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    startButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      minHeight: 48,
+      paddingHorizontal: 14,
+      borderRadius: 24,
+      backgroundColor: c.primary,
+    },
+    startText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+    disabled: {
+      opacity: 0.35,
+    },
+    cardName: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: c.text,
+    },
+    cardDetails: {
+      fontSize: 14,
+      color: c.textMuted,
+    },
+    newButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: c.textFaint,
+    },
+    newButtonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+  });
+}

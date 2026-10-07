@@ -31,14 +31,15 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 | Exercise library | My exercises grouped by muscle group, with search and filter |
 | Manage exercises | Create, edit and archive my own exercises (the list starts empty) |
 | Favorite exercises | Star exercises so they appear first in lists |
-| Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps) |
+| Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps). The routine done most recently is listed first |
 | Note for next week | Per exercise: green "keep the weight" or red "increase the weight" |
-| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets |
+| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets, add exercises (they are added to the routine too) |
 | Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after |
 | Workout summary | After finishing: exercises, sets, volume and progressions |
 | Body weight log | One entry per day (today or past days); saving the same day again updates it |
-| Body weight chart | Daily values plus a 7-day moving average |
+| Body weight chart | Daily values and a line at the weight goal; the summary shows the 7-day average and how much is left to the goal |
 | Backup | Export all data to a JSON file and import it back |
+| Dark mode | Settings → Aparência: automatic (follows the phone), light or dark |
 | Exercise progress | Chart of the top set weight over time per exercise |
  
 ## 🛠️ Tech stack
@@ -69,9 +70,10 @@ GymLog/
 │   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
-│   │   ├── migrations.ts   → schema migrations (v1 to v8)
+│   │   ├── migrations.ts   → schema migrations (v1 to v9)
 │   │   └── repositories/   → data access functions (one file per entity, + tests)
 │   ├── lib/                → pure logic: search, labels, sets, progress, dates, body weight, backup (+ tests)
+│   ├── theme/              → light and dark colours, theme provider
 │   ├── test-utils/         → in-memory SQLite for repository tests
 │   └── types/              → shared TypeScript types
 ├── assets/
@@ -92,6 +94,7 @@ GymLog/
 | workout_exercises | id, workout_id, exercise_id, position |
 | workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in), planned_reps and planned_weight_kg (values the set started with) |
 | body_weight_entries | id, date (unique), weight_kg |
+| app_settings | key, value (body weight goal, theme) |
 
 ### Workouts and exercises
 

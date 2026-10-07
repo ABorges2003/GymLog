@@ -7,12 +7,15 @@ import {
   getBodyWeightEntries,
   saveBodyWeight,
 } from "@/db/repositories/body-weight";
+import { getSetting, setSetting } from "@/db/repositories/settings";
 import type { BodyWeightEntry } from "@/lib/body-weight";
 
-// Body weight entries (oldest first) with save and delete. Reloads on focus.
+// Body weight entries (oldest first) and the goal, with save and delete.
+// Reloads on focus.
 export function useBodyWeight() {
   const db = useSQLiteContext();
   const [entries, setEntries] = useState<BodyWeightEntry[] | null>(null);
+  const [goalKg, setGoalKg] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -22,9 +25,14 @@ export function useBodyWeight() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      getBodyWeightEntries(db)
-        .then((result) => {
-          if (active) setEntries(result);
+      Promise.all([
+        getBodyWeightEntries(db),
+        getSetting(db, "body_weight_goal_kg"),
+      ])
+        .then(([result, goal]) => {
+          if (!active) return;
+          setEntries(result);
+          setGoalKg(goal === null ? null : Number(goal));
         })
         .catch((e: unknown) => {
           if (active) setError(String(e));
@@ -51,5 +59,18 @@ export function useBodyWeight() {
     [db, reload],
   );
 
-  return { entries, error, save, remove };
+  // null removes the goal.
+  const saveGoal = useCallback(
+    async (value: number | null) => {
+      await setSetting(
+        db,
+        "body_weight_goal_kg",
+        value === null ? null : String(value),
+      );
+      setGoalKg(value);
+    },
+    [db],
+  );
+
+  return { entries, goalKg, error, save, remove, saveGoal };
 }

@@ -2,7 +2,7 @@ import { randomUUID } from "expo-crypto";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { toExercise, type ExerciseRow } from "@/db/repositories/exercises";
-import { uniqueMuscleGroups } from "@/lib/routines";
+import { sortRoutines, uniqueMuscleGroups } from "@/lib/routines";
 import { DEFAULT_SETS } from "@/lib/sets";
 import type { MuscleGroup } from "@/types/exercise";
 import type { PlannedSet, SetType } from "@/types/set";
@@ -23,7 +23,8 @@ function toRoutine(row: RoutineRow): Routine {
   return { id: row.id, name: row.name, createdAt: row.created_at };
 }
 
-// All routines sorted by name, with their exercise count and muscle groups.
+// All routines, the most recently done first (see sortRoutines), with their
+// exercise count and muscle groups.
 export async function getRoutineSummaries(
   db: SQLiteDatabase,
 ): Promise<RoutineSummary[]> {
@@ -39,9 +40,18 @@ export async function getRoutineSummaries(
      JOIN exercises e ON e.id = re.exercise_id
      ORDER BY re.routine_id, re.position`,
   );
+  const lastDone = await db.getAllAsync<{
+    routine_id: string;
+    last_done_at: string;
+  }>(
+    `SELECT routine_id, MAX(finished_at) AS last_done_at
+     FROM workouts
+     WHERE routine_id IS NOT NULL AND finished_at IS NOT NULL
+     GROUP BY routine_id`,
+  );
 
-  return routines
-    .map((row) => {
+  return sortRoutines(
+    routines.map((row) => {
       const muscleGroups = exercises
         .filter((exercise) => exercise.routine_id === row.id)
         .map((exercise) => exercise.muscle_group);
@@ -49,9 +59,12 @@ export async function getRoutineSummaries(
         ...toRoutine(row),
         exerciseCount: muscleGroups.length,
         muscleGroups: uniqueMuscleGroups(muscleGroups),
+        lastDoneAt:
+          lastDone.find((item) => item.routine_id === row.id)?.last_done_at ??
+          null,
       };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name, "pt"));
+    }),
+  );
 }
 
 export async function getRoutineById(
@@ -208,31 +221,46 @@ export async function setRoutineExerciseSets(
 }
 
 // Adds exercises at the end of the routine, in the given order, each with
-// the default set structure.
+// the default set structure. Exercises already in the routine are skipped.
+// No transaction of its own, so it can run inside another one.
+export async function insertRoutineExercises(
+  db: SQLiteDatabase,
+  routineId: string,
+  exerciseIds: string[],
+): Promise<void> {
+  const last = await db.getFirstAsync<{ position: number | null }>(
+    "SELECT MAX(position) AS position FROM routine_exercises WHERE routine_id = ?",
+    routineId,
+  );
+  const existing = await db.getAllAsync<{ exercise_id: string }>(
+    "SELECT exercise_id FROM routine_exercises WHERE routine_id = ?",
+    routineId,
+  );
+  const skip = new Set(existing.map((row) => row.exercise_id));
+  let position = last?.position ?? 0;
+  for (const exerciseId of exerciseIds) {
+    if (skip.has(exerciseId)) continue;
+    position += 1;
+    const routineExerciseId = randomUUID();
+    await db.runAsync(
+      "INSERT INTO routine_exercises (id, routine_id, exercise_id, position) VALUES (?, ?, ?, ?)",
+      routineExerciseId,
+      routineId,
+      exerciseId,
+      position,
+    );
+    await insertRoutineSets(db, routineExerciseId, DEFAULT_SETS);
+  }
+}
+
 export async function addExercisesToRoutine(
   db: SQLiteDatabase,
   routineId: string,
   exerciseIds: string[],
 ): Promise<void> {
-  await db.withExclusiveTransactionAsync(async (txn) => {
-    const last = await txn.getFirstAsync<{ position: number | null }>(
-      "SELECT MAX(position) AS position FROM routine_exercises WHERE routine_id = ?",
-      routineId,
-    );
-    let position = last?.position ?? 0;
-    for (const exerciseId of exerciseIds) {
-      position += 1;
-      const routineExerciseId = randomUUID();
-      await txn.runAsync(
-        "INSERT INTO routine_exercises (id, routine_id, exercise_id, position) VALUES (?, ?, ?, ?)",
-        routineExerciseId,
-        routineId,
-        exerciseId,
-        position,
-      );
-      await insertRoutineSets(txn, routineExerciseId, DEFAULT_SETS);
-    }
-  });
+  await db.withExclusiveTransactionAsync((txn) =>
+    insertRoutineExercises(txn, routineId, exerciseIds),
+  );
 }
 
 export async function removeRoutineExercise(

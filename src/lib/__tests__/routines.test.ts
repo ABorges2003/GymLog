@@ -1,5 +1,6 @@
 import {
   ROUTINE_NAME_MAX_LENGTH,
+  sortRoutines,
   uniqueMuscleGroups,
   validateRoutineName,
 } from "@/lib/routines";
@@ -26,6 +27,23 @@ describe("validateRoutineName", () => {
 
   it("allows keeping the same name when renaming", () => {
     expect(validateRoutineName("Pernas", existing, "1")).toBeNull();
+  });
+});
+
+describe("sortRoutines", () => {
+  it("puts the most recently done first and never-done ones last, by name", () => {
+    const sorted = sortRoutines([
+      { name: "Pull", lastDoneAt: "2026-10-01T18:00:00Z" },
+      { name: "Pernas", lastDoneAt: null },
+      { name: "Push", lastDoneAt: "2026-10-06T18:00:00Z" },
+      { name: "Abdominal", lastDoneAt: null },
+    ]);
+    expect(sorted.map((routine) => routine.name)).toEqual([
+      "Push",
+      "Pull",
+      "Abdominal",
+      "Pernas",
+    ]);
   });
 });
 

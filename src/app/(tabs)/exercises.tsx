@@ -20,6 +20,8 @@ import {
   type Exercise,
   type MuscleGroup,
 } from "@/types/exercise";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 const MUSCLE_GROUP_OPTIONS: ChipOption<MuscleGroup | null>[] = [
   { value: null, label: "Todos" },
@@ -35,6 +37,8 @@ type ExerciseRowProps = {
 };
 
 function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const details = exercise.equipment
     ? EQUIPMENT_LABELS[exercise.equipment]
     : null;
@@ -47,7 +51,7 @@ function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
       >
         <Pressable
           style={styles.rowText}
-          android_ripple={{ color: "#e5e7eb" }}
+          android_ripple={{ color: c.ripple }}
           accessibilityRole="button"
         >
           <Text style={styles.name}>{exercise.name}</Text>
@@ -68,7 +72,7 @@ function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
         <Ionicons
           name={exercise.isFavorite ? "star" : "star-outline"}
           size={24}
-          color={exercise.isFavorite ? "#f5a524" : "#9ca3af"}
+          color={exercise.isFavorite ? c.star : c.textFaint}
         />
       </Pressable>
     </View>
@@ -76,6 +80,8 @@ function ExerciseRow({ exercise, onToggleFavorite }: ExerciseRowProps) {
 }
 
 export default function ExercisesScreen() {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { exercises, error, toggleFavorite } = useExercises();
   const [query, setQuery] = useState("");
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup | null>(null);
@@ -152,92 +158,96 @@ export default function ExercisesScreen() {
           accessibilityRole="button"
           accessibilityLabel="Criar exercício"
         >
-          <Ionicons name="add" size={32} color="white" />
+          <Ionicons name="add" size={32} color={c.onPrimary} />
         </Pressable>
       </Link>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  // Leaves room at the bottom so the last row is not hidden by the + button.
-  listContent: {
-    paddingBottom: 96,
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#1f2937",
-    elevation: 4,
-  },
-  empty: {
-    fontSize: 16,
-    color: "gray",
-    textAlign: "center",
-    marginTop: 32,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#eef0f3",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  sectionCount: {
-    fontSize: 14,
-    color: "gray",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    backgroundColor: "white",
-  },
-  rowText: {
-    flex: 1,
-    minHeight: 56,
-    justifyContent: "center",
-    paddingLeft: 16,
-    paddingVertical: 10,
-  },
-  star: {
-    width: 56,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  name: {
-    fontSize: 17,
-  },
-  details: {
-    fontSize: 14,
-    color: "gray",
-    marginTop: 2,
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 16,
-    backgroundColor: "#d0d4da",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    // Leaves room at the bottom so the last row is not hidden by the + button.
+    listContent: {
+      paddingBottom: 96,
+    },
+    fab: {
+      position: "absolute",
+      right: 20,
+      bottom: 20,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primary,
+      elevation: 4,
+    },
+    empty: {
+      fontSize: 16,
+      color: c.textMuted,
+      textAlign: "center",
+      marginTop: 32,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: c.subtle,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    sectionCount: {
+      fontSize: 14,
+      color: c.textMuted,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      backgroundColor: c.card,
+    },
+    rowText: {
+      flex: 1,
+      minHeight: 56,
+      justifyContent: "center",
+      paddingLeft: 16,
+      paddingVertical: 10,
+    },
+    star: {
+      width: 56,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    name: {
+      fontSize: 17,
+      color: c.text,
+    },
+    details: {
+      fontSize: 14,
+      color: c.textMuted,
+      marginTop: 2,
+    },
+    separator: {
+      height: StyleSheet.hairlineWidth,
+      marginLeft: 16,
+      backgroundColor: c.border,
+    },
+  });
+}

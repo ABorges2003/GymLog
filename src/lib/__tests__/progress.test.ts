@@ -98,6 +98,7 @@ describe("buildProgressHistory", () => {
   ): ExerciseEntry => ({
     workoutId,
     startedAt,
+    routineId: "push",
     routineName: "Push",
     exerciseId,
     exerciseName: exerciseId === "bench" ? "Supino" : "Press",
@@ -195,6 +196,36 @@ describe("buildProgressHistory", () => {
     });
   });
 
+  it("compares an exercise only within the same routine", () => {
+    const inRoutine = (routineId: string, entry: ExerciseEntry) => ({
+      ...entry,
+      routineId,
+    });
+    const history = buildProgressHistory([
+      inRoutine(
+        "abs",
+        entry("w1", "2026-10-01T18:00:00Z", "crunch", [top(56, 6)]),
+      ),
+      // Same exercise at the end of another routine, more tired: lighter.
+      inRoutine(
+        "push",
+        entry("w2", "2026-10-03T18:00:00Z", "crunch", [top(45, 8)]),
+      ),
+      inRoutine(
+        "abs",
+        entry("w3", "2026-10-08T18:00:00Z", "crunch", [top(56, 7)]),
+      ),
+    ]);
+    // w2 is the first time in "push": no comparison with "abs".
+    // w3 is compared with w1 (same routine), not with w2.
+    expect(history.map((group) => group.workoutId)).toEqual(["w3"]);
+    expect(history[0].changes[0]).toMatchObject({
+      direction: "up",
+      previous: { weightKg: 56, reps: 6 },
+      current: { weightKg: 56, reps: 7 },
+    });
+  });
+
   it("skips exercises without any weight", () => {
     const history = buildProgressHistory([
       entry("w1", "2026-09-27T18:00:00Z", "bench", [top(100, 6)]),
@@ -216,6 +247,7 @@ describe("buildExerciseChanges", () => {
     ].map(([workoutId, startedAt, weightKg]) => ({
       workoutId: workoutId as string,
       startedAt: startedAt as string,
+      routineId: "push",
       routineName: "Push",
       exerciseId: "bench",
       exerciseName: "Supino",
@@ -225,7 +257,7 @@ describe("buildExerciseChanges", () => {
     entries.push({ ...entries[1], exerciseId: "press", exerciseName: "Press" });
 
     expect(
-      buildExerciseChanges(entries, "bench").map((change) => [
+      buildExerciseChanges(entries, "bench", "push").map((change) => [
         change.workoutId,
         change.direction,
       ]),
@@ -277,6 +309,7 @@ describe("buildExerciseProgress", () => {
   ): ExerciseEntry => ({
     workoutId,
     startedAt,
+    routineId: "push",
     routineName: "Push",
     exerciseId,
     exerciseName: exerciseId,
@@ -294,6 +327,7 @@ describe("buildExerciseProgress", () => {
         entry("w4", "2026-10-18T18:00:00Z", "bench", [top(102.5, 5)]),
       ],
       "bench",
+      "push",
     );
     expect(points).toEqual([
       {
@@ -353,6 +387,7 @@ describe("exercisesWithChanges", () => {
     ): ExerciseEntry => ({
       workoutId,
       startedAt,
+      routineId: "push",
       routineName: "Push",
       exerciseId,
       exerciseName: exerciseId,
@@ -365,6 +400,6 @@ describe("exercisesWithChanges", () => {
       entry("w2", "2026-10-05T18:00:00Z", "bench", 102.5),
       entry("w2", "2026-10-05T18:00:00Z", "press", 60),
     ]);
-    expect([...ids]).toEqual(["bench"]);
+    expect([...ids]).toEqual(["push:bench"]);
   });
 });

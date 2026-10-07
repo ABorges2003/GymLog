@@ -5,10 +5,12 @@ import { toExercise, type ExerciseRow } from "@/db/repositories/exercises";
 import {
   getRoutineExerciseById,
   getRoutineExercises,
+  insertRoutineExercises,
   updateRoutineSetValues,
 } from "@/db/repositories/routines";
 import { setTypeHasReps } from "@/lib/sets";
 import type { ExerciseEntry } from "@/lib/progress";
+import { DEFAULT_SETS } from "@/lib/sets";
 import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
 import type { PlannedSet, SetType } from "@/types/set";
@@ -289,12 +291,13 @@ export async function getFinishedExerciseEntries(
     workout_exercise_id: string;
     workout_id: string;
     started_at: string;
+    routine_id: string | null;
     routine_name: string | null;
     exercise_id: string;
     exercise_name: string;
   }>(
     `SELECT we.id AS workout_exercise_id, w.id AS workout_id, w.started_at,
-            r.name AS routine_name, e.id AS exercise_id, e.name AS exercise_name
+            w.routine_id, r.name AS routine_name, e.id AS exercise_id, e.name AS exercise_name
      FROM workout_exercises we
      JOIN workouts w ON w.id = we.workout_id
      JOIN exercises e ON e.id = we.exercise_id
@@ -338,10 +341,63 @@ export async function getFinishedExerciseEntries(
   return rows.map((row) => ({
     workoutId: row.workout_id,
     startedAt: row.started_at,
+    routineId: row.routine_id,
     routineName: row.routine_name,
     exerciseId: row.exercise_id,
     exerciseName: row.exercise_name,
     sets: done.get(row.workout_exercise_id) ?? [],
     plannedSets: planned.get(row.workout_exercise_id) ?? [],
   }));
+}
+
+// Adds exercises at the end of a workout in progress, each with the default
+// set structure (W, F, F, T, B, empty). They are also added to the workout's
+// routine, so they are there next time.
+export async function addExercisesToWorkout(
+  db: SQLiteDatabase,
+  workoutId: string,
+  exerciseIds: string[],
+): Promise<void> {
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    const workout = await txn.getFirstAsync<{ routine_id: string | null }>(
+      "SELECT routine_id FROM workouts WHERE id = ?",
+      workoutId,
+    );
+    if (!workout) return;
+    if (workout.routine_id) {
+      await insertRoutineExercises(txn, workout.routine_id, exerciseIds);
+    }
+
+    const last = await txn.getFirstAsync<{ position: number | null }>(
+      "SELECT MAX(position) AS position FROM workout_exercises WHERE workout_id = ?",
+      workoutId,
+    );
+    let position = last?.position ?? 0;
+    for (const exerciseId of exerciseIds) {
+      position += 1;
+      const workoutExerciseId = randomUUID();
+      await txn.runAsync(
+        "INSERT INTO workout_exercises (id, workout_id, exercise_id, position) VALUES (?, ?, ?, ?)",
+        workoutExerciseId,
+        workoutId,
+        exerciseId,
+        position,
+      );
+      for (const [index, set] of buildWorkoutSets(DEFAULT_SETS).entries()) {
+        await txn.runAsync(
+          `INSERT INTO workout_sets
+             (id, workout_exercise_id, position, set_type, reps, weight_kg, planned_reps, planned_weight_kg)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          randomUUID(),
+          workoutExerciseId,
+          index + 1,
+          set.setType,
+          set.reps,
+          set.weightKg,
+          set.reps,
+          set.weightKg,
+        );
+      }
+    }
+  });
 }

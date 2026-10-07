@@ -1,4 +1,5 @@
-import { useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Link, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,8 +18,13 @@ import { useActiveWorkout } from "@/hooks/use-active-workout";
 import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { formatLongDate } from "@/lib/dates";
+import { progressKey } from "@/lib/progress";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 export default function WorkoutScreen() {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const {
     detail,
     loading,
@@ -180,8 +186,13 @@ export default function WorkoutScreen() {
             >
               <WorkoutExerciseCard
                 item={item}
+                routineId={workout.routineId}
                 hasHistory={
-                  withHistory ? withHistory.has(item.exercise.id) : null
+                  withHistory
+                    ? withHistory.has(
+                        progressKey(workout.routineId, item.exercise.id),
+                      )
+                    : null
                 }
                 onUpdateSet={(setId, values) => {
                   updateSet(setId, values).catch(
@@ -218,6 +229,12 @@ export default function WorkoutScreen() {
             </View>
           );
         })}
+        <Link href="/workout/add-exercises" asChild>
+          <Pressable style={styles.addExercises} accessibilityRole="button">
+            <Ionicons name="add" size={22} color={c.text} />
+            <Text style={styles.addExercisesText}>Adicionar exercícios</Text>
+          </Pressable>
+        </Link>
       </ScrollView>
 
       <View style={styles.actions}>
@@ -250,76 +267,96 @@ export default function WorkoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-  noWorkout: {
-    padding: 16,
-    gap: 32,
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-  header: {
-    alignItems: "center",
-    gap: 2,
-    paddingVertical: 14,
-    backgroundColor: "white",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#d0d4da",
-  },
-  headerLabel: {
-    fontSize: 15,
-    color: "gray",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  body: {
-    gap: 12,
-    padding: 16,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 16,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-  },
-  cancelButton: {
-    borderWidth: 1,
-    borderColor: "#fca5a5",
-    backgroundColor: "white",
-  },
-  cancelText: {
-    color: "#dc2626",
-  },
-  finishButton: {
-    backgroundColor: "#1f2937",
-  },
-  finishText: {
-    color: "white",
-  },
-  actionText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+    noWorkout: {
+      padding: 16,
+      gap: 32,
+    },
+    disabled: {
+      opacity: 0.6,
+    },
+    header: {
+      alignItems: "center",
+      gap: 2,
+      paddingVertical: 14,
+      backgroundColor: c.card,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    headerLabel: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    body: {
+      gap: 12,
+      padding: 16,
+    },
+    addExercises: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: c.textFaint,
+    },
+    addExercisesText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+    actions: {
+      flexDirection: "row",
+      gap: 12,
+      padding: 16,
+    },
+    actionButton: {
+      flex: 1,
+      minHeight: 56,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+    },
+    cancelButton: {
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+      backgroundColor: c.card,
+    },
+    cancelText: {
+      color: c.danger,
+    },
+    finishButton: {
+      backgroundColor: c.primary,
+    },
+    finishText: {
+      color: c.onPrimary,
+    },
+    actionText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+  });
+}

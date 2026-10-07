@@ -103,7 +103,7 @@ Every new exercise starts with **W · F · F · T · B**. To change it:
 
 ### 4.1 Start
 
-In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routine. The workout opens **already filled in** with the routine's weights, which are the ones from the last time you did it.
+In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routine. The routine you did most recently is always at the top of the list. The workout opens **already filled in** with the routine's weights, which are the ones from the last time you did it.
 
 <p align="center"><img src="images/05-treino.jpg" width="280" alt="Workout in progress"></p>
 
@@ -113,6 +113,7 @@ In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routi
 - **Tap the letter** of a set (W/F/T/B) to change its type.
 - **+ Série** (+ Set) adds a set equal to the last one; the **✕** deletes a set.
 - You only need to change what is **different** from last time.
+- Doing something extra today? Tap **+ Adicionar exercícios** (Add exercises) at the end of the workout. The exercises are also added to the routine, so they are there next time (remove them from the routine if it was a one-off).
 
 ### 4.3 The note for next week
 
@@ -157,7 +158,8 @@ The **Gráfico** (chart) button opens a chart of the top set weight over time.
 - Only the **top set** counts (the heaviest one, if you do two). Exercises without a top set use their heaviest set.
 - **Progression**: more weight, **or** the same weight with more reps.
 - **Regression**: less weight, or the same weight with fewer reps.
-- The comparison is with the **last time** you did the exercise. On the first workout, it is with the weights the workout started with.
+- The comparison is with the **last time** you did the exercise **in the same routine**. An exercise done in two routines (e.g. crunches at the end of Push, when you are more tired) has a separate history and chart in each. On the first workout of a routine, it is compared with the weights the workout started with.
+- From an exercise's details (**Ver progresso**), buttons at the top choose which routine's chart to show.
 - Workouts where **nothing changed** don't appear in the history.
 
 ---
@@ -170,11 +172,13 @@ The **Gráfico** (chart) button opens a chart of the top set weight over time.
 
 Below you see:
 - Your **latest weight**, the **average of the last 7 days** and how much that average changed in a week.
-- The **chart**: the **purple** line is each day's weight and the dashed **orange** line is the 7-day average.
+- The **chart**: the **purple** line is each day's weight and the dashed **orange** line is your **goal**.
+
+**Goal**: tap **Objetivo** (Goal) to set your target weight (e.g. `75`). The summary then shows how much is left: *Faltam perder 3,4 kg* (3.4 kg left to lose) or *Faltam ganhar…* (… left to gain).
 
 <!-- 📸 screenshot to add: images/10-peso.jpg (Weight tab with entries and the chart) -->
 
-> 💡 Body weight changes a lot from day to day (water, food). Look at the **orange line**: it shows the real trend. Weigh yourself at the same time each day, e.g. in the morning.
+> 💡 Body weight changes a lot from day to day (water, food). Look at the **7-day average** in the summary: it shows the real trend. Weigh yourself at the same time each day, e.g. in the morning.
 
 ---
 
@@ -198,6 +202,12 @@ The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exe
 > ⚠️ Importing **replaces everything** in the app with the backup's contents. If something fails halfway, nothing is changed.
 
 <p align="center"><img src="images/09-definicoes.jpg" width="280" alt="Settings with the backup buttons"></p>
+
+---
+
+### Appearance
+
+**Definições → Aparência** (Settings → Appearance): **Automático** (follows the phone's light/dark mode), **Claro** (light) or **Escuro** (dark).
 
 ---
 

@@ -1,29 +1,29 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useMemo } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
 import { ExercisePicker } from "@/components/exercise-picker";
-import { addExercisesToRoutine } from "@/db/repositories/routines";
+import { addExercisesToWorkout } from "@/db/repositories/workouts";
+import { useActiveWorkout } from "@/hooks/use-active-workout";
 import { useExercises } from "@/hooks/use-exercises";
-import { useRoutine } from "@/hooks/use-routine";
 import type { ThemeColors } from "@/theme/colors";
 import { useThemedStyles } from "@/theme/theme";
 
-export default function AddRoutineExercisesScreen() {
+// Adds exercises to the workout in progress (and to its routine).
+export default function AddWorkoutExercisesScreen() {
   const styles = useThemedStyles(createStyles);
-  const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const router = useRouter();
   const { exercises } = useExercises();
-  const { routine, exercises: routineExercises } = useRoutine(id);
+  const { detail, loading } = useActiveWorkout();
 
-  const alreadyInRoutine = useMemo(
-    () => new Set(routineExercises.map((item) => item.exercise.id)),
-    [routineExercises],
+  const alreadyInWorkout = useMemo(
+    () => new Set(detail?.exercises.map((item) => item.exercise.id) ?? []),
+    [detail],
   );
 
-  if (!exercises || !routine) {
+  if (!exercises || loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
@@ -32,8 +32,9 @@ export default function AddRoutineExercisesScreen() {
   }
 
   async function handleConfirm(exerciseIds: string[]) {
+    if (!detail) return;
     try {
-      await addExercisesToRoutine(db, id, exerciseIds);
+      await addExercisesToWorkout(db, detail.workout.id, exerciseIds);
       router.back();
     } catch {
       Alert.alert("Erro", "Não foi possível adicionar os exercícios.");
@@ -43,8 +44,8 @@ export default function AddRoutineExercisesScreen() {
   return (
     <ExercisePicker
       exercises={exercises}
-      disabledIds={alreadyInRoutine}
-      disabledLabel="Já está na rotina"
+      disabledIds={alreadyInWorkout}
+      disabledLabel="Já está no treino"
       onConfirm={handleConfirm}
     />
   );

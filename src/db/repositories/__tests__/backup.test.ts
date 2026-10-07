@@ -68,7 +68,7 @@ describe("backup", () => {
       "INSERT INTO exercises (id, name, muscle_group) VALUES ('old', 'Velho', 'back')",
     );
 
-    const parsed = parseBackup(backupText, 8);
+    const parsed = parseBackup(backupText, await getSchemaVersion(phone));
     if (!parsed.ok) throw new Error(parsed.error);
     await replaceAllData(phone, parsed.backup);
 
@@ -80,7 +80,10 @@ describe("backup", () => {
     const phone = await phoneWithData();
     const before = await readAllTables(phone);
 
-    const parsed = parseBackup(await exportToText(phone), 8);
+    const parsed = parseBackup(
+      await exportToText(phone),
+      await getSchemaVersion(phone),
+    );
     if (!parsed.ok) throw new Error(parsed.error);
     // A set pointing to an exercise that does not exist: the foreign key fails.
     parsed.backup.tables.workout_exercises.push({

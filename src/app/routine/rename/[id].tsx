@@ -6,8 +6,11 @@ import { RoutineNameForm } from "@/components/routine-name-form";
 import { getRoutineNames, renameRoutine } from "@/db/repositories/routines";
 import { useRoutine } from "@/hooks/use-routine";
 import { validateRoutineName } from "@/lib/routines";
+import type { ThemeColors } from "@/theme/colors";
+import { useThemedStyles } from "@/theme/theme";
 
 export default function RenameRoutineScreen() {
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const router = useRouter();
@@ -43,10 +46,12 @@ export default function RenameRoutineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });
+}

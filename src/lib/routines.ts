@@ -35,16 +35,21 @@ export function uniqueMuscleGroups(muscleGroups: MuscleGroup[]): MuscleGroup[] {
   return [...new Set(muscleGroups)];
 }
 
+// Most recently done first; routines never done go last, by name.
+export function sortRoutines<
+  T extends { name: string; lastDoneAt: string | null },
+>(routines: T[]): T[] {
+  return [...routines].sort((a, b) => {
+    if (a.lastDoneAt && b.lastDoneAt) {
+      return b.lastDoneAt.localeCompare(a.lastDoneAt);
+    }
+    if (a.lastDoneAt) return -1;
+    if (b.lastDoneAt) return 1;
+    return a.name.localeCompare(b.name, "pt");
+  });
+}
+
 export const PROGRESSION_LABELS: Record<Progression, string> = {
   keep: "Não aumentar na próxima semana",
   increase: "Aumentar carga na próxima semana",
-};
-
-// Green to keep the weight, red to increase it.
-export const PROGRESSION_COLORS: Record<
-  Progression,
-  { text: string; background: string }
-> = {
-  keep: { text: "#15803d", background: "#dcfce7" },
-  increase: { text: "#b91c1c", background: "#fee2e2" },
 };

@@ -14,15 +14,14 @@ import {
 import { useExerciseChanges } from "@/hooks/use-exercise-changes";
 import { formatShortDate } from "@/lib/dates";
 import { formatBestSet } from "@/lib/progress";
-
-const COLORS = {
-  up: "#15803d",
-  down: "#b91c1c",
-};
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
   exerciseId: string;
   exerciseName: string;
+  // Progress is per routine: only this routine's history is shown.
+  routineId: string | null;
   // Green when the exercise has history, red when not, grey while unknown.
   hasHistory: boolean | null;
 };
@@ -33,9 +32,12 @@ export function ExerciseHistoryButton({
   exerciseId,
   exerciseName,
   hasHistory,
+  routineId,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const [open, setOpen] = useState(false);
-  const { changes, error } = useExerciseChanges(exerciseId, open);
+  const { changes, error } = useExerciseChanges(exerciseId, routineId, open);
   const router = useRouter();
 
   return (
@@ -51,7 +53,11 @@ export function ExerciseHistoryButton({
           name="stats-chart"
           size={20}
           color={
-            hasHistory === null ? "#9ca3af" : hasHistory ? "#16a34a" : "#dc2626"
+            hasHistory === null
+              ? c.textFaint
+              : hasHistory
+                ? c.success
+                : c.danger
           }
         />
       </Pressable>
@@ -82,7 +88,7 @@ export function ExerciseHistoryButton({
                   <Ionicons
                     name={change.direction === "up" ? "arrow-up" : "arrow-down"}
                     size={22}
-                    color={COLORS[change.direction]}
+                    color={change.direction === "up" ? c.success : c.danger}
                   />
                   <Text style={styles.date}>
                     {formatShortDate(change.startedAt)}
@@ -93,7 +99,10 @@ export function ExerciseHistoryButton({
                     <Text
                       style={[
                         styles.current,
-                        { color: COLORS[change.direction] },
+                        {
+                          color:
+                            change.direction === "up" ? c.success : c.danger,
+                        },
                       ]}
                     >
                       {formatBestSet(change.current)}
@@ -109,13 +118,15 @@ export function ExerciseHistoryButton({
                   setOpen(false);
                   router.push({
                     pathname: "/exercise/progress/[id]",
-                    params: { id: exerciseId },
+                    params: routineId
+                      ? { id: exerciseId, routineId }
+                      : { id: exerciseId },
                   });
                 }}
                 style={styles.secondaryButton}
                 accessibilityRole="button"
               >
-                <Ionicons name="trending-up" size={20} color="#1f2937" />
+                <Ionicons name="trending-up" size={20} color={c.text} />
                 <Text style={styles.secondaryText}>Gráfico</Text>
               </Pressable>
               <Pressable
@@ -133,96 +144,100 @@ export function ExerciseHistoryButton({
   );
 }
 
-const styles = StyleSheet.create({
-  iconButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backdrop: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
-  },
-  card: {
-    maxHeight: "80%",
-    gap: 12,
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: "white",
-  },
-  title: {
-    fontSize: 19,
-    fontWeight: "bold",
-  },
-  loading: {
-    marginVertical: 24,
-  },
-  error: {
-    fontSize: 15,
-    color: "red",
-  },
-  empty: {
-    fontSize: 15,
-    color: "gray",
-    lineHeight: 22,
-  },
-  list: {
-    flexGrow: 0,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    minHeight: 48,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eef0f3",
-  },
-  date: {
-    width: 44,
-    fontSize: 14,
-    color: "gray",
-  },
-  values: {
-    flex: 1,
-    fontSize: 15,
-    color: "#4b5563",
-  },
-  current: {
-    fontWeight: "700",
-  },
-  buttons: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  secondaryButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-  },
-  secondaryText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  primaryButton: {
-    flex: 1,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  primaryText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    iconButton: {
+      width: 44,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    backdrop: {
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+      backgroundColor: c.overlay,
+    },
+    card: {
+      maxHeight: "80%",
+      gap: 12,
+      padding: 20,
+      borderRadius: 16,
+      backgroundColor: c.card,
+    },
+    title: {
+      fontSize: 19,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    loading: {
+      marginVertical: 24,
+    },
+    error: {
+      fontSize: 15,
+      color: c.danger,
+    },
+    empty: {
+      fontSize: 15,
+      color: c.textMuted,
+      lineHeight: 22,
+    },
+    list: {
+      flexGrow: 0,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      minHeight: 48,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.subtle,
+    },
+    date: {
+      width: 44,
+      fontSize: 14,
+      color: c.textMuted,
+    },
+    values: {
+      flex: 1,
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    current: {
+      fontWeight: "700",
+    },
+    buttons: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    secondaryButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      minHeight: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    secondaryText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    primaryButton: {
+      flex: 1,
+      minHeight: 48,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    primaryText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+  });
+}

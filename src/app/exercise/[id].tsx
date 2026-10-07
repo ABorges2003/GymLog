@@ -12,8 +12,11 @@ import {
 
 import { useExercise } from "@/hooks/use-exercise";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/lib/labels";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -28,6 +31,8 @@ function workoutCountLabel(count: number): string {
 }
 
 export default function ExerciseDetailScreen() {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { detail, notFound, error, toggleFavorite, remove } = useExercise(id);
@@ -110,7 +115,7 @@ export default function ExerciseDetailScreen() {
         <Ionicons
           name={exercise.isFavorite ? "star" : "star-outline"}
           size={22}
-          color={exercise.isFavorite ? "#f5a524" : "#1f2937"}
+          color={exercise.isFavorite ? c.star : c.text}
         />
         <Text style={styles.buttonText}>
           {exercise.isFavorite ? "Nos favoritos" : "Adicionar aos favoritos"}
@@ -125,7 +130,7 @@ export default function ExerciseDetailScreen() {
         asChild
       >
         <Pressable style={styles.button} accessibilityRole="button">
-          <Ionicons name="trending-up" size={22} color="#1f2937" />
+          <Ionicons name="trending-up" size={22} color={c.text} />
           <Text style={styles.buttonText}>Ver progresso</Text>
         </Pressable>
       </Link>
@@ -138,7 +143,7 @@ export default function ExerciseDetailScreen() {
         asChild
       >
         <Pressable style={styles.button} accessibilityRole="button">
-          <Ionicons name="create-outline" size={22} color="#1f2937" />
+          <Ionicons name="create-outline" size={22} color={c.text} />
           <Text style={styles.buttonText}>Editar</Text>
         </Pressable>
       </Link>
@@ -152,7 +157,7 @@ export default function ExerciseDetailScreen() {
           <Ionicons
             name={inUse ? "archive-outline" : "trash-outline"}
             size={22}
-            color="#dc2626"
+            color={c.danger}
           />
           <Text style={[styles.buttonText, styles.buttonDangerText]}>
             {inUse ? "Arquivar" : "Apagar"}
@@ -163,75 +168,80 @@ export default function ExerciseDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 16,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-  name: {
-    fontSize: 26,
-    fontWeight: "bold",
-  },
-  card: {
-    borderRadius: 12,
-    backgroundColor: "white",
-    paddingHorizontal: 16,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    minHeight: 48,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#d0d4da",
-  },
-  infoLabel: {
-    fontSize: 16,
-    color: "gray",
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  buttonActive: {
-    borderColor: "#f5a524",
-    backgroundColor: "#fff7e6",
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  buttonDanger: {
-    borderColor: "#fca5a5",
-    marginTop: 16,
-  },
-  buttonDangerText: {
-    color: "#dc2626",
-  },
-  archived: {
-    fontSize: 15,
-    color: "gray",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      gap: 16,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+    name: {
+      fontSize: 26,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    card: {
+      borderRadius: 12,
+      backgroundColor: c.card,
+      paddingHorizontal: 16,
+    },
+    infoRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      minHeight: 48,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    infoLabel: {
+      fontSize: 16,
+      color: c.textMuted,
+    },
+    infoValue: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: c.text,
+    },
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.card,
+    },
+    buttonActive: {
+      borderColor: c.star,
+      backgroundColor: c.warningBg,
+    },
+    buttonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+    buttonDanger: {
+      borderColor: c.dangerBorder,
+      marginTop: 16,
+    },
+    buttonDangerText: {
+      color: c.danger,
+    },
+    archived: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+  });
+}

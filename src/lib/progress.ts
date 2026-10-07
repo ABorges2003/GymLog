@@ -56,6 +56,8 @@ export function formatBestSet({ weightKg, reps }: BestSet): string {
 export type ExerciseEntry = {
   workoutId: string;
   startedAt: string;
+  // null for workouts whose routine was deleted.
+  routineId: string | null;
   routineName: string | null;
   exerciseId: string;
   exerciseName: string;
@@ -82,9 +84,18 @@ export type ProgressGroup = {
   changes: ProgressChange[];
 };
 
-// Compares each exercise with the previous time it was done (in any routine);
-// the first time, with the values the workout started with. Keeps only the
-// workouts with progressions or regressions, newest first.
+// Progress is tracked per exercise *and routine*: the same exercise in two
+// routines is not compared (it may be done more or less tired).
+export function progressKey(
+  routineId: string | null,
+  exerciseId: string,
+): string {
+  return `${routineId ?? "none"}:${exerciseId}`;
+}
+
+// Compares each exercise with the previous time it was done in the same
+// routine; the first time, with the values the workout started with. Keeps
+// only the workouts with progressions or regressions, newest first.
 export function buildProgressHistory(
   entries: ExerciseEntry[],
 ): ProgressGroup[] {
@@ -98,9 +109,9 @@ export function buildProgressHistory(
     const current = bestSet(entry.sets);
     if (!current) continue;
 
-    const previous =
-      lastBest.get(entry.exerciseId) ?? bestSet(entry.plannedSets);
-    lastBest.set(entry.exerciseId, current);
+    const key = progressKey(entry.routineId, entry.exerciseId);
+    const previous = lastBest.get(key) ?? bestSet(entry.plannedSets);
+    lastBest.set(key, current);
     if (!previous) continue;
 
     const direction = compareBestSets(previous, current);
@@ -169,15 +180,19 @@ export type ProgressPoint = {
   direction: Direction | null;
 };
 
-// Best set of an exercise in each finished workout, oldest first. Workouts
-// where no set has a weight are left out.
+// Best set of an exercise in each finished workout of a routine, oldest
+// first. Workouts where no set has a weight are left out.
 export function buildExerciseProgress(
   entries: ExerciseEntry[],
   exerciseId: string,
+  routineId: string | null,
 ): ProgressPoint[] {
   const points: ProgressPoint[] = [];
   const chronological = entries
-    .filter((entry) => entry.exerciseId === exerciseId)
+    .filter(
+      (entry) =>
+        entry.exerciseId === exerciseId && entry.routineId === routineId,
+    )
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
 
   for (const entry of chronological) {
@@ -225,13 +240,17 @@ export type ExerciseChange = {
   current: BestSet;
 };
 
-// The progressions and regressions of one exercise, newest first.
+// The progressions and regressions of one exercise in one routine, newest first.
 export function buildExerciseChanges(
   entries: ExerciseEntry[],
   exerciseId: string,
+  routineId: string | null,
 ): ExerciseChange[] {
   return buildProgressHistory(
-    entries.filter((entry) => entry.exerciseId === exerciseId),
+    entries.filter(
+      (entry) =>
+        entry.exerciseId === exerciseId && entry.routineId === routineId,
+    ),
   ).flatMap((group) =>
     group.changes.map((change) => ({
       workoutId: group.workoutId,
@@ -243,11 +262,42 @@ export function buildExerciseChanges(
   );
 }
 
-// Ids of the exercises with at least one progression or regression.
+// progressKey()s of the exercises (per routine) with at least one
+// progression or regression.
 export function exercisesWithChanges(entries: ExerciseEntry[]): Set<string> {
+  const routineOf = new Map(
+    entries.map((entry) => [entry.workoutId, entry.routineId]),
+  );
   return new Set(
     buildProgressHistory(entries).flatMap((group) =>
-      group.changes.map((change) => change.exerciseId),
+      group.changes.map((change) =>
+        progressKey(routineOf.get(group.workoutId) ?? null, change.exerciseId),
+      ),
     ),
   );
+}
+
+// Routines in which an exercise was done (in finished workouts), the most
+// recent first.
+export function routinesOfExercise(
+  entries: ExerciseEntry[],
+  exerciseId: string,
+): { routineId: string | null; routineName: string | null }[] {
+  const seen = new Map<
+    string,
+    { routineId: string | null; routineName: string | null }
+  >();
+  for (const entry of [...entries].sort((a, b) =>
+    b.startedAt.localeCompare(a.startedAt),
+  )) {
+    if (entry.exerciseId !== exerciseId) continue;
+    const key = entry.routineId ?? "none";
+    if (!seen.has(key)) {
+      seen.set(key, {
+        routineId: entry.routineId,
+        routineName: entry.routineName,
+      });
+    }
+  }
+  return [...seen.values()];
 }

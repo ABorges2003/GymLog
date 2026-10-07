@@ -14,9 +14,14 @@ import { chooseProgression } from "@/components/choose-progression";
 import { RoutineExerciseCard } from "@/components/routine-exercise-card";
 import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useRoutine } from "@/hooks/use-routine";
+import { progressKey } from "@/lib/progress";
 import type { RoutineExercise } from "@/types/routine";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 export default function RoutineScreen() {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const {
@@ -106,7 +111,7 @@ export default function RoutineScreen() {
       >
         <Pressable style={styles.nameRow} accessibilityRole="button">
           <Text style={styles.name}>{routine.name}</Text>
-          <Ionicons name="create-outline" size={22} color="gray" />
+          <Ionicons name="create-outline" size={22} color={c.textMuted} />
         </Pressable>
       </Link>
 
@@ -121,7 +126,12 @@ export default function RoutineScreen() {
         <RoutineExerciseCard
           key={item.id}
           item={item}
-          hasHistory={withHistory ? withHistory.has(item.exercise.id) : null}
+          routineId={routine.id}
+          hasHistory={
+            withHistory
+              ? withHistory.has(progressKey(routine.id, item.exercise.id))
+              : null
+          }
           isFirst={index === 0}
           isLast={index === exercises.length - 1}
           onMove={(direction) => {
@@ -152,7 +162,7 @@ export default function RoutineScreen() {
         asChild
       >
         <Pressable style={styles.addButton} accessibilityRole="button">
-          <Ionicons name="add" size={24} color="#1f2937" />
+          <Ionicons name="add" size={24} color={c.text} />
           <Text style={styles.addButtonText}>Adicionar exercícios</Text>
         </Pressable>
       </Link>
@@ -162,74 +172,78 @@ export default function RoutineScreen() {
         style={styles.deleteButton}
         accessibilityRole="button"
       >
-        <Ionicons name="trash-outline" size={22} color="#dc2626" />
+        <Ionicons name="trash-outline" size={22} color={c.danger} />
         <Text style={styles.deleteText}>Apagar rotina</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 12,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 48,
-  },
-  name: {
-    flexShrink: 1,
-    fontSize: 26,
-    fontWeight: "bold",
-  },
-  empty: {
-    fontSize: 16,
-    color: "gray",
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#9ca3af",
-  },
-  addButtonText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 52,
-    marginTop: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#fca5a5",
-    backgroundColor: "white",
-  },
-  deleteText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#dc2626",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: 16,
+      gap: 12,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 48,
+    },
+    name: {
+      flexShrink: 1,
+      fontSize: 26,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    empty: {
+      fontSize: 16,
+      color: c.textMuted,
+    },
+    addButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: c.textFaint,
+    },
+    addButtonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+    deleteButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      marginTop: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.dangerBorder,
+      backgroundColor: c.card,
+    },
+    deleteText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.danger,
+    },
+  });
+}

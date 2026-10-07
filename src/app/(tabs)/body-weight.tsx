@@ -12,10 +12,12 @@ import {
   View,
 } from "react-native";
 
+import { GoalEditor } from "@/components/goal-editor";
 import { WeightChart } from "@/components/weight-chart";
 import { useBodyWeight } from "@/hooks/use-body-weight";
 import {
   MOVING_AVERAGE_DAYS,
+  goalStatus,
   parseBodyWeight,
   summarizeBodyWeight,
   withMovingAverage,
@@ -28,6 +30,8 @@ import {
   toDateKey,
 } from "@/lib/dates";
 import { formatWeight } from "@/lib/sets";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 function formatChange(change: number): string {
   const rounded = Math.round(change * 10) / 10;
@@ -36,8 +40,16 @@ function formatChange(change: number): string {
   return `${arrow} ${formatWeight(Math.abs(rounded))} kg numa semana`;
 }
 
+function formatGoal(status: ReturnType<typeof goalStatus>): string {
+  if (status.kind === "reached") return "🎉 Objetivo atingido";
+  const verb = status.kind === "lose" ? "perder" : "ganhar";
+  return `Faltam ${verb} ${formatWeight(status.remainingKg)} kg`;
+}
+
 export default function BodyWeightScreen() {
-  const { entries, error, save, remove } = useBodyWeight();
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
+  const { entries, goalKg, error, save, remove, saveGoal } = useBodyWeight();
   const today = toDateKey(new Date());
   const [day, setDay] = useState(today);
   const [text, setText] = useState("");
@@ -111,7 +123,7 @@ export default function BodyWeightScreen() {
             accessibilityRole="button"
             accessibilityLabel="Dia anterior"
           >
-            <Ionicons name="chevron-back" size={26} color="#1f2937" />
+            <Ionicons name="chevron-back" size={26} color={c.text} />
           </Pressable>
           <Text style={styles.dayLabel}>{formatDayLabel(day)}</Text>
           <Pressable
@@ -121,7 +133,7 @@ export default function BodyWeightScreen() {
             accessibilityRole="button"
             accessibilityLabel="Dia seguinte"
           >
-            <Ionicons name="chevron-forward" size={26} color="#1f2937" />
+            <Ionicons name="chevron-forward" size={26} color={c.text} />
           </Pressable>
         </View>
 
@@ -135,7 +147,7 @@ export default function BodyWeightScreen() {
             onChangeText={setText}
             keyboardType="decimal-pad"
             placeholder="—"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={c.textFaint}
             maxLength={6}
             selectTextOnFocus
             accessibilityLabel="Peso em kg"
@@ -154,13 +166,17 @@ export default function BodyWeightScreen() {
           accessibilityRole="button"
         >
           {saving ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={c.onPrimary} />
           ) : (
             <Text style={styles.saveText}>
               {existing ? "Atualizar" : "Guardar"}
             </Text>
           )}
         </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <GoalEditor goalKg={goalKg} onSave={saveGoal} />
       </View>
 
       {summary && (
@@ -177,6 +193,11 @@ export default function BodyWeightScreen() {
               {formatChange(summary.weeklyChange)}
             </Text>
           )}
+          {goalKg !== null && (
+            <Text style={[styles.summaryLine, styles.goalLine]}>
+              {formatGoal(goalStatus(summary.latest.weightKg, goalKg))}
+            </Text>
+          )}
         </View>
       )}
 
@@ -185,16 +206,20 @@ export default function BodyWeightScreen() {
           <View style={styles.legend}>
             <View style={[styles.legendDot, styles.legendDaily]} />
             <Text style={styles.legendText}>Peso do dia</Text>
-            <View style={[styles.legendDot, styles.legendAverage]} />
-            <Text style={styles.legendText}>
-              Média {MOVING_AVERAGE_DAYS} dias
-            </Text>
+            {goalKg !== null && (
+              <>
+                <View style={[styles.legendDot, styles.legendGoal]} />
+                <Text style={styles.legendText}>
+                  Objetivo ({formatWeight(goalKg)} kg)
+                </Text>
+              </>
+            )}
           </View>
           <WeightChart
             points={points.map((point) => ({
               label: formatShortDate(dateFromKey(point.date).toISOString()),
               weightKg: point.weightKg,
-              average: Math.round(point.average * 10) / 10,
+              secondary: goalKg ?? undefined,
             }))}
           />
         </View>
@@ -215,7 +240,7 @@ export default function BodyWeightScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Apagar registo de ${formatDayLabel(entry.date)}`}
               >
-                <Ionicons name="close" size={20} color="#9ca3af" />
+                <Ionicons name="close" size={20} color={c.textFaint} />
               </Pressable>
             </View>
           ))}
@@ -233,149 +258,160 @@ export default function BodyWeightScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-    padding: 16,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  error: {
-    fontSize: 16,
-    color: "red",
-    textAlign: "center",
-  },
-  card: {
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "white",
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-  dayRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dayButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayLabel: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  input: {
-    width: 160,
-    minHeight: 64,
-    fontSize: 36,
-    fontWeight: "bold",
-    textAlign: "center",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "#f9fafb",
-  },
-  inputError: {
-    borderColor: "red",
-    backgroundColor: "#fef2f2",
-  },
-  unit: {
-    fontSize: 22,
-    color: "gray",
-  },
-  saveButton: {
-    minHeight: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  saveText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "white",
-  },
-  disabled: {
-    opacity: 0.35,
-  },
-  summary: {
-    alignItems: "center",
-    gap: 4,
-  },
-  summaryWeight: {
-    fontSize: 32,
-    fontWeight: "bold",
-  },
-  summaryLine: {
-    fontSize: 15,
-    color: "gray",
-  },
-  legend: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendDaily: {
-    backgroundColor: "#7c3aed",
-  },
-  legendAverage: {
-    marginLeft: 12,
-    backgroundColor: "#f59e0b",
-  },
-  legendText: {
-    fontSize: 13,
-    color: "gray",
-  },
-  entryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 44,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eef0f3",
-  },
-  entryDate: {
-    flex: 1,
-    fontSize: 15,
-    color: "gray",
-  },
-  entryWeight: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    width: 40,
-    height: 40,
-    marginRight: -8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  empty: {
-    fontSize: 15,
-    color: "gray",
-    textAlign: "center",
-    lineHeight: 22,
-    marginTop: 8,
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 12,
+      padding: 16,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+    },
+    error: {
+      fontSize: 16,
+      color: c.danger,
+      textAlign: "center",
+    },
+    card: {
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    cardTitle: {
+      fontSize: 17,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    dayRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    dayButton: {
+      width: 48,
+      height: 48,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayLabel: {
+      flex: 1,
+      fontSize: 18,
+      fontWeight: "600",
+      textAlign: "center",
+      color: c.text,
+    },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+    input: {
+      width: 160,
+      minHeight: 64,
+      fontSize: 36,
+      fontWeight: "bold",
+      textAlign: "center",
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.input,
+      color: c.text,
+    },
+    inputError: {
+      borderColor: c.danger,
+      backgroundColor: c.dangerBg,
+    },
+    unit: {
+      fontSize: 22,
+      color: c.textMuted,
+    },
+    saveButton: {
+      minHeight: 52,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    saveText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+    disabled: {
+      opacity: 0.35,
+    },
+    summary: {
+      alignItems: "center",
+      gap: 4,
+    },
+    summaryWeight: {
+      fontSize: 32,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    goalLine: {
+      fontWeight: "600",
+      color: c.warningText,
+    },
+    summaryLine: {
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    legend: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    legendDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+    },
+    legendDaily: {
+      backgroundColor: c.accent,
+    },
+    legendGoal: {
+      marginLeft: 12,
+      backgroundColor: c.warning,
+    },
+    legendText: {
+      fontSize: 13,
+      color: c.textMuted,
+    },
+    entryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      minHeight: 44,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.subtle,
+    },
+    entryDate: {
+      flex: 1,
+      fontSize: 15,
+      color: c.textMuted,
+    },
+    entryWeight: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    deleteButton: {
+      width: 40,
+      height: 40,
+      marginRight: -8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    empty: {
+      fontSize: 15,
+      color: c.textMuted,
+      textAlign: "center",
+      lineHeight: 22,
+      marginTop: 8,
+    },
+  });
+}

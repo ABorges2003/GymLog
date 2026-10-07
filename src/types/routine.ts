@@ -13,6 +13,8 @@ export type RoutineSummary = Routine & {
   exerciseCount: number;
   // In the order they first appear in the routine.
   muscleGroups: MuscleGroup[];
+  // When a workout of this routine was last finished (ISO 8601), or null.
+  lastDoneAt: string | null;
 };
 
 // Note for the next time the exercise is done.

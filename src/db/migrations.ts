@@ -183,6 +183,16 @@ const migrations: Migration[] = [
         ADD COLUMN planned_weight_kg REAL CHECK (planned_weight_kg IS NULL OR planned_weight_kg >= 0);
     `);
   },
+
+  // v9: app settings as key/value pairs (body weight goal, theme...).
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE app_settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

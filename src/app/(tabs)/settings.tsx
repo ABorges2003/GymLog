@@ -20,10 +20,27 @@ import {
   type MuscleGroupCount,
   type TableInfo,
 } from "@/db/repositories/diagnostics";
+import { FilterChips, type ChipOption } from "@/components/filter-chips";
 import { useBackup } from "@/hooks/use-backup";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
+import type { ThemeColors } from "@/theme/colors";
+import {
+  useColors,
+  useTheme,
+  useThemedStyles,
+  type ThemeMode,
+} from "@/theme/theme";
+
+const THEME_OPTIONS: ChipOption<ThemeMode>[] = [
+  { value: "system", label: "Automático" },
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Escuro" },
+];
 
 export default function SettingsScreen() {
+  const { mode, setMode } = useTheme();
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const db = useSQLiteContext();
   const [info, setInfo] = useState<DatabaseInfo | null>(null);
   const [tables, setTables] = useState<TableInfo[]>([]);
@@ -70,6 +87,23 @@ export default function SettingsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Aparência</Text>
+        <FilterChips
+          options={THEME_OPTIONS}
+          selected={mode}
+          onSelect={(next) => {
+            setMode(next).catch(() =>
+              Alert.alert("Erro", "Não foi possível guardar a aparência."),
+            );
+          }}
+          wrap
+        />
+        <Text style={styles.hint}>
+          Automático segue o modo claro/escuro do telemóvel.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Backup</Text>
         <Text style={styles.hint}>
           Guarda todos os teus exercícios, rotinas e treinos num ficheiro
@@ -84,10 +118,10 @@ export default function SettingsScreen() {
           accessibilityRole="button"
         >
           {busy === "export" ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={c.onPrimary} />
           ) : (
             <>
-              <Ionicons name="share-outline" size={22} color="white" />
+              <Ionicons name="share-outline" size={22} color={c.onPrimary} />
               <Text style={[styles.buttonText, styles.primaryText]}>
                 Exportar backup
               </Text>
@@ -109,7 +143,7 @@ export default function SettingsScreen() {
             <ActivityIndicator />
           ) : (
             <>
-              <Ionicons name="download-outline" size={22} color="#1f2937" />
+              <Ionicons name="download-outline" size={22} color={c.text} />
               <Text style={styles.buttonText}>Importar backup</Text>
             </>
           )}
@@ -156,61 +190,67 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-    padding: 16,
-  },
-  card: {
-    gap: 10,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "white",
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 8,
-  },
-  hint: {
-    fontSize: 15,
-    color: "gray",
-    lineHeight: 21,
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    minHeight: 52,
-    borderRadius: 12,
-  },
-  primaryButton: {
-    backgroundColor: "#1f2937",
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  primaryText: {
-    color: "white",
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-  row: {
-    fontSize: 15,
-  },
-  error: {
-    fontSize: 15,
-    color: "red",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 16,
+      padding: 16,
+    },
+    card: {
+      gap: 10,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    cardTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    subtitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginTop: 8,
+      color: c.text,
+    },
+    hint: {
+      fontSize: 15,
+      color: c.textMuted,
+      lineHeight: 21,
+    },
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      minHeight: 52,
+      borderRadius: 12,
+    },
+    primaryButton: {
+      backgroundColor: c.primary,
+    },
+    secondaryButton: {
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    buttonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+    primaryText: {
+      color: c.onPrimary,
+    },
+    disabled: {
+      opacity: 0.6,
+    },
+    row: {
+      fontSize: 15,
+      color: c.text,
+    },
+    error: {
+      fontSize: 15,
+      color: c.danger,
+    },
+  });
+}

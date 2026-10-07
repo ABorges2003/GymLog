@@ -1,6 +1,8 @@
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 
 import type { ChipOption } from "@/components/filter-chips";
+import type { ThemeColors } from "@/theme/colors";
+import { useThemedStyles } from "@/theme/theme";
 
 type Props<T> = {
   options: ChipOption<T>[];
@@ -17,6 +19,7 @@ export function ToggleChips<T>({
   onChange,
   allLabel,
 }: Props<T>) {
+  const styles = useThemedStyles(createStyles);
   function toggle(value: T) {
     onChange(
       selected.includes(value)
@@ -64,30 +67,33 @@ export function ToggleChips<T>({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  chip: {
-    minHeight: 36,
-    justifyContent: "center",
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  chipSelected: {
-    borderColor: "#1f2937",
-    backgroundColor: "#1f2937",
-  },
-  label: {
-    fontSize: 15,
-  },
-  labelSelected: {
-    color: "white",
-    fontWeight: "600",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    chip: {
+      minHeight: 36,
+      justifyContent: "center",
+      paddingHorizontal: 14,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.card,
+    },
+    chipSelected: {
+      borderColor: c.primary,
+      backgroundColor: c.primary,
+    },
+    label: {
+      fontSize: 15,
+      color: c.text,
+    },
+    labelSelected: {
+      color: c.onPrimary,
+      fontWeight: "600",
+    },
+  });
+}

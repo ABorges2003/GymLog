@@ -20,6 +20,8 @@ import {
   type Exercise,
   type MuscleGroup,
 } from "@/types/exercise";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 const MUSCLE_GROUP_OPTIONS: ChipOption<MuscleGroup>[] = MUSCLE_GROUPS.map(
   (muscleGroup) => ({
@@ -44,6 +46,8 @@ export function ExercisePicker({
   disabledLabel,
   onConfirm,
 }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const [query, setQuery] = useState("");
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -80,7 +84,7 @@ export function ExercisePicker({
         <Text style={styles.empty}>Ainda não tens exercícios.</Text>
         <Link href="/exercise/new" asChild>
           <Pressable style={styles.createButton} accessibilityRole="button">
-            <Ionicons name="add" size={22} color="#1f2937" />
+            <Ionicons name="add" size={22} color={c.text} />
             <Text style={styles.createButtonText}>Criar exercício</Text>
           </Pressable>
         </Link>
@@ -118,14 +122,14 @@ export function ExercisePicker({
               onPress={() => toggle(item.id)}
               disabled={disabled}
               style={styles.row}
-              android_ripple={{ color: "#e5e7eb" }}
+              android_ripple={{ color: c.ripple }}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: isSelected, disabled }}
             >
               <Ionicons
                 name={disabled || isSelected ? "checkbox" : "square-outline"}
                 size={26}
-                color={disabled ? "#d0d4da" : "#1f2937"}
+                color={disabled ? c.border : c.text}
               />
               <View style={styles.rowText}>
                 <Text style={[styles.name, disabled && styles.disabledText]}>
@@ -161,7 +165,7 @@ export function ExercisePicker({
           accessibilityRole="button"
         >
           {saving ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={c.onPrimary} />
           ) : (
             <Text style={styles.confirmText}>
               {selected.length === 0
@@ -175,87 +179,92 @@ export function ExercisePicker({
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    padding: 16,
-  },
-  empty: {
-    fontSize: 16,
-    color: "gray",
-    textAlign: "center",
-    marginTop: 32,
-  },
-  createButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minHeight: 52,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  createButtonText: {
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: "bold",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#eef0f3",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    minHeight: 60,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "white",
-  },
-  rowText: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 17,
-  },
-  disabledText: {
-    color: "#9ca3af",
-  },
-  details: {
-    fontSize: 14,
-    color: "gray",
-    marginTop: 2,
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#d0d4da",
-    backgroundColor: "white",
-  },
-  confirmButton: {
-    minHeight: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#1f2937",
-  },
-  confirmDisabled: {
-    opacity: 0.4,
-  },
-  confirmText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+    },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 16,
+      padding: 16,
+    },
+    empty: {
+      fontSize: 16,
+      color: c.textMuted,
+      textAlign: "center",
+      marginTop: 32,
+    },
+    createButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 52,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.card,
+    },
+    createButtonText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.text,
+    },
+    sectionHeader: {
+      fontSize: 16,
+      fontWeight: "bold",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: c.subtle,
+      color: c.text,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      minHeight: 60,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: c.card,
+    },
+    rowText: {
+      flex: 1,
+    },
+    name: {
+      fontSize: 17,
+      color: c.text,
+    },
+    disabledText: {
+      color: c.textFaint,
+    },
+    details: {
+      fontSize: 14,
+      color: c.textMuted,
+      marginTop: 2,
+    },
+    footer: {
+      padding: 16,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      backgroundColor: c.card,
+    },
+    confirmButton: {
+      minHeight: 56,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 12,
+      backgroundColor: c.primary,
+    },
+    confirmDisabled: {
+      opacity: 0.4,
+    },
+    confirmText: {
+      fontSize: 17,
+      fontWeight: "600",
+      color: c.onPrimary,
+    },
+  });
+}

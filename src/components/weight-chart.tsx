@@ -3,25 +3,30 @@ import { LineChart } from "react-native-gifted-charts";
 
 import { chartScale } from "@/lib/progress";
 import { formatWeight } from "@/lib/sets";
+import type { ThemeColors } from "@/theme/colors";
+import { useColors, useThemedStyles } from "@/theme/theme";
 
 type Props = {
-  // `average` (optional) is drawn as a second, dashed line without points.
-  points: { label: string; weightKg: number; average?: number }[];
+  // `secondary` (optional) is drawn as a second, dashed line without points
+  // (e.g. a goal).
+  points: { label: string; weightKg: number; secondary?: number }[];
 };
 
 const Y_AXIS_WIDTH = 44;
 const POINT_SPACING = 64;
 
-// Line chart of weights over time, with an optional average line; scrolls
+// Line chart of weights over time, with an optional second line; scrolls
 // sideways when there are many points.
 export function WeightChart({ points }: Props) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
   const { width } = useWindowDimensions();
-  const averages = points.flatMap((point) =>
-    point.average === undefined ? [] : [point.average],
+  const secondary = points.flatMap((point) =>
+    point.secondary === undefined ? [] : [point.secondary],
   );
   const scale = chartScale([
     ...points.map((point) => point.weightKg),
-    ...averages,
+    ...secondary,
   ]);
   // Card padding (16 × 2), screen padding (16 × 2) and the y axis labels.
   const chartWidth = width - 64 - Y_AXIS_WIDTH;
@@ -35,11 +40,11 @@ export function WeightChart({ points }: Props) {
           dataPointText: formatWeight(point.weightKg),
         }))}
         data2={
-          averages.length === points.length
-            ? averages.map((value) => ({ value }))
+          secondary.length === points.length
+            ? secondary.map((value) => ({ value }))
             : undefined
         }
-        color2="#f59e0b"
+        color2={c.warning}
         thickness2={2}
         strokeDashArray2={[6, 4]}
         hideDataPoints2
@@ -54,17 +59,17 @@ export function WeightChart({ points }: Props) {
         spacing={POINT_SPACING}
         initialSpacing={24}
         endSpacing={24}
-        color="#7c3aed"
+        color={c.accent}
         thickness={3}
-        dataPointsColor="#7c3aed"
+        dataPointsColor={c.accent}
         dataPointsRadius={5}
-        textColor="#1f2937"
+        textColor={c.text}
         textFontSize={12}
         textShiftY={-10}
         textShiftX={-8}
-        yAxisColor="#d0d4da"
-        xAxisColor="#d0d4da"
-        rulesColor="#eef0f3"
+        yAxisColor={c.border}
+        xAxisColor={c.border}
+        rulesColor={c.subtle}
         yAxisTextStyle={styles.axisText}
         xAxisLabelTextStyle={styles.axisText}
         scrollToEnd
@@ -73,13 +78,15 @@ export function WeightChart({ points }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 16,
-    overflow: "hidden",
-  },
-  axisText: {
-    fontSize: 11,
-    color: "gray",
-  },
-});
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      paddingTop: 16,
+      overflow: "hidden",
+    },
+    axisText: {
+      fontSize: 11,
+      color: c.textMuted,
+    },
+  });
+}

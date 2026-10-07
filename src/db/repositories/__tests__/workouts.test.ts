@@ -8,6 +8,7 @@ import {
   setRoutineExerciseSets,
 } from "@/db/repositories/routines";
 import {
+  addExercisesToWorkout,
   addWorkoutSet,
   deleteWorkout,
   deleteWorkoutSet,
@@ -213,6 +214,37 @@ describe("workouts repository", () => {
         previous: { weightKg: 100, reps: 6 },
         current: { weightKg: 102.5, reps: 5 },
       },
+    ]);
+  });
+
+  it("adds exercises during a workout, and to its routine", async () => {
+    await db.execAsync(
+      "INSERT INTO exercises (id, name, muscle_group) VALUES ('fly', 'Aberturas', 'chest')",
+    );
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+
+    await addExercisesToWorkout(db, workoutId, ["fly"]);
+
+    const detail = await getWorkoutDetail(db, workoutId);
+    expect(detail?.exercises.map((item) => item.exercise.name)).toEqual([
+      "Supino",
+      "Press Militar",
+      "Aberturas",
+    ]);
+    expect(detail?.exercises[2].sets.map((set) => set.setType)).toEqual([
+      "warmup",
+      "feeder",
+      "feeder",
+      "top",
+      "backoff",
+    ]);
+    // Linked to the routine, so it can have a note and is there next time.
+    expect(detail?.exercises[2].routineExerciseId).not.toBeNull();
+    const routine = await getRoutineExercises(db, routineId);
+    expect(routine.map((item) => item.exercise.id)).toEqual([
+      "bench",
+      "press",
+      "fly",
     ]);
   });
 
