@@ -14,9 +14,10 @@ The app is in Portuguese, so buttons and labels are written here **exactly as th
 4. [Working out](#4-working-out)
 5. [Tracking progress](#5-tracking-progress)
 6. [Body weight](#6-body-weight)
-7. [Backup: never lose your data](#7-backup-never-lose-your-data)
-8. [Installing and updating the app](#8-installing-and-updating-the-app)
-9. [FAQ](#9-faq)
+7. [Diet](#7-diet)
+8. [Backup: never lose your data](#8-backup-never-lose-your-data)
+9. [Installing and updating the app](#9-installing-and-updating-the-app)
+10. [FAQ](#10-faq)
 
 ---
 
@@ -28,14 +29,15 @@ GymLog is built around one simple idea: **your workouts are always the same, onl
 2. On workout day you tap **Começar** (Start) and the workout opens **already filled in** with last time's weights.
 3. You change only what went up and tap **Terminar** (Finish). The new weights are saved into the routine for next time.
 
-The app has 4 tabs at the bottom:
+The app has 5 tabs at the bottom:
 
 | Tab | What it is for |
 |-----|----------------|
 | 🏋️ **Treino** (Workout) | Your routines and the workout in progress |
+| 🥗 **Dieta** (Diet) | What you eat each day: kcal, protein, carbs and fat |
 | ⚖️ **Peso** (Weight) | Your body weight and its chart |
 | 📋 **Exercícios** (Exercises) | Your exercise list |
-| ⚙️ **Definições** (Settings) | Backup (export and import) |
+| ⚙️ **Definições** (Settings) | Backup (export and import) and light/dark mode |
 
 <p align="center"><img src="images/01-separadores.jpg" width="280" alt="Workout tab with the routines and the tab bar"></p>
 
@@ -176,13 +178,57 @@ Below you see:
 
 **Goal**: tap **Objetivo** (Goal) to set your target weight (e.g. `75`). The summary then shows how much is left: *Faltam perder 3,4 kg* (3.4 kg left to lose) or *Faltam ganhar…* (… left to gain).
 
-<!-- 📸 screenshot to add: images/10-peso.jpg (Weight tab with entries and the chart) -->
+<p align="center"><img src="images/10-peso.jpg" width="280" alt="Weight tab with the goal, the 7-day average and the chart"></p>
 
 > 💡 Body weight changes a lot from day to day (water, food). Look at the **7-day average** in the summary: it shows the real trend. Weigh yourself at the same time each day, e.g. in the morning.
 
 ---
 
-## 7. Backup: never lose your data
+## 7. Diet
+
+The app never looks food values up: you create **your own foods** once, and then only type how much you ate.
+
+### 7.1 Goals
+
+The first time, tap **Define os teus objetivos** (set your goals) and type your daily **Calorias** (kcal) and, optionally, **Proteína**, **Carbos** and **Gordura** (protein, carbs, fat in grams). Change them later with the ✏️ next to the remaining kcal.
+
+<p align="center"><img src="images/11-dieta.jpg" width="280" alt="Diet tab with the kcal left, the macro bars and the meals"></p>
+
+### 7.2 Your foods
+
+**Os meus alimentos** (my foods) → **+**:
+1. Type the **Nome** (name), e.g. "Aveia".
+2. Choose **Por gramas** (per grams, e.g. per 100 g), **Por ml** (per millilitres, e.g. milk per 100 ml) or **Por unidade** (per unit, e.g. per 1 egg).
+3. Type the kcal, protein, carbs and fat for that amount (0 if it has none), as on the label.
+
+Tap a food in the list to **edit** it, or to delete it with **Apagar alimento** (Delete food). Editing a food later does **not** change the days you already logged, and a food you already logged is hidden instead of erased, so old days stay correct.
+
+<p align="center">
+  <img src="images/12-novo-alimento.jpg" width="280" alt="My foods list with search">
+  <img src="images/13-adicionar-alimento.jpg" width="280" alt="Editing a food: values per 100 g">
+</p>
+
+### 7.3 Logging what you eat
+
+Each meal (**Pequeno-almoço**, **Lanche da manhã**, **Almoço**, **Lanche da tarde**, **Jantar**, **Ceia**) has a **+**:
+1. Tap **+**, search and pick the food.
+2. Type the **grams** (or **ml**, or **units**). The app shows the kcal and macros for that amount.
+3. Tap **Adicionar** (Add). The **✕** next to a food removes it.
+
+Can't find the food? Tap **Criar alimento** (Create food) right there.
+
+
+At the top you see the **kcal left**, what you ate and a bar for each macro (red when you go over).
+
+### 7.4 Other days
+
+Use the **‹ ›** arrows at the top to see or log other days (you can't go past today).
+
+> 💡 Create your usual foods once (e.g. per 100 g, as on the label). After that, logging a meal is just picking the food and typing the grams.
+
+---
+
+## 8. Backup: never lose your data
 
 Your data lives **only on your phone**. If you uninstall the app or change phones without a backup, **you lose everything**. Back up regularly (e.g. once a week).
 
@@ -191,7 +237,7 @@ Your data lives **only on your phone**. If you uninstall the app or change phone
 1. **Definições → Exportar backup** (Settings → Export backup).
 2. The share menu opens: choose **Google Drive** (recommended) or send it by email.
 
-The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exercises, routines, workouts and body weight.
+The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exercises, routines, workouts, body weight and diet.
 
 ### Import
 
@@ -209,9 +255,11 @@ The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exe
 
 **Definições → Aparência** (Settings → Appearance): **Automático** (follows the phone's light/dark mode), **Claro** (light) or **Escuro** (dark).
 
+<p align="center"><img src="images/14-modo-escuro.jpg" width="280" alt="Workout tab in dark mode"></p>
+
 ---
 
-## 8. Installing and updating the app
+## 9. Installing and updating the app
 
 - GymLog is installed from an **APK** file (it is not on the Play Store). When you open the APK, Android asks for permission to install apps from that source: allow it.
 - **Updating**: install the new APK **over** the old one. Your data is kept.
@@ -220,7 +268,7 @@ The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exe
 
 ---
 
-## 9. FAQ
+## 10. FAQ
 
 **I changed a weight during the workout and the routine didn't change.**
 Weights are only copied into the routine when you tap **Terminar** (Finish). If you cancel, nothing changes.

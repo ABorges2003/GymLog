@@ -15,7 +15,18 @@ I'm building it for my own training: I wanted a simple, fast app that works even
  
 ## 📸 Screenshots
  
-*Coming soon.*
+<p align="center">
+  <img src="docs/images/03-rotina.jpg" width="200" alt="Routine with planned sets">
+  <img src="docs/images/05-treino.jpg" width="200" alt="Workout in progress">
+  <img src="docs/images/08-grafico.jpg" width="200" alt="Progress chart of an exercise">
+</p>
+<p align="center">
+  <img src="docs/images/10-peso.jpg" width="200" alt="Body weight with goal and chart">
+  <img src="docs/images/11-dieta.jpg" width="200" alt="Diet tab with kcal and macros">
+  <img src="docs/images/14-modo-escuro.jpg" width="200" alt="Dark mode">
+</p>
+
+More screenshots in the [user guide](docs/user-guide.md).
  
 ## 🎯 Goals
  
@@ -23,6 +34,7 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 - See what was lifted last time for each exercise while training
 - Track strength progress per exercise and detect personal records
 - Log body weight daily and see the real trend in a chart
+- Log what I eat and see the day's kcal, protein, carbs and fat against my goals
 - Never lose data: easy export and import of backups
 ## 📋 Features
  
@@ -39,6 +51,9 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 | Body weight log | One entry per day (today or past days); saving the same day again updates it |
 | Body weight chart | Daily values and a line at the weight goal; the summary shows the 7-day average and how much is left to the goal |
 | Backup | Export all data to a JSON file and import it back |
+| Diet log | Day by day (‹ › to change day), 6 meals (Pequeno-almoço … Ceia): add foods by amount; kcal left and a bar per macro (red when over) |
+| Diet goals | Daily kcal (required) and protein / carbs / fat (optional) |
+| Food library | My own foods with kcal and macros per X grams, per X ml or per unit, with search; editing a food never changes days already logged |
 | Dark mode | Settings → Aparência: automatic (follows the phone), light or dark |
 | Exercise progress | Chart of the top set weight over time per exercise |
  
@@ -62,15 +77,16 @@ I'm building it for my own training: I wanted a simple, fast app that works even
 GymLog/
 ├── src/
 │   ├── app/                → screens (Expo Router)
-│   │   ├── (tabs)/         → Workout, Body weight, Exercises, Settings
+│   │   ├── (tabs)/         → Workout, Diet, Body weight, Exercises, Settings
 │   │   ├── exercise/       → exercise details, create/edit, progress chart
+│   │   ├── diet/           → add food to a meal, my foods, goals
 │   │   ├── routine/        → routine, rename, add exercises, planned sets
 │   │   └── workout/        → workout summary
 │   ├── components/         → reusable UI components
 │   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → table definitions
-│   │   ├── migrations.ts   → schema migrations (v1 to v9)
+│   │   ├── migrations.ts   → schema migrations (v1 to v11)
 │   │   └── repositories/   → data access functions (one file per entity, + tests)
 │   ├── lib/                → pure logic: search, labels, sets, progress, dates, body weight, backup (+ tests)
 │   ├── theme/              → light and dark colours, theme provider
@@ -94,7 +110,10 @@ GymLog/
 | workout_exercises | id, workout_id, exercise_id, position |
 | workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in), planned_reps and planned_weight_kg (values the set started with) |
 | body_weight_entries | id, date (unique), weight_kg |
-| app_settings | key, value (body weight goal, theme) |
+| app_settings | key, value (body weight goal, theme, diet goals) |
+| foods | id, name, basis (grams or unit), measure (g or ml), basis_amount, kcal, protein_g, carbs_g, fat_g, is_archived |
+| food_entries | id, date, meal, food_id, amount, kcal, protein_g, carbs_g, fat_g (stored when logged), created_at |
+| diet_days | date, training_kcal (unused, kept so old migrations stay untouched) |
 
 ### Workouts and exercises
 
@@ -181,6 +200,40 @@ erDiagram
         REAL weight_kg
     }
 ```
+
+### Diet
+
+Foods are my own; each logged entry keeps a copy of the values worked out for the amount eaten.
+
+```mermaid
+erDiagram
+    foods ||--o{ food_entries : "logged as"
+
+    foods {
+        TEXT id PK
+        TEXT name
+        TEXT basis "grams | unit"
+        TEXT measure "g | ml"
+        REAL basis_amount
+        REAL kcal
+        REAL protein_g
+        REAL carbs_g
+        REAL fat_g
+        INTEGER is_archived
+    }
+    food_entries {
+        TEXT id PK
+        TEXT date "YYYY-MM-DD"
+        TEXT meal
+        TEXT food_id FK
+        REAL amount
+        REAL kcal
+        REAL protein_g
+        REAL carbs_g
+        REAL fat_g
+        TEXT created_at
+    }
+```
  
 ## 🗺️ Roadmap
  
@@ -190,7 +243,8 @@ erDiagram
 - [X] Phase 3: Routines, workout logging, progress history and charts → **MVP**
 - [X] Phase 4: Body weight log and chart → **MVP**
 - [X] Phase 5: Backup export / import → **MVP**
-- [ ] Phase 6: First APK build installed on my phone
+- [X] Phase 6: First APK build installed on my phone
+- [X] Extras: weight goal, dark mode, new icon, per-routine progress and diet tracking
 ## 📖 How to run (development)
  
 ```bash

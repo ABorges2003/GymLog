@@ -19,6 +19,10 @@ export default function TabsLayout() {
         options={{ title: "Treino", tabBarIcon: tabIcon("barbell-outline") }}
       />
       <Tabs.Screen
+        name="diet"
+        options={{ title: "Dieta", tabBarIcon: tabIcon("nutrition-outline") }}
+      />
+      <Tabs.Screen
         name="body-weight"
         options={{ title: "Peso", tabBarIcon: tabIcon("scale-outline") }}
       />

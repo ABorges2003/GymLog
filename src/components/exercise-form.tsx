@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 
 import { FilterChips, type ChipOption } from "@/components/filter-chips";
+import { KeyboardAwareScrollView } from "@/components/keyboard-aware-scroll-view";
 import {
   EXERCISE_NAME_MAX_LENGTH,
   type ExerciseInputErrors,
@@ -78,10 +78,7 @@ export function ExerciseForm({
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <View style={styles.field}>
         <Text style={styles.label}>Nome</Text>
         <TextInput
@@ -132,7 +129,7 @@ export function ExerciseForm({
           <Text style={styles.buttonText}>{submitLabel}</Text>
         )}
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

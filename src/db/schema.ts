@@ -10,6 +10,8 @@ export const TABLES = [
   "workout_sets",
   "body_weight_entries",
   "app_settings",
+  "foods",
+  "food_entries",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];

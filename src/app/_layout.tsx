@@ -36,6 +36,26 @@ export default function RootLayout() {
             options={{ title: "Séries", presentation: "modal" }}
           />
           <Stack.Screen
+            name="diet/add"
+            options={{ title: "Adicionar alimento", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="diet/foods"
+            options={{ title: "Os meus alimentos" }}
+          />
+          <Stack.Screen
+            name="diet/food/new"
+            options={{ title: "Novo alimento", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="diet/food/edit/[id]"
+            options={{ title: "Editar alimento", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="diet/goals"
+            options={{ title: "Objetivos", presentation: "modal" }}
+          />
+          <Stack.Screen
             name="workout/add-exercises"
             options={{ title: "Adicionar exercícios", presentation: "modal" }}
           />

@@ -193,6 +193,55 @@ const migrations: Migration[] = [
       );
     `);
   },
+
+  // v10: diet. The user's foods (values per X grams or per unit), what was
+  // eaten each day (values stored when logged) and the extra kcal of
+  // training days.
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE foods (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        basis TEXT NOT NULL CHECK (basis IN ('grams', 'unit')),
+        basis_amount REAL NOT NULL CHECK (basis_amount > 0),
+        kcal REAL NOT NULL CHECK (kcal >= 0),
+        protein_g REAL NOT NULL CHECK (protein_g >= 0),
+        carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
+        fat_g REAL NOT NULL CHECK (fat_g >= 0),
+        is_archived INTEGER NOT NULL DEFAULT 0 CHECK (is_archived IN (0, 1))
+      );
+
+      CREATE TABLE food_entries (
+        id TEXT PRIMARY KEY NOT NULL,
+        date TEXT NOT NULL,
+        meal TEXT NOT NULL CHECK (meal IN ('breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'supper')),
+        food_id TEXT NOT NULL REFERENCES foods (id) ON DELETE RESTRICT,
+        amount REAL NOT NULL CHECK (amount > 0),
+        kcal REAL NOT NULL CHECK (kcal >= 0),
+        protein_g REAL NOT NULL CHECK (protein_g >= 0),
+        carbs_g REAL NOT NULL CHECK (carbs_g >= 0),
+        fat_g REAL NOT NULL CHECK (fat_g >= 0),
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX idx_food_entries_date ON food_entries (date);
+      CREATE INDEX idx_food_entries_food ON food_entries (food_id);
+
+      CREATE TABLE diet_days (
+        date TEXT PRIMARY KEY NOT NULL,
+        training_kcal REAL NOT NULL CHECK (training_kcal >= 0)
+      );
+    `);
+  },
+
+  // v11: foods measured in millilitres (e.g. milk per 100 ml). They keep
+  // basis = 'grams' (same maths) with measure = 'ml'.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE foods
+        ADD COLUMN measure TEXT NOT NULL DEFAULT 'g' CHECK (measure IN ('g', 'ml'));
+    `);
+  },
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {
