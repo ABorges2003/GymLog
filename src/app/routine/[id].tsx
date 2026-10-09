@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 
-import { chooseProgression } from "@/components/choose-progression";
 import { RoutineExerciseCard } from "@/components/routine-exercise-card";
 import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useRoutine } from "@/hooks/use-routine";
@@ -140,17 +139,11 @@ export default function RoutineScreen() {
             );
           }}
           onRemove={() => confirmRemoveExercise(item)}
-          onProgressionPress={() =>
-            chooseProgression(
-              item.exercise.name,
-              item.progression,
-              (progression) => {
-                setProgression(item.id, progression).catch(
-                  handleError("Não foi possível guardar a nota."),
-                );
-              },
-            )
-          }
+          onProgressionChange={(progression) => {
+            setProgression(item.id, progression).catch(
+              handleError("Não foi possível guardar a nota."),
+            );
+          }}
         />
       ))}
 

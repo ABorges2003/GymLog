@@ -167,9 +167,25 @@ describe("routines repository", () => {
       await addExercisesToRoutine(db, routineId, ["e1", "e2"]);
       const [first, second] = await getRoutineExercises(db, routineId);
       const planned = [
-        { setType: "warmup" as const, reps: 15, weightKg: 40 },
-        { setType: "top" as const, reps: 6, weightKg: 102.5 },
-        { setType: "top" as const, reps: null, weightKg: null },
+        {
+          setType: "warmup" as const,
+          reps: null,
+          weightKg: 40,
+          toFailure: false,
+        },
+        { setType: "top" as const, reps: 6, weightKg: 102.5, toFailure: false },
+        {
+          setType: "backoff" as const,
+          reps: null,
+          weightKg: 85,
+          toFailure: true,
+        },
+        {
+          setType: "top" as const,
+          reps: null,
+          weightKg: null,
+          toFailure: false,
+        },
       ];
 
       await setRoutineExerciseSets(db, first.id, planned);
@@ -183,12 +199,28 @@ describe("routines repository", () => {
       });
     });
 
+    it("stores reps only where they belong", async () => {
+      await addExercisesToRoutine(db, routineId, ["e1"]);
+      const [item] = await getRoutineExercises(db, routineId);
+      await setRoutineExerciseSets(db, item.id, [
+        { setType: "warmup", reps: 15, weightKg: 40, toFailure: true },
+        { setType: "top", reps: 6, weightKg: 100, toFailure: true },
+        { setType: "backoff", reps: 8, weightKg: 85, toFailure: true },
+      ]);
+      const saved = await getRoutineExerciseById(db, item.id);
+      expect(saved?.sets).toEqual([
+        { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+        { setType: "top", reps: 6, weightKg: 100, toFailure: false },
+        { setType: "backoff", reps: null, weightKg: 85, toFailure: true },
+      ]);
+    });
+
     it("rejects invalid planned values", async () => {
       await addExercisesToRoutine(db, routineId, ["e1"]);
       const [item] = await getRoutineExercises(db, routineId);
       await expect(
         setRoutineExerciseSets(db, item.id, [
-          { setType: "top", reps: 0, weightKg: 100 },
+          { setType: "top", reps: 0, weightKg: 100, toFailure: false },
         ]),
       ).rejects.toThrow();
       // The transaction was rolled back: the old sets are still there.

@@ -16,6 +16,7 @@ import {
   getActiveWorkout,
   getFinishedExerciseEntries,
   getWorkoutDetail,
+  setAssistedReps,
   startWorkoutFromRoutine,
   updateWorkoutSet,
 } from "@/db/repositories/workouts";
@@ -32,10 +33,10 @@ let db: SQLiteDatabase;
 let routineId: string;
 
 const benchSets: PlannedSet[] = [
-  { setType: "warmup", reps: null, weightKg: 40 },
-  { setType: "feeder", reps: null, weightKg: 70 },
-  { setType: "top", reps: 6, weightKg: 100 },
-  { setType: "backoff", reps: 8, weightKg: 85 },
+  { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+  { setType: "feeder", reps: null, weightKg: 70, toFailure: false },
+  { setType: "top", reps: 6, weightKg: 100, toFailure: false },
+  { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
 ];
 
 beforeEach(async () => {
@@ -54,14 +55,112 @@ beforeEach(async () => {
 // Values of each set of the first exercise of a workout.
 async function benchValues(workoutId: string) {
   const detail = await getWorkoutDetail(db, workoutId);
-  return detail?.exercises[0].sets.map(({ setType, reps, weightKg }) => ({
-    setType,
-    reps,
-    weightKg,
-  }));
+  return detail?.exercises[0].sets.map(
+    ({ setType, reps, weightKg, toFailure }) => ({
+      setType,
+      reps,
+      weightKg,
+      toFailure,
+    }),
+  );
 }
 
 describe("workouts repository", () => {
+  it("carries a back-off to failure from the routine and back", async () => {
+    const [bench] = await getRoutineExercises(db, routineId);
+    await setRoutineExerciseSets(db, bench.id, [
+      { setType: "top", reps: 6, weightKg: 100, toFailure: false },
+      { setType: "backoff", reps: null, weightKg: 85, toFailure: true },
+    ]);
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    expect((await benchValues(workoutId))?.[1]).toEqual({
+      setType: "backoff",
+      reps: null,
+      weightKg: 85,
+      toFailure: true,
+    });
+
+    // Today the back-off was done with 9 reps instead.
+    const sets = (await getWorkoutDetail(db, workoutId))!.exercises[0].sets;
+    await updateWorkoutSet(db, sets[1].id, {
+      setType: "backoff",
+      reps: 9,
+      weightKg: 85,
+      toFailure: false,
+    });
+    await finishWorkout(db, workoutId);
+
+    const [after] = await getRoutineExercises(db, routineId);
+    expect(after.sets[1]).toEqual({
+      setType: "backoff",
+      reps: 9,
+      weightKg: 85,
+      toFailure: false,
+    });
+  });
+
+  it("keeps reps done with help only on top sets", async () => {
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const top = (await getWorkoutDetail(db, workoutId))!.exercises[0].sets[2];
+    await setAssistedReps(db, top.id, 2);
+    await updateWorkoutSet(db, top.id, {
+      setType: "backoff",
+      reps: 6,
+      weightKg: 100,
+      toFailure: false,
+    });
+    const detail = await getWorkoutDetail(db, workoutId);
+    expect(detail?.exercises[0].sets[2].assistedReps).toBeNull();
+  });
+
+  it("saves and removes the reps done with help of a set", async () => {
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const assisted = async () =>
+      (await getWorkoutDetail(db, workoutId))?.exercises[0].sets.map(
+        (set) => set.assistedReps,
+      );
+    expect(await assisted()).toEqual([null, null, null, null]);
+
+    const top = (await getWorkoutDetail(db, workoutId))!.exercises[0].sets[2];
+    await setAssistedReps(db, top.id, 2.5);
+    expect(await assisted()).toEqual([null, null, 2.5, null]);
+
+    // A set that becomes a feeder has no reps, so none with help either.
+    await updateWorkoutSet(db, top.id, {
+      setType: "feeder",
+      reps: null,
+      weightKg: 100,
+      toFailure: false,
+    });
+    expect(await assisted()).toEqual([null, null, null, null]);
+
+    await updateWorkoutSet(db, top.id, {
+      setType: "top",
+      reps: 6,
+      weightKg: 100,
+      toFailure: false,
+    });
+    await setAssistedReps(db, top.id, 2);
+    await updateWorkoutSet(db, top.id, {
+      setType: "top",
+      reps: 7,
+      weightKg: 100,
+      toFailure: false,
+    });
+    expect(await assisted()).toEqual([null, null, 2, null]);
+
+    await setAssistedReps(db, top.id, null);
+    expect(await assisted()).toEqual([null, null, null, null]);
+  });
+
+  it("keeps the 'maybe' note", async () => {
+    const [bench] = await getRoutineExercises(db, routineId);
+    await setRoutineExerciseProgression(db, bench.id, "maybe");
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const detail = await getWorkoutDetail(db, workoutId);
+    expect(detail?.exercises[0].progression).toBe("maybe");
+  });
+
   it("has no active workout at first", async () => {
     expect(await getActiveWorkout(db)).toBeNull();
   });
@@ -109,10 +208,10 @@ describe("workouts repository", () => {
     const second = await startWorkoutFromRoutine(db, routineId);
 
     expect(await benchValues(second)).toEqual([
-      { setType: "warmup", reps: null, weightKg: 40 },
-      { setType: "feeder", reps: null, weightKg: 70 },
-      { setType: "top", reps: 5, weightKg: 102.5 },
-      { setType: "backoff", reps: 8, weightKg: 85 },
+      { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+      { setType: "feeder", reps: null, weightKg: 70, toFailure: false },
+      { setType: "top", reps: 5, weightKg: 102.5, toFailure: false },
+      { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
     ]);
   });
 
@@ -124,6 +223,7 @@ describe("workouts repository", () => {
       setType: "top",
       reps: 4.5,
       weightKg: 102.5,
+      toFailure: false,
     });
 
     await finishWorkout(db, workoutId);
@@ -133,6 +233,7 @@ describe("workouts repository", () => {
       setType: "top",
       reps: 4.5,
       weightKg: 102.5,
+      toFailure: false,
     });
   });
 
@@ -144,6 +245,7 @@ describe("workouts repository", () => {
       setType: "top",
       reps: 4,
       weightKg: 110,
+      toFailure: false,
     });
 
     await deleteWorkout(db, workoutId);
@@ -199,6 +301,7 @@ describe("workouts repository", () => {
       setType: "top",
       reps: 5,
       weightKg: 102.5,
+      toFailure: false,
     });
     await finishWorkout(db, workoutId);
 
@@ -297,6 +400,7 @@ describe("workouts repository", () => {
         setType: "top",
         reps: 4.5,
         weightKg: 102.5,
+        toFailure: false,
       });
       expect((await benchSetsNow())[2]).toMatchObject({
         reps: 4.5,
@@ -310,11 +414,13 @@ describe("workouts repository", () => {
         setType: "feeder",
         reps: 6,
         weightKg: 90,
+        toFailure: false,
       });
       expect((await benchSetsNow())[2]).toMatchObject({
         setType: "feeder",
         reps: null,
         weightKg: 90,
+        toFailure: false,
       });
     });
 

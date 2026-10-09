@@ -8,7 +8,7 @@ import { ProgressionNote } from "@/components/progression-note";
 import { SetTypeBadge } from "@/components/set-type-badge";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/lib/labels";
 import { formatSetValues } from "@/lib/sets";
-import type { RoutineExercise } from "@/types/routine";
+import type { Progression, RoutineExercise } from "@/types/routine";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
 
@@ -22,7 +22,7 @@ type Props = {
   isLast: boolean;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
-  onProgressionPress: () => void;
+  onProgressionChange: (progression: Progression | null) => void;
 };
 
 function IconButton({
@@ -64,7 +64,7 @@ export function RoutineExerciseCard({
   isLast,
   onMove,
   onRemove,
-  onProgressionPress,
+  onProgressionChange,
 }: Props) {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
@@ -140,8 +140,9 @@ export function RoutineExerciseCard({
       </Link>
 
       <ProgressionNote
+        exerciseName={exercise.name}
         progression={item.progression}
-        onPress={onProgressionPress}
+        onChange={onProgressionChange}
       />
     </View>
   );

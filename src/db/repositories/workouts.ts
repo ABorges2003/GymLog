@@ -8,9 +8,8 @@ import {
   insertRoutineExercises,
   updateRoutineSetValues,
 } from "@/db/repositories/routines";
-import { setTypeHasReps } from "@/lib/sets";
 import type { ExerciseEntry } from "@/lib/progress";
-import { DEFAULT_SETS } from "@/lib/sets";
+import { DEFAULT_SETS, normalizeSet, setTypeHasAssistedReps } from "@/lib/sets";
 import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
 import type { PlannedSet, SetType } from "@/types/set";
@@ -43,6 +42,7 @@ type WorkoutSetRow = {
   set_type: SetType;
   reps: number | null;
   weight_kg: number | null;
+  to_failure: number;
 };
 
 // The workout in progress (finished_at is null), if any.
@@ -101,14 +101,15 @@ export async function startWorkoutFromRoutine(
         // planned_* keep the starting values, the "before" of this workout.
         await txn.runAsync(
           `INSERT INTO workout_sets
-             (id, workout_exercise_id, position, set_type, reps, weight_kg, planned_reps, planned_weight_kg)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+             (id, workout_exercise_id, position, set_type, reps, weight_kg, to_failure, planned_reps, planned_weight_kg)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           randomUUID(),
           workoutExerciseId,
           setIndex + 1,
           set.setType,
           set.reps,
           set.weightKg,
+          set.toFailure ? 1 : 0,
           set.reps,
           set.weightKg,
         );
@@ -159,8 +160,11 @@ export async function getWorkoutDetail(
      ORDER BY we.position`,
     id,
   );
-  const sets = await db.getAllAsync<WorkoutSetRow>(
-    `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg
+  const sets = await db.getAllAsync<
+    WorkoutSetRow & { assisted_reps: number | null }
+  >(
+    `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg,
+            ws.to_failure, ws.assisted_reps
      FROM workout_sets ws
      JOIN workout_exercises we ON we.id = ws.workout_exercise_id
      WHERE we.workout_id = ?
@@ -185,6 +189,8 @@ export async function getWorkoutDetail(
           setType: set.set_type,
           reps: set.reps,
           weightKg: set.weight_kg,
+          toFailure: set.to_failure === 1,
+          assistedReps: set.assisted_reps,
         })),
       routineExerciseId: exercise.routine_exercise_id,
       progression: exercise.progression,
@@ -192,17 +198,37 @@ export async function getWorkoutDetail(
   };
 }
 
-// Changes a logged set. Warm-ups and feeders never keep reps.
+// Reps a set had with help (null removes them).
+export async function setAssistedReps(
+  db: SQLiteDatabase,
+  setId: string,
+  reps: number | null,
+): Promise<void> {
+  await db.runAsync(
+    "UPDATE workout_sets SET assisted_reps = ? WHERE id = ?",
+    reps,
+    setId,
+  );
+}
+
+// Changes a logged set (see normalizeSet). Reps done with help are kept only
+// on top sets.
 export async function updateWorkoutSet(
   db: SQLiteDatabase,
   setId: string,
-  { setType, reps, weightKg }: PlannedSet,
+  values: PlannedSet,
 ): Promise<void> {
+  const { setType, reps, weightKg, toFailure } = normalizeSet(values);
   await db.runAsync(
-    "UPDATE workout_sets SET set_type = ?, reps = ?, weight_kg = ? WHERE id = ?",
+    `UPDATE workout_sets
+     SET set_type = ?, reps = ?, weight_kg = ?, to_failure = ?,
+         assisted_reps = CASE WHEN ? THEN assisted_reps ELSE NULL END
+     WHERE id = ?`,
     setType,
-    setTypeHasReps(setType) ? reps : null,
+    reps,
     weightKg,
+    toFailure ? 1 : 0,
+    setTypeHasAssistedReps(setType) ? 1 : 0,
     setId,
   );
 }
@@ -214,7 +240,7 @@ export async function addWorkoutSet(
 ): Promise<void> {
   await db.withExclusiveTransactionAsync(async (txn) => {
     const last = await txn.getFirstAsync<WorkoutSetRow>(
-      `SELECT id, workout_exercise_id, position, set_type, reps, weight_kg
+      `SELECT id, workout_exercise_id, position, set_type, reps, weight_kg, to_failure
        FROM workout_sets
        WHERE workout_exercise_id = ?
        ORDER BY position DESC
@@ -222,14 +248,15 @@ export async function addWorkoutSet(
       workoutExerciseId,
     );
     await txn.runAsync(
-      `INSERT INTO workout_sets (id, workout_exercise_id, position, set_type, reps, weight_kg)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO workout_sets (id, workout_exercise_id, position, set_type, reps, weight_kg, to_failure)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       randomUUID(),
       workoutExerciseId,
       (last?.position ?? 0) + 1,
       last?.set_type ?? "top",
       last?.reps ?? null,
       last?.weight_kg ?? null,
+      last?.to_failure ?? 0,
     );
   });
 }
@@ -312,7 +339,7 @@ export async function getFinishedExerciseEntries(
     }
   >(
     `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg,
-            ws.planned_reps, ws.planned_weight_kg
+            ws.to_failure, ws.planned_reps, ws.planned_weight_kg
      FROM workout_sets ws
      JOIN workout_exercises we ON we.id = ws.workout_exercise_id
      JOIN workouts w ON w.id = we.workout_id
@@ -326,7 +353,12 @@ export async function getFinishedExerciseEntries(
     const id = set.workout_exercise_id;
     done.set(id, [
       ...(done.get(id) ?? []),
-      { setType: set.set_type, reps: set.reps, weightKg: set.weight_kg },
+      {
+        setType: set.set_type,
+        reps: set.reps,
+        weightKg: set.weight_kg,
+        toFailure: set.to_failure === 1,
+      },
     ]);
     planned.set(id, [
       ...(planned.get(id) ?? []),
@@ -334,6 +366,7 @@ export async function getFinishedExerciseEntries(
         setType: set.set_type,
         reps: set.planned_reps,
         weightKg: set.planned_weight_kg,
+        toFailure: false,
       },
     ]);
   }

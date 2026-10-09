@@ -20,6 +20,10 @@ export type WorkoutSet = {
   setType: SetType;
   reps: number | null;
   weightKg: number | null;
+  // Back-off done to failure (reps is then null).
+  toFailure: boolean;
+  // Extra reps done with a spotter's help (top sets only), or null.
+  assistedReps: number | null;
 };
 
 export type WorkoutExercise = {

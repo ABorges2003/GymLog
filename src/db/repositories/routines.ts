@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { toExercise, type ExerciseRow } from "@/db/repositories/exercises";
 import { sortRoutines, uniqueMuscleGroups } from "@/lib/routines";
-import { DEFAULT_SETS } from "@/lib/sets";
+import { DEFAULT_SETS, normalizeSet } from "@/lib/sets";
 import type { MuscleGroup } from "@/types/exercise";
 import type { PlannedSet, SetType } from "@/types/set";
 import type {
@@ -149,8 +149,9 @@ export async function getRoutineExercises(
     set_type: SetType;
     reps: number | null;
     weight_kg: number | null;
+    to_failure: number;
   }>(
-    `SELECT rs.routine_exercise_id, rs.set_type, rs.reps, rs.weight_kg
+    `SELECT rs.routine_exercise_id, rs.set_type, rs.reps, rs.weight_kg, rs.to_failure
      FROM routine_sets rs
      JOIN routine_exercises re ON re.id = rs.routine_exercise_id
      WHERE re.routine_id = ?
@@ -167,6 +168,7 @@ export async function getRoutineExercises(
         setType: set.set_type,
         reps: set.reps,
         weightKg: set.weight_kg,
+        toFailure: set.to_failure === 1,
       })),
     progression: row.progression,
   }));
@@ -191,16 +193,18 @@ async function insertRoutineSets(
   routineExerciseId: string,
   sets: PlannedSet[],
 ): Promise<void> {
-  for (const [index, set] of sets.entries()) {
+  for (const [index, values] of sets.entries()) {
+    const set = normalizeSet(values);
     await db.runAsync(
-      `INSERT INTO routine_sets (id, routine_exercise_id, position, set_type, reps, weight_kg)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO routine_sets (id, routine_exercise_id, position, set_type, reps, weight_kg, to_failure)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       randomUUID(),
       routineExerciseId,
       index + 1,
       set.setType,
       set.reps,
       set.weightKg,
+      set.toFailure ? 1 : 0,
     );
   }
 }
@@ -316,7 +320,7 @@ export async function setRoutineExerciseProgression(
   );
 }
 
-// Updates the reps and weight of a routine exercise's sets, matched by
+// Updates the reps, weight and failure mark of a routine exercise's sets, matched by
 // position (1, 2, 3...). Does not change the structure. No transaction of its
 // own, so it can run inside another one.
 export async function updateRoutineSetValues(
@@ -326,9 +330,10 @@ export async function updateRoutineSetValues(
 ): Promise<void> {
   for (const [index, set] of sets.entries()) {
     await db.runAsync(
-      "UPDATE routine_sets SET reps = ?, weight_kg = ? WHERE routine_exercise_id = ? AND position = ?",
+      "UPDATE routine_sets SET reps = ?, weight_kg = ?, to_failure = ? WHERE routine_exercise_id = ? AND position = ?",
       set.reps,
       set.weightKg,
+      set.toFailure ? 1 : 0,
       routineExerciseId,
       index + 1,
     );

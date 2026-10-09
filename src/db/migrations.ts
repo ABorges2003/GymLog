@@ -242,15 +242,83 @@ const migrations: Migration[] = [
         ADD COLUMN measure TEXT NOT NULL DEFAULT 'g' CHECK (measure IN ('g', 'ml'));
     `);
   },
+
+  // v12: a third note, "maybe" (probably increase), and reps done with help
+  // in a workout exercise. SQLite cannot change a CHECK, so routine_exercises
+  // is rebuilt. Its routine_sets are kept aside, deleted and put back:
+  // dropping the table may or may not cascade to them, depending on whether
+  // foreign keys are on in the migration's connection (on a phone, the
+  // transaction runs on its own connection, where they are off).
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE routine_sets_copy AS SELECT * FROM routine_sets;
+      DELETE FROM routine_sets;
+
+      CREATE TABLE routine_exercises_new (
+        id TEXT PRIMARY KEY NOT NULL,
+        routine_id TEXT NOT NULL REFERENCES routines (id) ON DELETE CASCADE,
+        exercise_id TEXT NOT NULL REFERENCES exercises (id) ON DELETE RESTRICT,
+        position INTEGER NOT NULL,
+        target_sets INTEGER CHECK (target_sets > 0),
+        target_reps INTEGER CHECK (target_reps > 0),
+        progression TEXT CHECK (progression IS NULL OR progression IN ('keep', 'maybe', 'increase'))
+      );
+
+      INSERT INTO routine_exercises_new (id, routine_id, exercise_id, position, target_sets, target_reps, progression)
+      SELECT id, routine_id, exercise_id, position, target_sets, target_reps, progression
+      FROM routine_exercises;
+
+      DROP TABLE routine_exercises;
+      ALTER TABLE routine_exercises_new RENAME TO routine_exercises;
+
+      CREATE INDEX idx_routine_exercises_routine ON routine_exercises (routine_id);
+      CREATE INDEX idx_routine_exercises_exercise ON routine_exercises (exercise_id);
+
+      INSERT INTO routine_sets (id, routine_exercise_id, position, set_type, reps, weight_kg)
+      SELECT id, routine_exercise_id, position, set_type, reps, weight_kg
+      FROM routine_sets_copy;
+      DROP TABLE routine_sets_copy;
+
+      ALTER TABLE workout_exercises
+        ADD COLUMN assisted_reps REAL CHECK (assisted_reps IS NULL OR assisted_reps > 0);
+    `);
+  },
+
+  // v13: reps done with help belong to each set, not to the whole exercise.
+  // Only test builds had the v12 column, so its values are not kept.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE workout_exercises DROP COLUMN assisted_reps;
+      ALTER TABLE workout_sets
+        ADD COLUMN assisted_reps REAL CHECK (assisted_reps IS NULL OR assisted_reps > 0);
+    `);
+  },
+
+  // v14: back-off sets done to failure (then without reps), planned in the
+  // routine and logged in the workout. Reps done with help are now for top
+  // sets only.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE routine_sets
+        ADD COLUMN to_failure INTEGER NOT NULL DEFAULT 0 CHECK (to_failure IN (0, 1));
+      ALTER TABLE workout_sets
+        ADD COLUMN to_failure INTEGER NOT NULL DEFAULT 0 CHECK (to_failure IN (0, 1));
+      UPDATE workout_sets SET assisted_reps = NULL WHERE set_type <> 'top';
+    `);
+  },
 ];
 
-export async function migrate(db: SQLiteDatabase): Promise<void> {
+// Upgrades the schema to the latest version (tests may stop at an older one).
+export async function migrate(
+  db: SQLiteDatabase,
+  targetVersion: number = migrations.length,
+): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>(
     "PRAGMA user_version",
   );
   const currentVersion = row?.user_version ?? 0;
 
-  for (let version = currentVersion; version < migrations.length; version++) {
+  for (let version = currentVersion; version < targetVersion; version++) {
     const runMigration = migrations[version];
     await db.withExclusiveTransactionAsync(async (txn) => {
       await runMigration(txn);

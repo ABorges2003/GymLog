@@ -14,6 +14,7 @@ export const DEFAULT_SETS: PlannedSet[] = DEFAULT_SET_TYPES.map((setType) => ({
   setType,
   reps: null,
   weightKg: null,
+  toFailure: false,
 }));
 
 export const MAX_SETS_PER_EXERCISE = 12;
@@ -79,13 +80,42 @@ export function formatWeight(weightKg: number): string {
   return String(Math.round(weightKg * 100) / 100).replace(".", ",");
 }
 
+// Only back-off sets can be done to failure (instead of a number of reps).
+export function setTypeCanFail(setType: SetType): boolean {
+  return setType === "backoff";
+}
+
+// Only top sets can have reps done with help.
+export function setTypeHasAssistedReps(setType: SetType): boolean {
+  return setType === "top";
+}
+
+// A set as it is stored: reps only on top and back-off sets, and none on a
+// back-off done to failure; only back-offs can be done to failure.
+export function normalizeSet(set: PlannedSet): PlannedSet {
+  const toFailure = set.toFailure && setTypeCanFail(set.setType);
+  return {
+    setType: set.setType,
+    reps: setTypeHasReps(set.setType) && !toFailure ? set.reps : null,
+    weightKg: set.weightKg,
+    toFailure,
+  };
+}
+
 // Short summary of a set's values, weight first: "100 kg × 6", "100 kg",
-// "6 reps" or "". Reps are only shown for set types that have them.
+// "6 reps", "85 kg × falha", "até à falha" or "". Reps are only shown for set
+// types that have them.
 export function formatSetValues({
   setType,
   reps,
   weightKg,
+  toFailure,
 }: PlannedSet): string {
+  if (toFailure && setTypeCanFail(setType)) {
+    return weightKg === null
+      ? "até à falha"
+      : `${formatWeight(weightKg)} kg × falha`;
+  }
   const shownReps = setTypeHasReps(setType) ? reps : null;
   if (weightKg !== null && shownReps !== null) {
     return `${formatWeight(weightKg)} kg × ${formatReps(shownReps)}`;

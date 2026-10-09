@@ -43,11 +43,13 @@ function createAdapter(db: DatabaseSync): SQLiteDatabase {
   return adapter as unknown as SQLiteDatabase;
 }
 
-// Fresh database with every migration applied.
-export async function createTestDatabase(): Promise<SQLiteDatabase> {
+// Fresh database with every migration applied, or only up to `version`.
+export async function createTestDatabase(
+  version?: number,
+): Promise<SQLiteDatabase> {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON;");
   const adapter = createAdapter(db);
-  await migrate(adapter);
+  await migrate(adapter, version);
   return adapter;
 }

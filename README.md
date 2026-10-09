@@ -44,13 +44,15 @@ More screenshots in the [user guide](docs/user-guide.md).
 | Manage exercises | Create, edit and archive my own exercises (the list starts empty) |
 | Favorite exercises | Star exercises so they appear first in lists |
 | Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps). The routine done most recently is listed first |
-| Note for next week | Per exercise: green "keep the weight" or red "increase the weight" |
+| Note for next week | Per exercise: green "keep the weight", yellow "probably increase" or red "increase the weight" |
 | Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets, add exercises (they are added to the routine too) |
 | Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after |
 | Workout summary | After finishing: exercises, sets, volume and progressions |
 | Body weight log | One entry per day (today or past days); saving the same day again updates it |
 | Body weight chart | Daily values and a line at the weight goal; the summary shows the 7-day average and how much is left to the goal |
-| Backup | Export all data to a JSON file and import it back |
+| Backup | Export to a JSON file and import it back, choosing the parts: workouts, body weight and/or diet |
+| Assisted reps | During a workout, a hand icon at the end of each top set logs the reps done with help ("100 kg × 6 +2") |
+| Back-off to failure | A flame on each back-off set (in the routine and in the workout) marks it done to failure instead of a number of reps ("85 kg × falha") |
 | Diet log | Day by day (‹ › to change day), 6 meals (Pequeno-almoço … Ceia): add foods by amount; kcal left and a bar per macro (red when over) |
 | Diet goals | Daily kcal (required) and protein / carbs / fat (optional) |
 | Food library | My own foods with kcal and macros per X grams, per X ml or per unit, with search; editing a food never changes days already logged |
@@ -104,11 +106,11 @@ GymLog/
 |-------|-------------|
 | exercises | id, name, muscle_group, equipment, is_custom (unused), is_archived, is_favorite |
 | routines | id, name, created_at |
-| routine_exercises | id, routine_id, exercise_id, position, progression (keep, increase or empty), target_sets (unused), target_reps (unused) |
-| routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (optional), weight_kg (optional) |
+| routine_exercises | id, routine_id, exercise_id, position, progression (keep, maybe, increase or empty), target_sets (unused), target_reps (unused) |
+| routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (optional), weight_kg (optional), to_failure (back-off done to failure, then no reps) |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
 | workout_exercises | id, workout_id, exercise_id, position |
-| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in), planned_reps and planned_weight_kg (values the set started with) |
+| workout_sets | id, workout_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (only top/backoff), weight_kg (empty until filled in), planned_reps and planned_weight_kg (values the set started with), to_failure (back-off done to failure), assisted_reps (reps done with help, top sets only) |
 | body_weight_entries | id, date (unique), weight_kg |
 | app_settings | key, value (body weight goal, theme, diet goals) |
 | foods | id, name, basis (grams or unit), measure (g or ml), basis_amount, kcal, protein_g, carbs_g, fat_g, is_archived |
@@ -137,7 +139,7 @@ erDiagram
         TEXT routine_id FK
         TEXT exercise_id FK
         INTEGER position
-        TEXT progression "keep | increase"
+        TEXT progression "keep | maybe | increase"
         INTEGER target_sets
         INTEGER target_reps
     }
@@ -148,6 +150,7 @@ erDiagram
         TEXT set_type
         INTEGER reps "optional"
         REAL weight_kg "optional"
+        INTEGER to_failure "0 | 1"
     }
     exercises {
         TEXT id PK
@@ -180,6 +183,8 @@ erDiagram
         REAL weight_kg "optional"
         REAL planned_reps "starting value"
         REAL planned_weight_kg "starting value"
+        INTEGER to_failure "0 | 1"
+        REAL assisted_reps "optional"
     }
 ```
 
@@ -271,7 +276,7 @@ The `preview` profile in `eas.json` is configured to generate an **APK**. Downlo
  
 ## 💾 Backups
  
-All data lives only on the phone. Use **Settings → Export backup** regularly and save the file to Google Drive or email. **Import backup** restores everything on a new phone or after reinstalling.
+All data lives only on the phone. Use **Settings → Export backup** regularly and save the file to Google Drive or email. **Import backup** restores everything on a new phone or after reinstalling. Both let you choose the parts (workouts, body weight, diet); importing a part replaces only that part.
  
 ## 📘 User guide
  

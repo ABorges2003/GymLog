@@ -4,6 +4,7 @@ import {
   formatReps,
   formatSetValues,
   formatWeight,
+  normalizeSet,
   parseReps,
   parseWeight,
   setTypeHasReps,
@@ -110,7 +111,12 @@ describe("setTypeHasReps", () => {
 
 describe("formatSetValues", () => {
   it("shows weight first, then reps", () => {
-    const set = { setType: "top" as const, reps: 6, weightKg: 102.5 };
+    const set = {
+      setType: "top" as const,
+      reps: 6,
+      weightKg: 102.5,
+      toFailure: false,
+    };
     expect(formatSetValues(set)).toBe("102,5 kg × 6");
     expect(formatSetValues({ ...set, reps: 4.5 })).toBe("102,5 kg × 4,5");
     expect(formatSetValues({ ...set, reps: null })).toBe("102,5 kg");
@@ -119,11 +125,61 @@ describe("formatSetValues", () => {
   });
 
   it("never shows reps for warm-ups and feeders", () => {
-    expect(formatSetValues({ setType: "feeder", reps: 3, weightKg: 70 })).toBe(
-      "70 kg",
-    );
     expect(
-      formatSetValues({ setType: "warmup", reps: 15, weightKg: null }),
+      formatSetValues({
+        setType: "feeder",
+        reps: 3,
+        weightKg: 70,
+        toFailure: false,
+      }),
+    ).toBe("70 kg");
+    expect(
+      formatSetValues({
+        setType: "warmup",
+        reps: 15,
+        weightKg: null,
+        toFailure: false,
+      }),
     ).toBe("");
+  });
+});
+
+describe("back-offs to failure", () => {
+  it("are shown as falha", () => {
+    expect(
+      formatSetValues({
+        setType: "backoff",
+        reps: null,
+        weightKg: 85,
+        toFailure: true,
+      }),
+    ).toBe("85 kg × falha");
+    expect(
+      formatSetValues({
+        setType: "backoff",
+        reps: null,
+        weightKg: null,
+        toFailure: true,
+      }),
+    ).toBe("até à falha");
+  });
+
+  it("only exist for back-offs, and have no reps", () => {
+    expect(
+      normalizeSet({ setType: "top", reps: 6, weightKg: 100, toFailure: true }),
+    ).toEqual({ setType: "top", reps: 6, weightKg: 100, toFailure: false });
+    expect(
+      normalizeSet({
+        setType: "backoff",
+        reps: 8,
+        weightKg: 85,
+        toFailure: true,
+      }),
+    ).toEqual({
+      setType: "backoff",
+      reps: null,
+      weightKg: 85,
+      toFailure: true,
+    });
   });
 });

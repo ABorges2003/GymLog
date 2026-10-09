@@ -10,6 +10,7 @@ import {
   finishWorkout,
   getActiveWorkout,
   getWorkoutDetail,
+  setAssistedReps,
   startWorkoutFromRoutine,
   updateWorkoutSet,
 } from "@/db/repositories/workouts";
@@ -103,6 +104,14 @@ export function useActiveWorkout() {
     [db, reload],
   );
 
+  const setAssisted = useCallback(
+    async (setId: string, reps: number | null) => {
+      await setAssistedReps(db, setId, reps);
+      await reload();
+    },
+    [db, reload],
+  );
+
   return {
     detail,
     loading,
@@ -114,5 +123,6 @@ export function useActiveWorkout() {
     addSet,
     deleteSet,
     setProgression,
+    setAssisted,
   };
 }

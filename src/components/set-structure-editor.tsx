@@ -10,6 +10,12 @@ import {
   View,
 } from "react-native";
 
+import {
+  FAILURE_TOGGLE_WIDTH,
+  FailureBox,
+  FailureToggle,
+  REPS_LABEL_WIDTH,
+} from "@/components/failure-toggle";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import {
   DEFAULT_SETS,
@@ -21,6 +27,7 @@ import {
   formatWeight,
   parseReps,
   parseWeight,
+  setTypeCanFail,
   setTypeHasReps,
   validateSetCount,
 } from "@/lib/sets";
@@ -34,6 +41,8 @@ type DraftSet = {
   setType: SetType;
   repsText: string;
   weightText: string;
+  // Only used by back-off sets.
+  toFailure: boolean;
 };
 
 type Props = {
@@ -42,7 +51,8 @@ type Props = {
   onSave: (sets: PlannedSet[]) => Promise<void>;
 };
 
-// Edits the planned sets (type, reps, weight) of one exercise.
+// Edits the planned sets (type, reps, weight) of one exercise. Back-offs can
+// be planned to failure instead of a number of reps.
 export function SetStructureEditor({ initialSets, onSave }: Props) {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
@@ -53,6 +63,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
     setType: set.setType,
     repsText: set.reps === null ? "" : formatReps(set.reps),
     weightText: set.weightKg === null ? "" : formatWeight(set.weightKg),
+    toFailure: set.toFailure,
   });
 
   const [drafts, setDrafts] = useState<DraftSet[]>(() =>
@@ -96,7 +107,12 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
         ...current,
         last
           ? { ...last, key: nextKey.current++ }
-          : toDraft({ setType: "top", reps: null, weightKg: null }),
+          : toDraft({
+              setType: "top",
+              reps: null,
+              weightKg: null,
+              toFailure: false,
+            }),
       ];
     });
   }
@@ -109,7 +125,8 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
     }
     const sets: PlannedSet[] = [];
     for (const draft of drafts) {
-      const hasReps = setTypeHasReps(draft.setType);
+      const failed = draft.toFailure && setTypeCanFail(draft.setType);
+      const hasReps = setTypeHasReps(draft.setType) && !failed;
       const reps = hasReps ? parseReps(draft.repsText) : null;
       const weight = parseWeight(draft.weightText);
       if ((reps && !reps.ok) || !weight.ok) {
@@ -118,9 +135,10 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
       }
       sets.push({
         setType: draft.setType,
-        // Warm-ups and feeders never store reps.
+        // Warm-ups, feeders and back-offs to failure never store reps.
         reps: reps?.ok ? reps.value : null,
         weightKg: weight.value,
+        toFailure: failed,
       });
     }
     setError(null);
@@ -151,7 +169,9 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
 
         {drafts.map((draft, index) => {
           const hasReps = setTypeHasReps(draft.setType);
-          const repsInvalid = hasReps && !parseReps(draft.repsText).ok;
+          const failed = draft.toFailure && setTypeCanFail(draft.setType);
+          const repsInvalid =
+            hasReps && !failed && !parseReps(draft.repsText).ok;
           const weightInvalid = !parseWeight(draft.weightText).ok;
           return (
             <View
@@ -223,26 +243,67 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
                 {hasReps ? (
                   <>
                     <Text style={styles.unit}>×</Text>
-                    <TextInput
-                      style={[styles.input, repsInvalid && styles.inputError]}
-                      value={draft.repsText}
-                      onChangeText={(repsText) =>
-                        update(draft.key, { repsText })
-                      }
-                      keyboardType="decimal-pad"
-                      placeholder="—"
-                      placeholderTextColor={c.textFaint}
-                      maxLength={5}
-                      selectTextOnFocus
-                      onFocus={() => setFocusedKey(draft.key)}
-                      onBlur={() => setFocusedKey(null)}
-                      accessibilityLabel={`Reps da série ${index + 1}`}
-                    />
-                    <Text style={styles.unit}>reps</Text>
+                    {failed ? (
+                      <>
+                        <FailureBox
+                          onPress={() =>
+                            update(draft.key, { toFailure: false })
+                          }
+                          minHeight={48}
+                        />
+                        {/* Invisible: keeps the row as wide as one with reps. */}
+                        <Text
+                          style={[styles.unit, styles.repsLabel, styles.hidden]}
+                        >
+                          reps
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <TextInput
+                          style={[
+                            styles.input,
+                            repsInvalid && styles.inputError,
+                          ]}
+                          value={draft.repsText}
+                          onChangeText={(repsText) =>
+                            update(draft.key, { repsText })
+                          }
+                          keyboardType="decimal-pad"
+                          placeholder="—"
+                          placeholderTextColor={c.textFaint}
+                          maxLength={5}
+                          selectTextOnFocus
+                          onFocus={() => setFocusedKey(draft.key)}
+                          onBlur={() => setFocusedKey(null)}
+                          accessibilityLabel={`Reps da série ${index + 1}`}
+                        />
+                        <Text
+                          style={[styles.unit, styles.repsLabel]}
+                          numberOfLines={1}
+                        >
+                          reps
+                        </Text>
+                      </>
+                    )}
+                    {setTypeCanFail(draft.setType) ? (
+                      <FailureToggle
+                        value={failed}
+                        onChange={(toFailure) =>
+                          update(draft.key, { toFailure })
+                        }
+                        label={`série ${index + 1}`}
+                      />
+                    ) : (
+                      <View style={styles.togglePlaceholder} />
+                    )}
                   </>
                 ) : (
                   // Keeps the weight input the same width as in rows with reps.
-                  <View style={styles.repsPlaceholder} />
+                  <>
+                    <View style={styles.repsPlaceholder} />
+                    <View style={styles.togglePlaceholder} />
+                  </>
                 )}
               </View>
             </View>
@@ -388,6 +449,16 @@ function createStyles(c: ThemeColors) {
     },
     repsPlaceholder: {
       flex: 1,
+    },
+    // Same width as FailureToggle.
+    togglePlaceholder: {
+      width: FAILURE_TOGGLE_WIDTH,
+    },
+    hidden: {
+      opacity: 0,
+    },
+    repsLabel: {
+      width: REPS_LABEL_WIDTH,
     },
     buttons: {
       gap: 10,

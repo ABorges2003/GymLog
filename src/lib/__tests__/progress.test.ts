@@ -17,18 +17,19 @@ const top = (weightKg: number | null, reps: number | null): PlannedSet => ({
   setType: "top",
   weightKg,
   reps,
+  toFailure: false,
 });
 
 describe("bestSet", () => {
   it("picks the heaviest top set, more reps on a tie", () => {
     expect(
       bestSet([
-        { setType: "warmup", reps: null, weightKg: 40 },
-        { setType: "feeder", reps: null, weightKg: 110 },
+        { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+        { setType: "feeder", reps: null, weightKg: 110, toFailure: false },
         top(100, 6),
         top(102.5, 4),
         top(102.5, 5),
-        { setType: "backoff", reps: 8, weightKg: 85 },
+        { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
       ]),
     ).toEqual({ weightKg: 102.5, reps: 5 });
   });
@@ -36,8 +37,8 @@ describe("bestSet", () => {
   it("uses the heaviest set when there is no top set", () => {
     expect(
       bestSet([
-        { setType: "warmup", reps: null, weightKg: 20 },
-        { setType: "backoff", reps: 10, weightKg: 30 },
+        { setType: "warmup", reps: null, weightKg: 20, toFailure: false },
+        { setType: "backoff", reps: 10, weightKg: 30, toFailure: false },
       ]),
     ).toEqual({ weightKg: 30, reps: 10 });
   });
@@ -45,7 +46,10 @@ describe("bestSet", () => {
   it("ignores sets without weight", () => {
     expect(bestSet([top(null, 6)])).toBeNull();
     expect(
-      bestSet([top(null, 6), { setType: "feeder", reps: null, weightKg: 80 }]),
+      bestSet([
+        top(null, 6),
+        { setType: "feeder", reps: null, weightKg: 80, toFailure: false },
+      ]),
     ).toEqual({ weightKg: 80, reps: null });
   });
 });
@@ -274,10 +278,10 @@ describe("summarizeWorkout", () => {
       summarizeWorkout([
         {
           sets: [
-            { setType: "warmup", reps: null, weightKg: 40 },
-            { setType: "feeder", reps: null, weightKg: 80 },
+            { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+            { setType: "feeder", reps: null, weightKg: 80, toFailure: false },
             top(100, 6),
-            { setType: "backoff", reps: 8, weightKg: 85 },
+            { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
           ],
         },
         { sets: [top(60, 8), top(null, null)] },

@@ -6,6 +6,7 @@ import { ExerciseHistoryButton } from "@/components/exercise-history-button";
 import { ProgressionNote } from "@/components/progression-note";
 import { WorkoutSetRow } from "@/components/workout-set-row";
 import { MAX_SETS_PER_EXERCISE } from "@/lib/sets";
+import type { Progression } from "@/types/routine";
 import type { PlannedSet } from "@/types/set";
 import type { WorkoutExercise } from "@/types/workout";
 import type { ThemeColors } from "@/theme/colors";
@@ -20,14 +21,15 @@ type Props = {
   onUpdateSet: (setId: string, values: PlannedSet) => void;
   onAddSet: () => void;
   onDeleteSet: (setId: string) => void;
+  onAssistedRepsChange: (setId: string, reps: number | null) => void;
   // null when the exercise is no longer in the routine (no note possible).
-  onProgressionPress: (() => void) | null;
+  onProgressionChange: ((progression: Progression | null) => void) | null;
   // An input got focus; `offsetY` is the set row's position inside the card.
   onInputFocus: (offsetY: number) => void;
 };
 
-// One exercise of the workout in progress: editable sets and the note for
-// next week.
+// One exercise of the workout in progress: editable sets (with reps done
+// with help) and the note for next week.
 export function WorkoutExerciseCard({
   item,
   hasHistory,
@@ -35,7 +37,8 @@ export function WorkoutExerciseCard({
   onUpdateSet,
   onAddSet,
   onDeleteSet,
-  onProgressionPress,
+  onAssistedRepsChange,
+  onProgressionChange,
   onInputFocus,
 }: Props) {
   const c = useColors();
@@ -72,7 +75,11 @@ export function WorkoutExerciseCard({
             <WorkoutSetRow
               set={set}
               index={index}
+              exerciseName={item.exercise.name}
               onSave={(values) => onUpdateSet(set.id, values)}
+              onAssistedRepsChange={(reps) =>
+                onAssistedRepsChange(set.id, reps)
+              }
               onDelete={() => onDeleteSet(set.id)}
               onFocus={() =>
                 onInputFocus(setsY.current + (rowY.current.get(set.id) ?? 0))
@@ -95,11 +102,12 @@ export function WorkoutExerciseCard({
         <Text style={styles.addText}>Série</Text>
       </Pressable>
 
-      {onProgressionPress && (
+      {onProgressionChange && (
         <View style={styles.note}>
           <ProgressionNote
+            exerciseName={item.exercise.name}
             progression={item.progression}
-            onPress={onProgressionPress}
+            onChange={onProgressionChange}
           />
         </View>
       )}

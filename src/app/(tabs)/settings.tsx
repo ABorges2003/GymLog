@@ -20,6 +20,10 @@ import {
   type MuscleGroupCount,
   type TableInfo,
 } from "@/db/repositories/diagnostics";
+import {
+  BackupPartsPopup,
+  type BackupRequest,
+} from "@/components/backup-parts-popup";
 import { FilterChips, type ChipOption } from "@/components/filter-chips";
 import { useBackup } from "@/hooks/use-backup";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
@@ -47,6 +51,8 @@ export default function SettingsScreen() {
   const [exerciseCounts, setExerciseCounts] = useState<MuscleGroupCount[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"export" | "import" | null>(null);
+  // The popup to choose what to export or import, while open.
+  const [request, setRequest] = useState<BackupRequest | null>(null);
 
   const loadDiagnostics = useCallback(() => {
     Promise.all([
@@ -64,7 +70,7 @@ export default function SettingsScreen() {
 
   useFocusEffect(loadDiagnostics);
 
-  const { exportBackup, importBackup } = useBackup(loadDiagnostics);
+  const { exportBackup, pickBackup, importBackup } = useBackup(loadDiagnostics);
 
   async function run(kind: "export" | "import", action: () => Promise<void>) {
     setBusy(kind);
@@ -106,13 +112,13 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Backup</Text>
         <Text style={styles.hint}>
-          Guarda todos os teus exercícios, rotinas e treinos num ficheiro
-          (Google Drive, email...). Num telemóvel novo ou depois de reinstalar,
-          importa esse ficheiro para recuperar tudo.
+          Guarda os teus treinos, peso e dieta num ficheiro (Google Drive,
+          email...). Num telemóvel novo ou depois de reinstalar, importa esse
+          ficheiro para recuperar tudo. Podes escolher só uma parte.
         </Text>
 
         <Pressable
-          onPress={() => run("export", exportBackup)}
+          onPress={() => setRequest({ kind: "export" })}
           disabled={busy !== null}
           style={[styles.button, styles.primaryButton, busy && styles.disabled]}
           accessibilityRole="button"
@@ -130,7 +136,12 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => run("import", importBackup)}
+          onPress={() =>
+            run("import", async () => {
+              const backup = await pickBackup();
+              if (backup) setRequest({ kind: "import", backup });
+            })
+          }
           disabled={busy !== null}
           style={[
             styles.button,
@@ -149,6 +160,21 @@ export default function SettingsScreen() {
           )}
         </Pressable>
       </View>
+
+      {request && (
+        <BackupPartsPopup
+          request={request}
+          onClose={() => setRequest(null)}
+          onConfirm={(parts) => {
+            setRequest(null);
+            if (request.kind === "export") {
+              run("export", () => exportBackup(parts));
+            } else {
+              run("import", () => importBackup(request.backup, parts));
+            }
+          }}
+        />
+      )}
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Base de dados</Text>

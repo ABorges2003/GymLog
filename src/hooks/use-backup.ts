@@ -9,13 +9,14 @@ import { Alert } from "react-native";
 import {
   getSchemaVersion,
   readAllTables,
-  replaceAllData,
+  replaceData,
 } from "@/db/repositories/backup";
 import {
   backupFileName,
   createBackup,
-  describeBackup,
   parseBackup,
+  type Backup,
+  type BackupPart,
 } from "@/lib/backup";
 
 // Reads a picked file's text. The picker gives a content:// URI (not copied:
@@ -38,32 +39,42 @@ async function readPickedFile(uri: string): Promise<string> {
   throw lastError;
 }
 
-// Export to a JSON file shared with any app (Drive, email...), and import it
-// back replacing all data. `onImported` runs after a successful import.
+// Export the chosen parts to a JSON file shared with any app (Drive,
+// email...), and import parts of such a file back. `onImported` runs after a
+// successful import.
 export function useBackup(onImported: () => void) {
   const db = useSQLiteContext();
 
-  const exportBackup = useCallback(async () => {
-    const backup = createBackup(
-      await readAllTables(db),
-      await getSchemaVersion(db),
-    );
-    const file = new File(Paths.cache, backupFileName());
-    if (file.exists) file.delete();
-    file.create();
-    file.write(JSON.stringify(backup));
+  const exportBackup = useCallback(
+    async (parts: BackupPart[]) => {
+      const backup = createBackup(
+        await readAllTables(db),
+        await getSchemaVersion(db),
+        parts,
+      );
+      const file = new File(Paths.cache, backupFileName());
+      if (file.exists) file.delete();
+      file.create();
+      file.write(JSON.stringify(backup));
 
-    if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert("Erro", "Não é possível partilhar ficheiros neste aparelho.");
-      return;
-    }
-    await Sharing.shareAsync(file.uri, {
-      mimeType: "application/json",
-      dialogTitle: "Guardar backup do GymLog",
-    });
-  }, [db]);
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert(
+          "Erro",
+          "Não é possível partilhar ficheiros neste aparelho.",
+        );
+        return;
+      }
+      await Sharing.shareAsync(file.uri, {
+        mimeType: "application/json",
+        dialogTitle: "Guardar backup do GymLog",
+      });
+    },
+    [db],
+  );
 
-  const importBackup = useCallback(async () => {
+  // Asks for a file and checks it. null if cancelled or not a valid backup
+  // (the reason is already shown).
+  const pickBackup = useCallback(async (): Promise<Backup | null> => {
     const picked = await DocumentPicker.getDocumentAsync({
       // Any file: apps like WhatsApp do not save .json files as
       // application/json, so a narrower filter hides them. parseBackup checks
@@ -71,7 +82,7 @@ export function useBackup(onImported: () => void) {
       type: "*/*",
       copyToCacheDirectory: false,
     });
-    if (picked.canceled) return;
+    if (picked.canceled) return null;
 
     const [asset] = picked.assets;
     let text: string;
@@ -82,39 +93,32 @@ export function useBackup(onImported: () => void) {
         "Não foi possível ler o ficheiro",
         `${asset.name}\n\n${String(error)}`,
       );
-      return;
+      return null;
     }
     const parsed = parseBackup(text, await getSchemaVersion(db));
     if (!parsed.ok) {
       Alert.alert("Backup inválido", parsed.error);
-      return;
+      return null;
     }
+    return parsed.backup;
+  }, [db]);
 
-    Alert.alert(
-      "Importar backup?",
-      `O backup tem ${describeBackup(parsed.backup)}.\n\nTudo o que está agora na app vai ser substituído pelo backup.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Importar",
-          style: "destructive",
-          onPress: () => {
-            replaceAllData(db, parsed.backup)
-              .then(() => {
-                Alert.alert("Backup importado", "Os dados foram restaurados.");
-                onImported();
-              })
-              .catch(() =>
-                Alert.alert(
-                  "Erro",
-                  "Não foi possível importar. Os dados da app não foram alterados.",
-                ),
-              );
-          },
-        },
-      ],
-    );
-  }, [db, onImported]);
+  const importBackup = useCallback(
+    async (backup: Backup, parts: BackupPart[]) => {
+      try {
+        await replaceData(db, backup, parts);
+      } catch {
+        Alert.alert(
+          "Erro",
+          "Não foi possível importar. Os dados da app não foram alterados.",
+        );
+        return;
+      }
+      Alert.alert("Backup importado", "Os dados foram restaurados.");
+      onImported();
+    },
+    [db, onImported],
+  );
 
-  return { exportBackup, importBackup };
+  return { exportBackup, pickBackup, importBackup };
 }

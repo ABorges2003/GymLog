@@ -91,11 +91,11 @@ Each exercise has a set structure. Each set has a type:
 Every new exercise starts with **W · F · F · T · B**. To change it:
 
 1. In the routine, tap the row of coloured letters under an exercise (**Séries**, sets).
-2. For each set, choose the **type** (W/F/T/B), type the **kg** and, for T and B, the **reps**.
+2. For each set, choose the **type** (W/F/T/B), type the **kg** and, for T and B, the **reps**. A back-off you always take **to failure**? Tap the 🔥 **flame** at the end of it: the reps field becomes **FALHA** (failure). Tap the flame (or FALHA) again to go back to a number.
 3. **+ Adicionar série** (Add set) copies the last set (handy for a second top set). The 🗑 deletes a set.
 4. Tap **Guardar** (Save).
 
-<p align="center"><img src="images/04-series.jpg" width="280" alt="Set editor of an exercise"></p>
+<p align="center"><img src="images/04-series.jpg" width="280" alt="Set editor of an exercise, with the back-off planned to failure"></p>
 
 > 💡 Use a **comma** for decimals: `102,5` kg. You can also log **half reps**: `4,5`.
 
@@ -107,14 +107,16 @@ Every new exercise starts with **W · F · F · T · B**. To change it:
 
 In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routine. The routine you did most recently is always at the top of the list. The workout opens **already filled in** with the routine's weights, which are the ones from the last time you did it.
 
-<p align="center"><img src="images/05-treino.jpg" width="280" alt="Workout in progress"></p>
+<p align="center"><img src="images/05-treino.jpg" width="280" alt="Workout in progress: +1 rep with help on the top set and the back-off to failure"></p>
 
 ### 4.2 During the workout
 
 - **Change the kg and reps** right in the fields. Everything is **saved automatically** as you type: if the app closes, nothing is lost.
 - **Tap the letter** of a set (W/F/T/B) to change its type.
+- Back-offs have the 🔥 **flame** instead: tap it if you went to failure, or type the reps you did. On **Terminar**, the routine keeps what you did (failure or the number of reps) for next time.
 - **+ Série** (+ Set) adds a set equal to the last one; the **✕** deletes a set.
 - You only need to change what is **different** from last time.
+- Did a spotter help you with some reps? Tap the ✋ **hand** at the end of the top set and type how many (e.g. 2). The set then reads **100 kg × 6 +2**. Tap it again to change or remove it (**Tirar**). It is only a reminder for that workout: it does not count for progress.
 - Doing something extra today? Tap **+ Adicionar exercícios** (Add exercises) at the end of the workout. The exercises are also added to the routine, so they are there next time (remove them from the routine if it was a one-off).
 
 ### 4.3 The note for next week
@@ -122,9 +124,12 @@ In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routi
 At the bottom of each exercise there is a note to remind you what to do next time:
 
 - 🟢 **"Não aumentar na próxima semana"** (don't increase next week): keep the weight.
+- 🟡 **"Em princípio aumentar na próxima semana"** (probably increase next week): go up if you feel good that day.
 - 🔴 **"Aumentar carga na próxima semana"** (increase the weight next week): time to go up.
 
-Tap **+ Nota para a próxima semana** (note for next week), or the note itself, to set, change or remove it. The note is stored in the routine and shows up in the next workout.
+Tap **+ Nota para a próxima semana** (note for next week), or the note itself: a popup opens to pick one of the three, or **Tirar nota** (remove the note). The note is stored in the routine and shows up in the next workout.
+
+<p align="center"><img src="images/15-nota.jpg" width="280" alt="Popup to choose the note for next week: green, yellow or red"></p>
 
 ### 4.4 Finish or cancel
 
@@ -235,19 +240,23 @@ Your data lives **only on your phone**. If you uninstall the app or change phone
 ### Export
 
 1. **Definições → Exportar backup** (Settings → Export backup).
-2. The share menu opens: choose **Google Drive** (recommended) or send it by email.
+2. A popup asks what to export: **Treinos** (exercises, routines and workouts), **Peso** (weight) and **Dieta** (diet). Everything is ticked; untick what you don't want and tap **Exportar**.
+3. The share menu opens: choose **Google Drive** (recommended) or send it by email.
 
-The file is called `gymlog-backup-YYYY-MM-DD.json` and holds **everything**: exercises, routines, workouts, body weight and diet.
+The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the three parts ticked.
 
 ### Import
 
 1. **Definições → Importar backup** (Settings → Import backup).
-2. Pick the file. The app shows what it contains (e.g. "27 exercícios, 6 rotinas, 20 treinos").
-3. Tap **Importar** (Import).
+2. Pick the file. A popup shows the parts it has and what each one holds (e.g. "27 exercícios, 6 rotinas, 20 treinos").
+3. Untick what you don't want to import and tap **Importar** (Import).
 
-> ⚠️ Importing **replaces everything** in the app with the backup's contents. If something fails halfway, nothing is changed.
+> ⚠️ Each part you import **replaces** that part in the app (e.g. importing only **Dieta** replaces your foods and meals, and leaves your workouts and weight as they are). If something fails halfway, nothing is changed. The light/dark setting is never part of a backup.
 
-<p align="center"><img src="images/09-definicoes.jpg" width="280" alt="Settings with the backup buttons"></p>
+<p align="center">
+  <img src="images/09-definicoes.jpg" width="280" alt="Settings with the appearance and backup cards">
+  <img src="images/16-backup-partes.jpg" width="280" alt="Import popup with Treinos, Peso and Dieta to choose from">
+</p>
 
 ---
 

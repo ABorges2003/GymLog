@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 
-import { chooseProgression } from "@/components/choose-progression";
 import { RoutineList } from "@/components/routine-list";
 import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
 import { useActiveWorkout } from "@/hooks/use-active-workout";
@@ -36,6 +35,7 @@ export default function WorkoutScreen() {
     addSet,
     deleteSet,
     setProgression,
+    setAssisted,
   } = useActiveWorkout();
   const [busy, setBusy] = useState(false);
   const withHistory = useExercisesWithHistory();
@@ -205,21 +205,18 @@ export default function WorkoutScreen() {
                   );
                 }}
                 onDeleteSet={confirmDeleteSet}
-                onProgressionPress={
+                onAssistedRepsChange={(setId, reps) => {
+                  setAssisted(setId, reps).catch(
+                    showError("Não foi possível guardar as reps com ajuda."),
+                  );
+                }}
+                onProgressionChange={
                   routineExerciseId
-                    ? () =>
-                        chooseProgression(
-                          item.exercise.name,
-                          item.progression,
-                          (progression) => {
-                            setProgression(
-                              routineExerciseId,
-                              progression,
-                            ).catch(
-                              showError("Não foi possível guardar a nota."),
-                            );
-                          },
-                        )
+                    ? (progression) => {
+                        setProgression(routineExerciseId, progression).catch(
+                          showError("Não foi possível guardar a nota."),
+                        );
+                      }
                     : null
                 }
                 onInputFocus={(offsetY) =>
