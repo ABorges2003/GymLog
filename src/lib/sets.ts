@@ -75,6 +75,22 @@ export function parseWeight(text: string): ParsedNumber {
   return value <= MAX_WEIGHT_KG ? { ok: true, value } : { ok: false };
 }
 
+// Reps done with help after a set's values: " +1 com ajuda", or "".
+export function formatAssistedReps(
+  assistedReps: number | null | undefined,
+): string {
+  return assistedReps ? ` +${formatReps(assistedReps)} com ajuda` : "";
+}
+
+// Font size for a number input: smaller for long values ("16,25",
+// "102,5"), so they fit in narrow inputs without changing their width.
+export function inputFontSize(text: string, base = 20): number {
+  const length = text.trim().length;
+  if (length >= 5) return base - 4;
+  if (length === 4) return base - 2;
+  return base;
+}
+
 // Weight with a decimal comma and no trailing zeros: 100 -> "100", 102.5 -> "102,5".
 export function formatWeight(weightKg: number): string {
   return String(Math.round(weightKg * 100) / 100).replace(".", ",");
@@ -91,14 +107,20 @@ export function setTypeHasAssistedReps(setType: SetType): boolean {
 }
 
 // A set as it is stored: reps only on top and back-off sets, and none on a
-// back-off done to failure; only back-offs can be done to failure.
+// back-off done to failure; only back-offs can be done to failure; only top
+// sets keep reps done with help.
 export function normalizeSet(set: PlannedSet): PlannedSet {
   const toFailure = set.toFailure && setTypeCanFail(set.setType);
+  const assistedReps = setTypeHasAssistedReps(set.setType)
+    ? set.assistedReps
+    : null;
   return {
     setType: set.setType,
     reps: setTypeHasReps(set.setType) && !toFailure ? set.reps : null,
     weightKg: set.weightKg,
     toFailure,
+    // Only when there are any, so plain sets stay without the field.
+    ...(assistedReps ? { assistedReps } : {}),
   };
 }
 

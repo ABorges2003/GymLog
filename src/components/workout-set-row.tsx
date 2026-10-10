@@ -14,6 +14,7 @@ import {
   SET_TYPE_LABELS,
   formatReps,
   formatWeight,
+  inputFontSize,
   parseReps,
   parseWeight,
   setTypeCanFail,
@@ -116,7 +117,11 @@ export function WorkoutSetRow({
       </Pressable>
 
       <TextInput
-        style={[styles.input, !weight.ok && styles.inputError]}
+        style={[
+          styles.input,
+          { fontSize: inputFontSize(weightText) },
+          !weight.ok && styles.inputError,
+        ]}
         value={weightText}
         onChangeText={(text) => {
           setWeightText(text);
@@ -146,7 +151,11 @@ export function WorkoutSetRow({
           ) : (
             <>
               <TextInput
-                style={[styles.input, !reps.ok && styles.inputError]}
+                style={[
+                  styles.input,
+                  { fontSize: inputFontSize(repsText) },
+                  !reps.ok && styles.inputError,
+                ]}
                 value={repsText}
                 onChangeText={(text) => {
                   setRepsText(text);
@@ -213,7 +222,7 @@ function createStyles(c: ThemeColors) {
     input: {
       flex: 1,
       minHeight: 46,
-      paddingHorizontal: 6,
+      paddingHorizontal: 2,
       fontSize: 20,
       fontWeight: "600",
       textAlign: "center",

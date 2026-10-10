@@ -12,8 +12,9 @@ export function buildWorkoutSets(planned: PlannedSet[]): PlannedSet[] {
 // The routine keeps its structure; each planned set takes the values done in
 // the same set (same position and type). Values left empty in the workout
 // keep the planned ones. A back-off done to failure stays to failure, and one
-// done with a number of reps takes that number instead. Warm-ups and feeders
-// never get reps.
+// done with a number of reps takes that number instead. A top set keeps the
+// reps done with help of the workout (none if they were removed). Warm-ups
+// and feeders never get reps.
 export function mergeIntoPlanned(
   planned: PlannedSet[],
   done: PlannedSet[],
@@ -22,9 +23,13 @@ export function mergeIntoPlanned(
     const doneSet = done[index];
     const same = doneSet && doneSet.setType === plannedSet.setType;
     const weightKg = (same ? doneSet.weightKg : null) ?? plannedSet.weightKg;
+    const assistedReps = same
+      ? (doneSet.assistedReps ?? null)
+      : plannedSet.assistedReps;
     if (same && doneSet.toFailure) {
       return normalizeSet({
         ...plannedSet,
+        assistedReps,
         weightKg,
         reps: null,
         toFailure: true,
@@ -33,11 +38,12 @@ export function mergeIntoPlanned(
     if (same && doneSet.reps !== null && setTypeHasReps(plannedSet.setType)) {
       return normalizeSet({
         ...plannedSet,
+        assistedReps,
         weightKg,
         reps: doneSet.reps,
         toFailure: false,
       });
     }
-    return normalizeSet({ ...plannedSet, weightKg });
+    return normalizeSet({ ...plannedSet, assistedReps, weightKg });
   });
 }

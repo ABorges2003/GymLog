@@ -99,3 +99,34 @@ describe("mergeIntoPlanned with back-offs to failure", () => {
     ).toEqual([backoff(null, true)]);
   });
 });
+
+describe("mergeIntoPlanned with reps done with help", () => {
+  const top = (assistedReps?: number | null): PlannedSet => ({
+    setType: "top",
+    reps: 6,
+    weightKg: 93,
+    toFailure: false,
+    ...(assistedReps !== undefined ? { assistedReps } : {}),
+  });
+
+  it("keeps the reps done with help of the workout", () => {
+    expect(mergeIntoPlanned([top()], [top(1)])).toEqual([top(1)]);
+  });
+
+  it("drops them when the workout had none", () => {
+    expect(mergeIntoPlanned([top(1)], [top(null)])).toEqual([top()]);
+  });
+
+  it("never keeps them on other set types", () => {
+    const backoff: PlannedSet = {
+      setType: "backoff",
+      reps: 8,
+      weightKg: 70,
+      toFailure: false,
+      assistedReps: 2,
+    };
+    expect(
+      mergeIntoPlanned([backoff], [backoff])[0].assistedReps,
+    ).toBeUndefined();
+  });
+});

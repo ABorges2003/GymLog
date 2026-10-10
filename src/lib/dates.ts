@@ -73,3 +73,18 @@ export function formatDayLabel(key: string, today: Date = new Date()): string {
   if (key === addDaysToKey(todayKey, -1)) return "Ontem";
   return formatLongDate(dateFromKey(key).toISOString(), today);
 }
+
+// Time between two moments as a stopwatch: "0:07", "42:13", "1:05:09".
+// Negative spans (a clock moved back) count as zero.
+export function formatElapsed(fromIso: string, to: Date = new Date()): string {
+  const total = Math.max(
+    0,
+    Math.floor((to.getTime() - new Date(fromIso).getTime()) / 1000),
+  );
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, "0");
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}`
+    : `${minutes}:${seconds}`;
+}

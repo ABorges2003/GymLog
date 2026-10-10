@@ -13,6 +13,7 @@ import {
 
 import { RoutineList } from "@/components/routine-list";
 import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
+import { WorkoutTimer } from "@/components/workout-timer";
 import { useActiveWorkout } from "@/hooks/use-active-workout";
 import { useExercisesWithHistory } from "@/hooks/use-exercises-with-history";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
@@ -162,9 +163,12 @@ export default function WorkoutScreen() {
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{routineName ?? "Treino"}</Text>
-        <Text style={styles.headerLabel}>
-          {formatLongDate(workout.startedAt)}
-        </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerLabel}>
+            {formatLongDate(workout.startedAt)}
+          </Text>
+          <WorkoutTimer startedAt={workout.startedAt} />
+        </View>
       </View>
 
       <ScrollView
@@ -294,6 +298,11 @@ function createStyles(c: ThemeColors) {
       backgroundColor: c.card,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
     },
     headerLabel: {
       fontSize: 15,

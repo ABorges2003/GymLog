@@ -99,6 +99,46 @@ describe("workouts repository", () => {
     });
   });
 
+  it("shows reps done with help in the progress history", async () => {
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const top = (await getWorkoutDetail(db, workoutId))!.exercises[0].sets[2];
+    await updateWorkoutSet(db, top.id, {
+      setType: "top",
+      reps: 7,
+      weightKg: 100,
+      toFailure: false,
+    });
+    await setAssistedReps(db, top.id, 1);
+    await finishWorkout(db, workoutId);
+
+    const [group] = buildProgressHistory(await getFinishedExerciseEntries(db));
+    expect(group.changes[0].current).toEqual({
+      weightKg: 100,
+      reps: 7,
+      assistedReps: 1,
+    });
+  });
+
+  it("carries reps done with help to the routine and the next workout", async () => {
+    const first = await startWorkoutFromRoutine(db, routineId);
+    const top = (await getWorkoutDetail(db, first))!.exercises[0].sets[2];
+    await setAssistedReps(db, top.id, 1);
+    await finishWorkout(db, first);
+
+    const [bench] = await getRoutineExercises(db, routineId);
+    expect(bench.sets[2]).toMatchObject({ setType: "top", assistedReps: 1 });
+
+    const next = await startWorkoutFromRoutine(db, routineId);
+    const nextTop = (await getWorkoutDetail(db, next))!.exercises[0].sets[2];
+    expect(nextTop.assistedReps).toBe(1);
+
+    // Done without help this time: the routine forgets them.
+    await setAssistedReps(db, nextTop.id, null);
+    await finishWorkout(db, next);
+    const [after] = await getRoutineExercises(db, routineId);
+    expect(after.sets[2].assistedReps).toBeUndefined();
+  });
+
   it("keeps reps done with help only on top sets", async () => {
     const workoutId = await startWorkoutFromRoutine(db, routineId);
     const top = (await getWorkoutDetail(db, workoutId))!.exercises[0].sets[2];

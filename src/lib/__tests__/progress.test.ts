@@ -407,3 +407,28 @@ describe("exercisesWithChanges", () => {
     expect([...ids]).toEqual(["push:bench"]);
   });
 });
+
+describe("reps done with help", () => {
+  it("are kept with the best set but never count as progress", () => {
+    const best = bestSet([
+      {
+        setType: "top",
+        reps: 5,
+        weightKg: 12,
+        toFailure: false,
+        assistedReps: 1,
+      },
+    ]);
+    expect(best).toEqual({ weightKg: 12, reps: 5, assistedReps: 1 });
+    expect(compareBestSets({ weightKg: 12, reps: 5 }, best!)).toBe("same");
+  });
+
+  it("are shown after the reps", () => {
+    expect(formatBestSet({ weightKg: 12, reps: 5, assistedReps: 1 })).toBe(
+      "12 kg × 5 +1 com ajuda",
+    );
+    expect(formatBestSet({ weightKg: 12, reps: 5, assistedReps: null })).toBe(
+      "12 kg × 5",
+    );
+  });
+});

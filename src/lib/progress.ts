@@ -1,4 +1,9 @@
-import { formatReps, formatWeight, setTypeHasReps } from "@/lib/sets";
+import {
+  formatAssistedReps,
+  formatReps,
+  formatWeight,
+  setTypeHasReps,
+} from "@/lib/sets";
 import type { PlannedSet } from "@/types/set";
 
 // The set used to measure an exercise in a workout: the heaviest top set
@@ -7,9 +12,14 @@ import type { PlannedSet } from "@/types/set";
 export type BestSet = {
   weightKg: number;
   reps: number | null;
+  // Extra reps done with help: shown, but never counted as progress.
+  assistedReps?: number | null;
 };
 
-export function bestSet(sets: PlannedSet[]): BestSet | null {
+// A set done in a workout, which may have reps done with help.
+export type LoggedSet = PlannedSet & { assistedReps?: number | null };
+
+export function bestSet(sets: LoggedSet[]): BestSet | null {
   const withWeight = sets.filter((set) => set.weightKg !== null);
   const tops = withWeight.filter((set) => set.setType === "top");
   const candidates = tops.length > 0 ? tops : withWeight;
@@ -19,6 +29,8 @@ export function bestSet(sets: PlannedSet[]): BestSet | null {
     const current: BestSet = {
       weightKg: set.weightKg as number,
       reps: setTypeHasReps(set.setType) ? set.reps : null,
+      // Only when there are any, so plain sets stay { weightKg, reps }.
+      ...(set.assistedReps ? { assistedReps: set.assistedReps } : {}),
     };
     if (!best || compareBestSets(best, current) === "up") {
       best = current;
@@ -45,11 +57,15 @@ export function compareBestSets(
   return "same";
 }
 
-// "102,5 kg × 6", or "102,5 kg" without reps.
-export function formatBestSet({ weightKg, reps }: BestSet): string {
+// "102,5 kg × 6", "102,5 kg × 6 +1 com ajuda", or "102,5 kg" without reps.
+export function formatBestSet({
+  weightKg,
+  reps,
+  assistedReps,
+}: BestSet): string {
   return reps === null
     ? `${formatWeight(weightKg)} kg`
-    : `${formatWeight(weightKg)} kg × ${formatReps(reps)}`;
+    : `${formatWeight(weightKg)} kg × ${formatReps(reps)}${formatAssistedReps(assistedReps)}`;
 }
 
 // One exercise done in a finished workout.
@@ -62,7 +78,7 @@ export type ExerciseEntry = {
   exerciseId: string;
   exerciseName: string;
   // Values done.
-  sets: PlannedSet[];
+  sets: LoggedSet[];
   // Values the sets started with (from the routine); empty values for
   // workouts logged before they were stored.
   plannedSets: PlannedSet[];

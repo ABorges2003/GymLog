@@ -7,7 +7,7 @@ import { ExerciseHistoryButton } from "@/components/exercise-history-button";
 import { ProgressionNote } from "@/components/progression-note";
 import { SetTypeBadge } from "@/components/set-type-badge";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/lib/labels";
-import { formatSetValues } from "@/lib/sets";
+import { formatAssistedReps, formatSetValues } from "@/lib/sets";
 import type { Progression, RoutineExercise } from "@/types/routine";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
@@ -128,7 +128,14 @@ export function RoutineExerciseCard({
                 <View key={index} style={styles.setChip}>
                   <SetTypeBadge setType={set.setType} size={24} />
                   {formatSetValues(set) !== "" && (
-                    <Text style={styles.setValues}>{formatSetValues(set)}</Text>
+                    <Text style={styles.setValues}>
+                      {formatSetValues(set)}
+                      {set.assistedReps ? (
+                        <Text style={styles.assisted}>
+                          {formatAssistedReps(set.assistedReps)}
+                        </Text>
+                      ) : null}
+                    </Text>
                   )}
                 </View>
               ))
@@ -183,6 +190,10 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
       gap: 4,
       paddingRight: 6,
+    },
+    assisted: {
+      fontWeight: "600",
+      color: c.accent,
     },
     setValues: {
       fontSize: 14,

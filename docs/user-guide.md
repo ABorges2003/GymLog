@@ -16,8 +16,9 @@ The app is in Portuguese, so buttons and labels are written here **exactly as th
 6. [Body weight](#6-body-weight)
 7. [Diet](#7-diet)
 8. [Backup: never lose your data](#8-backup-never-lose-your-data)
-9. [Installing and updating the app](#9-installing-and-updating-the-app)
-10. [FAQ](#10-faq)
+9. [Light or dark mode](#9-light-or-dark-mode)
+10. [Installing and updating the app](#10-installing-and-updating-the-app)
+11. [FAQ](#11-faq)
 
 ---
 
@@ -86,7 +87,7 @@ Each exercise has a set structure. Each set has a type:
 | **W** | Warm-up (*Aquecimento*) | Light weight, 12–15 reps | ❌ weight only |
 | **F** | Feeder | Ramp-up sets, 2–3 reps | ❌ weight only |
 | **T** | Top set | Your heaviest set: the one that measures your strength | ✅ weight × reps |
-| **B** | Back-off | A lighter set after the top set | ✅ weight × reps |
+| **B** | Back-off | A lighter set after the top set | ✅ weight × reps, or to failure 🔥 |
 
 Every new exercise starts with **W · F · F · T · B**. To change it:
 
@@ -111,12 +112,13 @@ In the **Treino** (Workout) tab, tap **▶ Começar** (Start) on the day's routi
 
 ### 4.2 During the workout
 
+- Next to the date, the ⏱ **timer** shows how long you have been training.
 - **Change the kg and reps** right in the fields. Everything is **saved automatically** as you type: if the app closes, nothing is lost.
 - **Tap the letter** of a set (W/F/T/B) to change its type.
-- Back-offs have the 🔥 **flame** instead: tap it if you went to failure, or type the reps you did. On **Terminar**, the routine keeps what you did (failure or the number of reps) for next time.
 - **+ Série** (+ Set) adds a set equal to the last one; the **✕** deletes a set.
 - You only need to change what is **different** from last time.
-- Did a spotter help you with some reps? Tap the ✋ **hand** at the end of the top set and type how many (e.g. 2). The set then reads **100 kg × 6 +2**. Tap it again to change or remove it (**Tirar**). It is only a reminder for that workout: it does not count for progress.
+- **Back-off to failure**: tap the 🔥 **flame** at the end of a back-off if you went to failure, or type the reps you did instead.
+- **Reps with help**: did a spotter help you? Tap the ✋ **hand** at the end of the top set and type how many (e.g. 2). The set then reads **100 kg × 6 +2**; tap the **+2** to change it or **Tirar** (remove) it. Reps with help never count for progress.
 - Doing something extra today? Tap **+ Adicionar exercícios** (Add exercises) at the end of the workout. The exercises are also added to the routine, so they are there next time (remove them from the routine if it was a one-off).
 
 ### 4.3 The note for next week
@@ -133,7 +135,7 @@ Tap **+ Nota para a próxima semana** (note for next week), or the note itself: 
 
 ### 4.4 Finish or cancel
 
-- **Terminar** (Finish): the workout is saved and **the weights you did are copied into the routine**. A **Resumo** (summary) shows the number of exercises and sets, the total volume and your progressions.
+- **Terminar** (Finish): the workout is saved and **what you did is copied into the routine**: weights, reps, failure 🔥 and reps with help ✋ (the routine shows e.g. **100 kg × 6 +2 com ajuda**). Next time the workout starts with them; if you do it without help that day, just remove the **+2**. A **Resumo** (summary) shows how long the workout took, the number of exercises and sets, the total volume, your progressions and, under **Séries**, the top sets and back-offs you did (e.g. **12 kg × 5 +1 com ajuda**). The exercise history (the chart icon) also shows the reps done with help.
 - **Cancelar** (Cancel): the workout is deleted and **nothing changes** in the routine.
 
 <p align="center"><img src="images/06-resumo.jpg" width="280" alt="Summary after finishing a workout"></p>
@@ -149,7 +151,7 @@ Next to each exercise name (in the routine and during the workout) there is an i
 - 🟢 **Green**: the exercise already has progressions or regressions.
 - 🔴 **Red**: it has none yet.
 
-Tap it to see that exercise's history:
+Tap it to see that exercise's history (reps with help are shown too, e.g. `100 kg × 6 +1 com ajuda`):
 
 - ▲ **green**: you went up (e.g. `100 kg × 6 → 102,5 kg × 5`)
 - ▼ **red**: you went down
@@ -222,7 +224,6 @@ Each meal (**Pequeno-almoço**, **Lanche da manhã**, **Almoço**, **Lanche da t
 
 Can't find the food? Tap **Criar alimento** (Create food) right there.
 
-
 At the top you see the **kcal left**, what you ate and a bar for each macro (red when you go over).
 
 ### 7.4 Other days
@@ -237,7 +238,7 @@ Use the **‹ ›** arrows at the top to see or log other days (you can't go pas
 
 Your data lives **only on your phone**. If you uninstall the app or change phones without a backup, **you lose everything**. Back up regularly (e.g. once a week).
 
-### Export
+### 8.1 Export
 
 1. **Definições → Exportar backup** (Settings → Export backup).
 2. A popup asks what to export: **Treinos** (exercises, routines and workouts), **Peso** (weight) and **Dieta** (diet). Everything is ticked; untick what you don't want and tap **Exportar**.
@@ -245,7 +246,7 @@ Your data lives **only on your phone**. If you uninstall the app or change phone
 
 The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the three parts ticked.
 
-### Import
+### 8.2 Import
 
 1. **Definições → Importar backup** (Settings → Import backup).
 2. Pick the file. A popup shows the parts it has and what each one holds (e.g. "27 exercícios, 6 rotinas, 20 treinos").
@@ -260,7 +261,7 @@ The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the 
 
 ---
 
-### Appearance
+## 9. Light or dark mode
 
 **Definições → Aparência** (Settings → Appearance): **Automático** (follows the phone's light/dark mode), **Claro** (light) or **Escuro** (dark).
 
@@ -268,7 +269,7 @@ The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the 
 
 ---
 
-## 9. Installing and updating the app
+## 10. Installing and updating the app
 
 - GymLog is installed from an **APK** file (it is not on the Play Store). When you open the APK, Android asks for permission to install apps from that source: allow it.
 - **Updating**: install the new APK **over** the old one. Your data is kept.
@@ -277,10 +278,16 @@ The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the 
 
 ---
 
-## 10. FAQ
+## 11. FAQ
 
 **I changed a weight during the workout and the routine didn't change.**
 Weights are only copied into the routine when you tap **Terminar** (Finish). If you cancel, nothing changes.
+
+**Do reps with help count as progress?**
+No. `100 kg × 6 +1` counts the same as `100 kg × 6`: the +1 is only a reminder.
+
+**Can a friend use the app?**
+Yes: send them the APK file (e.g. by WhatsApp or Google Drive). Their data stays on their phone and they start with an empty app.
 
 **I did an extra top set one day. Is it added to the routine?**
 No. The routine's structure (how many sets and of which type) only changes in the routine's set editor. A workout only updates the weights and reps.

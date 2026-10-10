@@ -3,7 +3,9 @@ import {
   MAX_SETS_PER_EXERCISE,
   formatReps,
   formatSetValues,
+  formatAssistedReps,
   formatWeight,
+  inputFontSize,
   normalizeSet,
   parseReps,
   parseWeight,
@@ -181,5 +183,23 @@ describe("back-offs to failure", () => {
       weightKg: 85,
       toFailure: true,
     });
+  });
+});
+
+describe("formatAssistedReps", () => {
+  it("shows the reps done with help, or nothing", () => {
+    expect(formatAssistedReps(1)).toBe(" +1 com ajuda");
+    expect(formatAssistedReps(1.5)).toBe(" +1,5 com ajuda");
+    expect(formatAssistedReps(null)).toBe("");
+    expect(formatAssistedReps(undefined)).toBe("");
+  });
+});
+
+describe("inputFontSize", () => {
+  it("shrinks the font for long values", () => {
+    expect(inputFontSize("100")).toBe(20);
+    expect(inputFontSize("12,5")).toBe(18);
+    expect(inputFontSize("16,25")).toBe(16);
+    expect(inputFontSize("102,25")).toBe(16);
   });
 });

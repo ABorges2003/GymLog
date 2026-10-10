@@ -10,4 +10,7 @@ export type PlannedSet = {
   reps: number | null;
   weightKg: number | null;
   toFailure: boolean;
+  // Top sets only: extra reps done with help last time (copied into the next
+  // workout like the weights). Missing or null when there are none.
+  assistedReps?: number | null;
 };

@@ -8,7 +8,7 @@ import {
   insertRoutineExercises,
   updateRoutineSetValues,
 } from "@/db/repositories/routines";
-import type { ExerciseEntry } from "@/lib/progress";
+import type { ExerciseEntry, LoggedSet } from "@/lib/progress";
 import { DEFAULT_SETS, normalizeSet, setTypeHasAssistedReps } from "@/lib/sets";
 import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
@@ -101,8 +101,8 @@ export async function startWorkoutFromRoutine(
         // planned_* keep the starting values, the "before" of this workout.
         await txn.runAsync(
           `INSERT INTO workout_sets
-             (id, workout_exercise_id, position, set_type, reps, weight_kg, to_failure, planned_reps, planned_weight_kg)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (id, workout_exercise_id, position, set_type, reps, weight_kg, to_failure, assisted_reps, planned_reps, planned_weight_kg)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           randomUUID(),
           workoutExerciseId,
           setIndex + 1,
@@ -110,6 +110,7 @@ export async function startWorkoutFromRoutine(
           set.reps,
           set.weightKg,
           set.toFailure ? 1 : 0,
+          set.assistedReps ?? null,
           set.reps,
           set.weightKg,
         );
@@ -336,10 +337,11 @@ export async function getFinishedExerciseEntries(
     WorkoutSetRow & {
       planned_reps: number | null;
       planned_weight_kg: number | null;
+      assisted_reps: number | null;
     }
   >(
     `SELECT ws.id, ws.workout_exercise_id, ws.position, ws.set_type, ws.reps, ws.weight_kg,
-            ws.to_failure, ws.planned_reps, ws.planned_weight_kg
+            ws.to_failure, ws.planned_reps, ws.planned_weight_kg, ws.assisted_reps
      FROM workout_sets ws
      JOIN workout_exercises we ON we.id = ws.workout_exercise_id
      JOIN workouts w ON w.id = we.workout_id
@@ -347,7 +349,7 @@ export async function getFinishedExerciseEntries(
      ORDER BY ws.position`,
   );
 
-  const done = new Map<string, PlannedSet[]>();
+  const done = new Map<string, LoggedSet[]>();
   const planned = new Map<string, PlannedSet[]>();
   for (const set of sets) {
     const id = set.workout_exercise_id;
@@ -358,6 +360,7 @@ export async function getFinishedExerciseEntries(
         reps: set.reps,
         weightKg: set.weight_kg,
         toFailure: set.to_failure === 1,
+        assistedReps: set.assisted_reps,
       },
     ]);
     planned.set(id, [

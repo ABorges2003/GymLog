@@ -25,6 +25,7 @@ import {
   SET_TYPE_SHORT_LABELS,
   formatReps,
   formatWeight,
+  inputFontSize,
   parseReps,
   parseWeight,
   setTypeCanFail,
@@ -43,6 +44,8 @@ type DraftSet = {
   weightText: string;
   // Only used by back-off sets.
   toFailure: boolean;
+  // Kept as it is (only set during a workout); dropped if no longer a top set.
+  assistedReps?: number | null;
 };
 
 type Props = {
@@ -64,6 +67,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
     repsText: set.reps === null ? "" : formatReps(set.reps),
     weightText: set.weightKg === null ? "" : formatWeight(set.weightKg),
     toFailure: set.toFailure,
+    assistedReps: set.assistedReps,
   });
 
   const [drafts, setDrafts] = useState<DraftSet[]>(() =>
@@ -139,6 +143,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
         reps: reps?.ok ? reps.value : null,
         weightKg: weight.value,
         toFailure: failed,
+        assistedReps: draft.assistedReps,
       });
     }
     setError(null);
@@ -225,7 +230,11 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
 
               <View style={styles.valuesRow}>
                 <TextInput
-                  style={[styles.input, weightInvalid && styles.inputError]}
+                  style={[
+                    styles.input,
+                    { fontSize: inputFontSize(draft.weightText) },
+                    weightInvalid && styles.inputError,
+                  ]}
                   value={draft.weightText}
                   onChangeText={(weightText) =>
                     update(draft.key, { weightText })
@@ -263,6 +272,7 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
                         <TextInput
                           style={[
                             styles.input,
+                            { fontSize: inputFontSize(draft.repsText) },
                             repsInvalid && styles.inputError,
                           ]}
                           value={draft.repsText}

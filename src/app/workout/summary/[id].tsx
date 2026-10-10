@@ -9,9 +9,15 @@ import {
 } from "react-native";
 
 import { ProgressChangeRow } from "@/components/progress-change-row";
+import { SetTypeBadge } from "@/components/set-type-badge";
 import { useWorkoutSummary } from "@/hooks/use-workout-summary";
-import { formatLongDate } from "@/lib/dates";
+import { formatElapsed, formatLongDate } from "@/lib/dates";
 import { formatVolume } from "@/lib/progress";
+import {
+  formatAssistedReps,
+  formatSetValues,
+  setTypeHasReps,
+} from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
 import { useThemedStyles } from "@/theme/theme";
 
@@ -62,6 +68,15 @@ export default function WorkoutSummaryScreen() {
             {detail.routineName ? `${detail.routineName} · ` : ""}
             {formatLongDate(detail.workout.startedAt)}
           </Text>
+          {detail.workout.finishedAt && (
+            <Text style={styles.subtitle}>
+              Duração:{" "}
+              {formatElapsed(
+                detail.workout.startedAt,
+                new Date(detail.workout.finishedAt),
+              )}
+            </Text>
+          )}
         </View>
 
         <View style={styles.stats}>
@@ -81,6 +96,36 @@ export default function WorkoutSummaryScreen() {
               <ProgressChangeRow key={change.exerciseId} change={change} />
             ))
           )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Séries</Text>
+          {detail.exercises.map((exercise) => {
+            // Top sets and back-offs: the ones that count.
+            const sets = exercise.sets.filter(
+              (set) =>
+                setTypeHasReps(set.setType) && formatSetValues(set) !== "",
+            );
+            if (sets.length === 0) return null;
+            return (
+              <View key={exercise.id} style={styles.exercise}>
+                <Text style={styles.exerciseName}>
+                  {exercise.exercise.name}
+                </Text>
+                {sets.map((set) => (
+                  <View key={set.id} style={styles.setRow}>
+                    <SetTypeBadge setType={set.setType} size={24} />
+                    <Text style={styles.setText}>
+                      {formatSetValues(set)}
+                      <Text style={styles.assisted}>
+                        {formatAssistedReps(set.assistedReps)}
+                      </Text>
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -164,6 +209,31 @@ function createStyles(c: ThemeColors) {
       fontWeight: "bold",
       marginBottom: 4,
       color: c.text,
+    },
+    exercise: {
+      gap: 6,
+      paddingVertical: 8,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+    },
+    exerciseName: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+    },
+    setRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    setText: {
+      flex: 1,
+      fontSize: 15,
+      color: c.text,
+    },
+    assisted: {
+      fontWeight: "600",
+      color: c.accent,
     },
     empty: {
       fontSize: 15,

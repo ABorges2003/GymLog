@@ -306,6 +306,15 @@ const migrations: Migration[] = [
       UPDATE workout_sets SET assisted_reps = NULL WHERE set_type <> 'top';
     `);
   },
+
+  // v15: the routine keeps the reps done with help of its top sets, like the
+  // weights, so the next workout starts with them.
+  async (db) => {
+    await db.execAsync(`
+      ALTER TABLE routine_sets
+        ADD COLUMN assisted_reps REAL CHECK (assisted_reps IS NULL OR assisted_reps > 0);
+    `);
+  },
 ];
 
 // Upgrades the schema to the latest version (tests may stop at an older one).
