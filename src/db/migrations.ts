@@ -315,6 +315,20 @@ const migrations: Migration[] = [
         ADD COLUMN assisted_reps REAL CHECK (assisted_reps IS NULL OR assisted_reps > 0);
     `);
   },
+
+  // v16: body weight phases (e.g. a bulk or a cut): a name and the days they
+  // start and end (no end while still going on).
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE body_weight_phases (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT CHECK (end_date IS NULL OR end_date >= start_date),
+        created_at TEXT NOT NULL
+      );
+    `);
+  },
 ];
 
 // Upgrades the schema to the latest version (tests may stop at an older one).

@@ -55,6 +55,16 @@ export default function RootLayout() {
             name="diet/goals"
             options={{ title: "Objetivos", presentation: "modal" }}
           />
+          <Stack.Screen name="phases" options={{ title: "Épocas" }} />
+          <Stack.Screen name="phase/[id]" options={{ title: "Época" }} />
+          <Stack.Screen
+            name="phase/new"
+            options={{ title: "Nova época", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="phase/edit/[id]"
+            options={{ title: "Editar época", presentation: "modal" }}
+          />
           <Stack.Screen
             name="workout/add-exercises"
             options={{ title: "Adicionar exercícios", presentation: "modal" }}

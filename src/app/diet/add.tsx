@@ -15,7 +15,7 @@ import {
 
 import { KeyboardAwareScrollView } from "@/components/keyboard-aware-scroll-view";
 import { SearchBar } from "@/components/search-bar";
-import { addFoodEntry } from "@/db/repositories/diet";
+import { addFoodEntry, getLastAmount } from "@/db/repositories/diet";
 import { useFoods } from "@/hooks/use-foods";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import {
@@ -27,6 +27,7 @@ import {
   scaleMacros,
   searchFoods,
 } from "@/lib/diet";
+import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
 import { MEALS, type Food, type Meal } from "@/types/diet";
@@ -57,9 +58,24 @@ export default function AddFoodEntryScreen() {
   );
   const amount = selected ? parseAmount(amountText, selected.basis) : null;
 
+  // Starts with the amount of the last time this food was logged (e.g. 2
+  // tostas), or 1 unit / empty the first time.
   function select(food: Food) {
+    const initial = food.basis === "unit" ? "1" : "";
     setSelected(food);
-    setAmountText(food.basis === "unit" ? "1" : "");
+    setAmountText(initial);
+    getLastAmount(db, food.id)
+      .then((last) => {
+        // Unless something was already typed in the meantime.
+        if (last !== null) {
+          setAmountText((current) =>
+            current === initial ? formatWeight(last) : current,
+          );
+        }
+      })
+      .catch(() => {
+        // Keep the default amount.
+      });
   }
 
   async function add() {

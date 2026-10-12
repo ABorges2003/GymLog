@@ -9,6 +9,7 @@ export const TABLES = [
   "workout_exercises",
   "workout_sets",
   "body_weight_entries",
+  "body_weight_phases",
   "app_settings",
   "foods",
   "food_entries",

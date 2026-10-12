@@ -130,7 +130,7 @@ describe("describePart", () => {
     expect(describePart(backup, "training")).toBe(
       "1 exercício, 1 rotina, 0 treinos",
     );
-    expect(describePart(backup, "body_weight")).toBe("1 registo");
+    expect(describePart(backup, "body_weight")).toBe("1 registo, 0 épocas");
     expect(describePart(backup, "diet")).toBe("0 alimentos, 0 registos");
   });
 });

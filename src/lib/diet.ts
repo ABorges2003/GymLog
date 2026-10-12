@@ -62,6 +62,15 @@ export function scaleMacros(
   };
 }
 
+// Values of a logged entry for a new amount, worked out from the values it was
+// logged with (so editing the food since then changes nothing).
+export function rescaleEntry(
+  entry: Macros & { amount: number },
+  amount: number,
+): Macros {
+  return scaleMacros({ ...entry, basisAmount: entry.amount }, amount);
+}
+
 export function sumMacros(items: Macros[]): Macros {
   return items.reduce(
     (total, item) => ({

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { FoodEntryPopup } from "@/components/food-entry-popup";
 import { ProgressBar } from "@/components/progress-bar";
 import { useDietDay } from "@/hooks/use-diet-day";
 import { addDaysToKey, formatDayLabel, toDateKey } from "@/lib/dates";
@@ -51,7 +52,9 @@ export default function DietScreen() {
   const styles = useThemedStyles(createStyles);
   const today = toDateKey(new Date());
   const [date, setDate] = useState(today);
-  const { day, error, deleteEntry } = useDietDay(date);
+  const { day, error, deleteEntry, updateAmount } = useDietDay(date);
+  // The food whose amount is being changed, if any.
+  const [editing, setEditing] = useState<FoodEntry | null>(null);
 
   const totals = useMemo(() => sumMacros(day?.entries ?? []), [day]);
 
@@ -175,6 +178,7 @@ export default function DietScreen() {
         {MEALS.map((meal, index) => {
           const mealEntries = entries.filter((entry) => entry.meal === meal);
           const mealKcal = sumMacros(mealEntries).kcal;
+          const planned = goals?.mealKcal?.[meal];
           return (
             <View
               key={meal}
@@ -182,8 +186,10 @@ export default function DietScreen() {
             >
               <View style={styles.mealHeader}>
                 <Text style={styles.mealName}>{MEAL_LABELS[meal]}</Text>
+                {/* Eaten, or eaten / planned when the meal has a plan. */}
                 <Text style={styles.muted}>
-                  {formatWeight(round(mealKcal))} kcal
+                  {formatWeight(round(mealKcal))}
+                  {planned !== undefined && ` / ${formatWeight(planned)}`} kcal
                 </Text>
                 <Link
                   href={{ pathname: "/diet/add", params: { date, meal } }}
@@ -200,7 +206,12 @@ export default function DietScreen() {
               </View>
               {mealEntries.map((entry) => (
                 <View key={entry.id} style={styles.entry}>
-                  <View style={styles.entryText}>
+                  <Pressable
+                    onPress={() => setEditing(entry)}
+                    style={styles.entryText}
+                    accessibilityRole="button"
+                    accessibilityHint="Mudar a quantidade"
+                  >
                     <Text style={styles.entryName}>
                       {entry.foodName}{" "}
                       <Text style={styles.muted}>
@@ -210,7 +221,7 @@ export default function DietScreen() {
                     <Text style={styles.entryMacros}>
                       {formatMacros(entry)}
                     </Text>
-                  </View>
+                  </Pressable>
                   <Pressable
                     onPress={() => confirmDelete(entry)}
                     style={styles.iconButton}
@@ -225,6 +236,13 @@ export default function DietScreen() {
           );
         })}
       </View>
+      {editing && (
+        <FoodEntryPopup
+          entry={editing}
+          onClose={() => setEditing(null)}
+          onSave={(amount) => updateAmount(editing, amount)}
+        />
+      )}
     </ScrollView>
   );
 }

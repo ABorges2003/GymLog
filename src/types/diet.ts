@@ -60,4 +60,6 @@ export type DietGoals = {
   proteinG: number | null;
   carbsG: number | null;
   fatG: number | null;
+  // Roughly how many kcal are planned for each meal (optional, any meals).
+  mealKcal?: Partial<Record<Meal, number>>;
 };

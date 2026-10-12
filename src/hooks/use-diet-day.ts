@@ -6,6 +6,7 @@ import {
   deleteFoodEntry,
   getDayEntries,
   getDietGoals,
+  updateFoodEntryAmount,
 } from "@/db/repositories/diet";
 import type { DietGoals, FoodEntry } from "@/types/diet";
 
@@ -55,5 +56,13 @@ export function useDietDay(date: string) {
     [db, reload],
   );
 
-  return { day, error, deleteEntry };
+  const updateAmount = useCallback(
+    async (entry: FoodEntry, amount: number) => {
+      await updateFoodEntryAmount(db, entry, amount);
+      await reload();
+    },
+    [db, reload],
+  );
+
+  return { day, error, deleteEntry, updateAmount };
 }

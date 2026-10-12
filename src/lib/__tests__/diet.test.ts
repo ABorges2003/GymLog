@@ -7,6 +7,7 @@ import {
   searchFoods,
   sumMacros,
   validateFood,
+  rescaleEntry,
 } from "@/lib/diet";
 import type { FoodInput } from "@/types/diet";
 
@@ -156,5 +157,23 @@ describe("searchFoods", () => {
       "Pão",
       "Pão de forma",
     ]);
+  });
+});
+
+describe("rescaleEntry", () => {
+  it("scales the logged values to a new amount", () => {
+    const entry = { amount: 2, kcal: 600, proteinG: 30, carbsG: 50, fatG: 30 };
+    expect(rescaleEntry(entry, 3)).toEqual({
+      kcal: 900,
+      proteinG: 45,
+      carbsG: 75,
+      fatG: 45,
+    });
+    expect(rescaleEntry(entry, 1)).toEqual({
+      kcal: 300,
+      proteinG: 15,
+      carbsG: 25,
+      fatG: 15,
+    });
   });
 });

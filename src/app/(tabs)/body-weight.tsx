@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Link } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +16,8 @@ import {
 import { GoalEditor } from "@/components/goal-editor";
 import { WeightChart } from "@/components/weight-chart";
 import { useBodyWeight } from "@/hooks/use-body-weight";
+import { usePhases } from "@/hooks/use-phases";
+import { phaseStatus } from "@/lib/body-weight-phases";
 import {
   MOVING_AVERAGE_DAYS,
   goalStatus,
@@ -50,6 +53,14 @@ export default function BodyWeightScreen() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
   const { entries, goalKg, error, save, remove, saveGoal } = useBodyWeight();
+  const { phases } = usePhases();
+  // e.g. "Bulk inverno · em curso", "3 épocas" or a hint for the first one.
+  const ongoing = phases?.find((phase) => phaseStatus(phase) === "ongoing");
+  const phasesDetail = ongoing
+    ? `${ongoing.name} · em curso`
+    : phases && phases.length > 0
+      ? `${phases.length} ${phases.length === 1 ? "época" : "épocas"}`
+      : "Bulk, cut… marca períodos e vê o progresso de cada um";
   const today = toDateKey(new Date());
   const [day, setDay] = useState(today);
   const [text, setText] = useState("");
@@ -179,6 +190,23 @@ export default function BodyWeightScreen() {
         <GoalEditor goalKg={goalKg} onSave={saveGoal} />
       </View>
 
+      <Link href="/phases" asChild>
+        <Pressable
+          // One style object: Link asChild does not accept style arrays.
+          style={styles.phasesLink}
+          accessibilityRole="button"
+        >
+          <Ionicons name="calendar-outline" size={22} color={c.accent} />
+          <View style={styles.phasesText}>
+            <Text style={styles.phasesTitle}>Épocas</Text>
+            <Text style={styles.phasesDetail} numberOfLines={1}>
+              {phasesDetail}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={c.textFaint} />
+        </Pressable>
+      </Link>
+
       {summary && (
         <View style={[styles.card, styles.summary]}>
           <Text style={styles.summaryWeight}>
@@ -285,6 +313,27 @@ function createStyles(c: ThemeColors) {
       fontSize: 17,
       fontWeight: "bold",
       color: c.text,
+    },
+    phasesLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: c.card,
+    },
+    phasesText: {
+      flex: 1,
+      gap: 2,
+    },
+    phasesTitle: {
+      fontSize: 17,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    phasesDetail: {
+      fontSize: 14,
+      color: c.textMuted,
     },
     dayRow: {
       flexDirection: "row",

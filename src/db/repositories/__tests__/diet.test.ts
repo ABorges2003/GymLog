@@ -2,6 +2,8 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import {
   addFoodEntry,
+  getLastAmount,
+  updateFoodEntryAmount,
   createFood,
   deleteFoodEntry,
   getDayEntries,
@@ -12,6 +14,7 @@ import {
   setDietGoals,
   updateFood,
 } from "@/db/repositories/diet";
+import { setSetting } from "@/db/repositories/settings";
 import { createTestDatabase } from "@/test-utils/sqlite";
 import type { Food } from "@/types/diet";
 
@@ -72,6 +75,44 @@ describe("diet repository", () => {
 
     const [entry] = await getDayEntries(db, "2026-10-07");
     expect(entry.kcal).toBe(380);
+  });
+
+  it("remembers the amount of the last time a food was logged", async () => {
+    expect(await getLastAmount(db, oats.id)).toBeNull();
+    const log = (date: string, amount: number, at: string) =>
+      addFoodEntry(
+        db,
+        { date, meal: "breakfast", food: oats, amount },
+        new Date(at),
+      );
+    await log("2026-10-07", 80, "2026-10-07T08:00:00Z");
+    await log("2026-10-08", 60, "2026-10-08T08:00:00Z");
+    // Logged later, but for an earlier day: the latest day wins.
+    await log("2026-10-06", 100, "2026-10-09T08:00:00Z");
+    expect(await getLastAmount(db, oats.id)).toBe(60);
+  });
+
+  it("changes only the amount, with values in proportion", async () => {
+    await addFoodEntry(db, {
+      date: "2026-10-07",
+      meal: "breakfast",
+      food: oats,
+      amount: 80,
+    });
+    // The food changes later: the logged entry keeps its own values.
+    await updateFood(db, oats.id, { ...oats, kcal: 1000 });
+    const [entry] = await getDayEntries(db, "2026-10-07");
+    await updateFoodEntryAmount(db, entry, 40);
+
+    expect(await getDayEntries(db, "2026-10-07")).toEqual([
+      expect.objectContaining({
+        amount: 40,
+        kcal: 152,
+        proteinG: 5.2,
+        carbsG: 26.8,
+        fatG: 2.8,
+      }),
+    ]);
   });
 
   it("deletes an entry", async () => {
@@ -141,10 +182,40 @@ describe("diet repository", () => {
     expect((await getFoodById(db, id))?.basis).toBe("grams");
   });
 
-  it("saves the daily goals", async () => {
+  it("saves the daily goals and the kcal planned per meal", async () => {
     expect(await getDietGoals(db)).toBeNull();
-    const goals = { kcal: 2850, proteinG: 204, carbsG: 409, fatG: 90 };
+    const goals = {
+      kcal: 2850,
+      proteinG: 204,
+      carbsG: 409,
+      fatG: 90,
+      mealKcal: { breakfast: 600, lunch: 900 },
+    };
     await setDietGoals(db, goals);
     expect(await getDietGoals(db)).toEqual(goals);
+  });
+
+  it("reads goals saved before meals had planned kcal", async () => {
+    await setSetting(
+      db,
+      "diet_goals",
+      JSON.stringify({ kcal: 2850, proteinG: null, carbsG: null, fatG: null }),
+    );
+    expect((await getDietGoals(db))?.mealKcal).toEqual({});
+  });
+
+  it("ignores planned kcal that are not valid", async () => {
+    await setSetting(
+      db,
+      "diet_goals",
+      JSON.stringify({
+        kcal: 2850,
+        proteinG: null,
+        carbsG: null,
+        fatG: null,
+        mealKcal: { lunch: 900, brunch: 500, dinner: -1, supper: "x" },
+      }),
+    );
+    expect((await getDietGoals(db))?.mealKcal).toEqual({ lunch: 900 });
   });
 });

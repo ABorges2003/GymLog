@@ -46,7 +46,7 @@ The app has 5 tabs at the bottom:
 
 ## 2. First steps: create your exercises
 
-The exercise list starts **empty**: you create the exercises you actually do.
+The exercise list starts **empty**: you create the exercises you actually do. (Want a head start? See [8.3 Example exercises and foods](#83-example-exercises-and-foods).)
 
 1. Open the **Exercícios** (Exercises) tab.
 2. Tap the round **+** button in the bottom-right corner.
@@ -189,6 +189,28 @@ Below you see:
 
 > 💡 Body weight changes a lot from day to day (water, food). Look at the **7-day average** in the summary: it shows the real trend. Weigh yourself at the same time each day, e.g. in the morning.
 
+### 6.1 Phases (bulk, cut…)
+
+Below the goal there is the **Épocas** (phases) button: tap it to open the list of your phases. A phase is a period with a purpose, e.g. "Bulk inverno" or "Cut verão". The button shows the phase going on, if any.
+
+1. Tap **Épocas → + Nova época** (new phase).
+2. Type the **Nome** (name) and the **Início** (start) and **Fim** (end) dates as `dd/mm/aaaa` (the slashes are added for you). Don't know when it ends yet? Leave **Fim** empty and set it later.
+3. Tap **Criar época** (create phase).
+
+Tap a phase to open it. You see:
+- How far along it is (e.g. **Dia 29 de 84**, with a bar) and whether it is **Em curso** (going on).
+- The **change** in the phase (e.g. **+1,4 kg**). It starts from your weigh-in on the first day or, if you didn't weigh yourself that day, from your last weigh-in in the 2 weeks before, so a phase you just created already shows where you start.
+- The table is there from the start: values not known yet show **—**.
+- The **weekly rate**, in kg and as a **% of your body weight** per week (handy to check a bulk or a cut is not too fast or too slow), the number of entries and the lowest and highest weight.
+- The **chart** of your weight during the phase.
+
+The ✏️ at the top changes the name or the dates; **Apagar época** (delete phase) removes it. Your weigh-ins are never deleted: a phase only marks dates.
+
+<p align="center">
+  <img src="images/17-epocas.jpg" width="280" alt="List of body weight phases">
+  <img src="images/18-epoca.jpg" width="280" alt="A phase: days, change, weekly rate, lowest and highest weight and chart">
+</p>
+
 ---
 
 ## 7. Diet
@@ -199,7 +221,11 @@ The app never looks food values up: you create **your own foods** once, and then
 
 The first time, tap **Define os teus objetivos** (set your goals) and type your daily **Calorias** (kcal) and, optionally, **Proteína**, **Carbos** and **Gordura** (protein, carbs, fat in grams). Change them later with the ✏️ next to the remaining kcal.
 
-<p align="center"><img src="images/11-dieta.jpg" width="280" alt="Diet tab with the kcal left, the macro bars and the meals"></p>
+<p align="center"><img src="images/19-objetivos.jpg" width="280" alt="Goals screen with the kcal planned per meal"></p>
+
+In the same screen, **Por refeição (opcional)** (per meal) lets you type roughly how many kcal you plan for each meal (e.g. Almoço 900). The screen shows the total planned against your daily kcal, and each meal then shows **eaten / planned** (e.g. 420 / 400 kcal).
+
+<p align="center"><img src="images/11-dieta.jpg" width="280" alt="Diet tab with the kcal left, the macro bars and the meals (eaten / planned kcal)"></p>
 
 ### 7.2 Your foods
 
@@ -219,8 +245,14 @@ Tap a food in the list to **edit** it, or to delete it with **Apagar alimento** 
 
 Each meal (**Pequeno-almoço**, **Lanche da manhã**, **Almoço**, **Lanche da tarde**, **Jantar**, **Ceia**) has a **+**:
 1. Tap **+**, search and pick the food.
-2. Type the **grams** (or **ml**, or **units**). The app shows the kcal and macros for that amount.
+2. Type the **grams** (or **ml**, or **units**). The app already suggests the amount of the last time you ate that food (e.g. if you had **2** tostas mistas yesterday, it starts at 2). It shows the kcal and macros for that amount.
 3. Tap **Adicionar** (Add). The **✕** next to a food removes it.
+
+Got the amount wrong? **Tap the food** in the meal and change only the amount: its kcal and macros follow (worked out from the values it was logged with).
+
+<p align="center"><img src="images/20-quantidade.jpg" width="280" alt="Popup to change the amount of a food in a meal"></p>
+
+Next to each meal you see the kcal you ate; if you planned kcal for it (see 7.1), you see both: e.g. **420 / 400 kcal** (ate 420 of the 400 planned).
 
 Can't find the food? Tap **Criar alimento** (Create food) right there.
 
@@ -252,12 +284,16 @@ The file is called `gymlog-backup-YYYY-MM-DD.json`. For a full backup, keep the 
 2. Pick the file. A popup shows the parts it has and what each one holds (e.g. "27 exercícios, 6 rotinas, 20 treinos").
 3. Untick what you don't want to import and tap **Importar** (Import).
 
-> ⚠️ Each part you import **replaces** that part in the app (e.g. importing only **Dieta** replaces your foods and meals, and leaves your workouts and weight as they are). If something fails halfway, nothing is changed. The light/dark setting is never part of a backup.
+> ⚠️ Each part you import **replaces** that part in the app (e.g. importing only **Dieta** replaces your foods and meals, and leaves your workouts and weight as they are). If something fails halfway, nothing is changed. The light/dark setting is never part of a backup. Phases are part of **Peso**.
 
 <p align="center">
-  <img src="images/09-definicoes.jpg" width="280" alt="Settings with the appearance and backup cards">
+  <img src="images/09-definicoes.jpg" width="280" alt="Settings with the appearance, backup and example cards">
   <img src="images/16-backup-partes.jpg" width="280" alt="Import popup with Treinos, Peso and Dieta to choose from">
 </p>
+
+### 8.3 Example exercises and foods
+
+The app starts empty. If you don't want to create everything from zero, **Definições → Exemplos para começar → Adicionar exemplos** (Settings → Examples to get started) adds a list of example exercises and foods. Before adding, a message tells you how many will be added and which ones you **already have** with the same name (accents and capitals ignored): those stay exactly as they are. Nothing of yours is ever deleted or changed, and you can edit or delete the examples like your own.
 
 ---
 
@@ -287,7 +323,7 @@ Weights are only copied into the routine when you tap **Terminar** (Finish). If 
 No. `100 kg × 6 +1` counts the same as `100 kg × 6`: the +1 is only a reminder.
 
 **Can a friend use the app?**
-Yes: send them the APK file (e.g. by WhatsApp or Google Drive). Their data stays on their phone and they start with an empty app.
+Yes: send them the APK file (e.g. by WhatsApp or Google Drive). Their data stays on their phone and they start with an empty app; they can add the example exercises and foods (see 8.3) so they don't start from zero.
 
 **I did an extra top set one day. Is it added to the routine?**
 No. The routine's structure (how many sets and of which type) only changes in the routine's set editor. A workout only updates the weights and reps.

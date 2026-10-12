@@ -2,8 +2,15 @@ import { randomUUID } from "expo-crypto";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { getSetting, setSetting } from "@/db/repositories/settings";
-import { scaleMacros, type FoodValues } from "@/lib/diet";
-import type { DietGoals, Food, FoodBasis, FoodEntry, Meal } from "@/types/diet";
+import { rescaleEntry, scaleMacros, type FoodValues } from "@/lib/diet";
+import {
+  MEALS,
+  type DietGoals,
+  type Food,
+  type FoodBasis,
+  type FoodEntry,
+  type Meal,
+} from "@/types/diet";
 
 // In the table, ml foods are basis 'grams' with measure 'ml' (see migration v11).
 type DbBasis = "grams" | "unit";
@@ -187,6 +194,22 @@ export async function getDayEntries(
 
 // Logs `amount` grams/units of a food in a meal; the values are worked out
 // and stored now.
+// Amount of the last time a food was logged (grams, ml or units), or null if
+// it never was. Used to suggest the usual amount.
+export async function getLastAmount(
+  db: SQLiteDatabase,
+  foodId: string,
+): Promise<number | null> {
+  const row = await db.getFirstAsync<{ amount: number }>(
+    `SELECT amount FROM food_entries
+     WHERE food_id = ?
+     ORDER BY date DESC, created_at DESC
+     LIMIT 1`,
+    foodId,
+  );
+  return row?.amount ?? null;
+}
+
 export async function addFoodEntry(
   db: SQLiteDatabase,
   entry: { date: string; meal: Meal; food: Food; amount: number },
@@ -210,6 +233,26 @@ export async function addFoodEntry(
   );
 }
 
+// Changes the amount of a logged food; its values follow in proportion.
+export async function updateFoodEntryAmount(
+  db: SQLiteDatabase,
+  entry: FoodEntry,
+  amount: number,
+): Promise<void> {
+  const macros = rescaleEntry(entry, amount);
+  await db.runAsync(
+    `UPDATE food_entries
+     SET amount = ?, kcal = ?, protein_g = ?, carbs_g = ?, fat_g = ?
+     WHERE id = ?`,
+    amount,
+    macros.kcal,
+    macros.proteinG,
+    macros.carbsG,
+    macros.fatG,
+    entry.id,
+  );
+}
+
 export async function deleteFoodEntry(
   db: SQLiteDatabase,
   id: string,
@@ -225,7 +268,15 @@ export async function getDietGoals(
   if (!value) return null;
   try {
     const goals = JSON.parse(value) as DietGoals;
-    return typeof goals.kcal === "number" ? goals : null;
+    if (typeof goals.kcal !== "number") return null;
+    // Keep only real meals with a positive number.
+    const mealKcal = Object.fromEntries(
+      Object.entries(goals.mealKcal ?? {}).filter(
+        ([meal, kcal]) =>
+          MEALS.includes(meal as Meal) && typeof kcal === "number" && kcal > 0,
+      ),
+    );
+    return { ...goals, mealKcal };
   } catch {
     return null;
   }

@@ -19,7 +19,7 @@ export const BACKUP_PART_LABELS: Record<BackupPart, string> = {
 
 export const BACKUP_PART_DETAILS: Record<BackupPart, string> = {
   training: "Exercícios, rotinas e treinos",
-  body_weight: "Registos de peso e objetivo",
+  body_weight: "Registos de peso, objetivo e épocas",
   diet: "Alimentos, refeições e objetivos",
 };
 
@@ -35,7 +35,7 @@ const PART_TABLES: Record<BackupPart, TableName[]> = {
     "workout_exercises",
     "workout_sets",
   ],
-  body_weight: ["body_weight_entries"],
+  body_weight: ["body_weight_entries", "body_weight_phases"],
   diet: ["foods", "food_entries"],
 };
 
@@ -208,7 +208,10 @@ export function describePart(backup: Backup, part: BackupPart): string {
         count("workouts", "treino", "treinos"),
       ].join(", ");
     case "body_weight":
-      return count("body_weight_entries", "registo", "registos");
+      return [
+        count("body_weight_entries", "registo", "registos"),
+        count("body_weight_phases", "época", "épocas"),
+      ].join(", ");
     case "diet":
       return [
         count("foods", "alimento", "alimentos"),

@@ -26,6 +26,7 @@ import {
 } from "@/components/backup-parts-popup";
 import { FilterChips, type ChipOption } from "@/components/filter-chips";
 import { useBackup } from "@/hooks/use-backup";
+import { useStarterPack } from "@/hooks/use-starter-pack";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
 import type { ThemeColors } from "@/theme/colors";
 import {
@@ -71,6 +72,7 @@ export default function SettingsScreen() {
   useFocusEffect(loadDiagnostics);
 
   const { exportBackup, pickBackup, importBackup } = useBackup(loadDiagnostics);
+  const starterPack = useStarterPack(loadDiagnostics);
 
   async function run(kind: "export" | "import", action: () => Promise<void>) {
     setBusy(kind);
@@ -158,6 +160,33 @@ export default function SettingsScreen() {
               <Text style={styles.buttonText}>Importar backup</Text>
             </>
           )}
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Exemplos para começar</Text>
+        <Text style={styles.hint}>
+          A app começa vazia. Se quiseres, adiciona uma lista de exercícios e
+          alimentos de exemplo para não começares do zero. Antes de adicionar,
+          mostra o que já tens com o mesmo nome: isso fica como está e nada é
+          apagado.
+        </Text>
+        <Pressable
+          onPress={() => {
+            starterPack
+              .add()
+              .catch((error: unknown) => Alert.alert("Erro", String(error)));
+          }}
+          disabled={busy !== null}
+          style={[
+            styles.button,
+            styles.secondaryButton,
+            busy && styles.disabled,
+          ]}
+          accessibilityRole="button"
+        >
+          <Ionicons name="sparkles-outline" size={22} color={c.text} />
+          <Text style={styles.buttonText}>Adicionar exemplos</Text>
         </Pressable>
       </View>
 

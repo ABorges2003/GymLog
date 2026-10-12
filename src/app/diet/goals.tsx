@@ -13,10 +13,11 @@ import {
 
 import { KeyboardAwareScrollView } from "@/components/keyboard-aware-scroll-view";
 import { getDietGoals, setDietGoals } from "@/db/repositories/diet";
-import { parsePositive } from "@/lib/diet";
+import { MEAL_LABELS, parsePositive } from "@/lib/diet";
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { MEALS, type Meal } from "@/types/diet";
 
 type Field = "kcal" | "proteinG" | "carbsG" | "fatG";
 
@@ -27,13 +28,23 @@ const FIELDS: { key: Field; label: string; unit: string; max: number }[] = [
   { key: "fatG", label: "Gordura", unit: "g", max: 1000 },
 ];
 
-// Daily diet goals. Calories are required; macros are optional.
+const MAX_MEAL_KCAL = 5000;
+
+// Daily diet goals. Calories are required; macros and the kcal planned for
+// each meal are optional.
 export default function DietGoalsScreen() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
   const db = useSQLiteContext();
   const router = useRouter();
   const [texts, setTexts] = useState<Record<Field, string> | null>(null);
+  const [mealTexts, setMealTexts] = useState<Record<Meal, string>>(
+    () =>
+      Object.fromEntries(MEALS.map((meal) => [meal, ""])) as Record<
+        Meal,
+        string
+      >,
+  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -47,6 +58,11 @@ export default function DietGoalsScreen() {
           carbsG: text(goals?.carbsG),
           fatG: text(goals?.fatG),
         });
+        setMealTexts(
+          Object.fromEntries(
+            MEALS.map((meal) => [meal, text(goals?.mealKcal?.[meal])]),
+          ) as Record<Meal, string>,
+        );
       })
       .catch(() => Alert.alert("Erro", "Não foi possível ler os objetivos."));
   }, [db]);
@@ -68,9 +84,22 @@ export default function DietGoalsScreen() {
       (field.key === "kcal" || texts[field.key].trim() !== "") &&
       parse(field) === null,
   ).map((field) => field.key);
+  const parseMeal = (meal: Meal) =>
+    mealTexts[meal].trim() === ""
+      ? null
+      : parsePositive(mealTexts[meal], MAX_MEAL_KCAL);
+  const invalidMeals = MEALS.filter(
+    (meal) => mealTexts[meal].trim() !== "" && parseMeal(meal) === null,
+  );
+  const plannedTotal = MEALS.reduce(
+    (total, meal) => total + Math.round(parseMeal(meal) ?? 0),
+    0,
+  );
+  const dayKcal = parse(FIELDS[0]);
+  const blocked = invalid.length > 0 || invalidMeals.length > 0;
 
   async function save() {
-    if (invalid.length > 0 || !texts) return;
+    if (blocked || !texts) return;
     setSaving(true);
     try {
       const [kcal, proteinG, carbsG, fatG] = FIELDS.map(parse);
@@ -79,6 +108,12 @@ export default function DietGoalsScreen() {
         proteinG,
         carbsG,
         fatG,
+        mealKcal: Object.fromEntries(
+          MEALS.flatMap((meal) => {
+            const value = parseMeal(meal);
+            return value === null ? [] : [[meal, Math.round(value)]];
+          }),
+        ),
       });
       router.back();
     } catch {
@@ -120,13 +155,49 @@ export default function DietGoalsScreen() {
           </View>
         </View>
       ))}
+
+      <Text style={styles.sectionTitle}>Por refeição (opcional)</Text>
+      <Text style={styles.hint}>
+        Mais ou menos quantas kcal planeias para cada refeição. Aparece ao lado
+        dela, ex.: 420 / 400 kcal.
+      </Text>
+      {MEALS.map((meal) => (
+        <View key={meal} style={styles.mealRow}>
+          <Text style={styles.mealLabel}>{MEAL_LABELS[meal]}</Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.mealInput,
+              invalidMeals.includes(meal) && styles.inputError,
+            ]}
+            value={mealTexts[meal]}
+            onChangeText={(text) =>
+              setMealTexts((current) => ({ ...current, [meal]: text }))
+            }
+            keyboardType="number-pad"
+            placeholder="—"
+            placeholderTextColor={c.textFaint}
+            maxLength={5}
+            selectTextOnFocus
+            accessibilityLabel={`Kcal planeadas para ${MEAL_LABELS[meal]}`}
+          />
+          <Text style={styles.unit}>kcal</Text>
+        </View>
+      ))}
+      {plannedTotal > 0 && (
+        <Text style={styles.hint}>
+          Total planeado: {formatWeight(plannedTotal)}
+          {dayKcal === null
+            ? ""
+            : ` de ${formatWeight(Math.round(dayKcal))}`}{" "}
+          kcal
+        </Text>
+      )}
+
       <Pressable
         onPress={save}
-        disabled={invalid.length > 0 || saving}
-        style={[
-          styles.button,
-          (invalid.length > 0 || saving) && styles.disabled,
-        ]}
+        disabled={blocked || saving}
+        style={[styles.button, (blocked || saving) && styles.disabled]}
         accessibilityRole="button"
       >
         {saving ? (
@@ -149,6 +220,28 @@ function createStyles(c: ThemeColors) {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
+    },
+    sectionTitle: {
+      marginTop: 8,
+      fontSize: 18,
+      fontWeight: "bold",
+      color: c.text,
+    },
+    mealRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    mealLabel: {
+      flex: 1,
+      fontSize: 16,
+      color: c.text,
+    },
+    mealInput: {
+      flex: 0,
+      width: 110,
+      minHeight: 48,
+      fontSize: 18,
     },
     hint: {
       fontSize: 15,
