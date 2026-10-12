@@ -16,6 +16,7 @@ import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { formatBasis, formatMacros, searchFoods } from "@/lib/diet";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { shadows } from "@/theme/tokens";
 
 // The user's foods: tap one to edit it, + to create one.
 export default function FoodsScreen() {
@@ -155,7 +156,7 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: c.primary,
-      elevation: 4,
+      boxShadow: shadows.raised,
     },
   });
 }

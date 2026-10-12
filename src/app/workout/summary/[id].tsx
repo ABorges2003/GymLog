@@ -1,13 +1,17 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import type { ComponentProps } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 
+import { CountUpText } from "@/components/count-up-text";
+import { PressableScale } from "@/components/pressable-scale";
 import { ProgressChangeRow } from "@/components/progress-change-row";
 import { SetTypeBadge } from "@/components/set-type-badge";
 import { useWorkoutSummary } from "@/hooks/use-workout-summary";
@@ -19,20 +23,55 @@ import {
   setTypeHasReps,
 } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
-import { useThemedStyles } from "@/theme/theme";
+import { useColors, useThemedStyles } from "@/theme/theme";
+import { radius, spacing, type } from "@/theme/tokens";
 
-function Stat({ value, label }: { value: string; label: string }) {
+type IconName = ComponentProps<typeof Ionicons>["name"];
+
+// Entrance timing: the hero lands first, then the stats one after another,
+// then the cards. Only on this screen (seen once per workout).
+const STAT_DELAY = 150;
+const STAT_STAGGER = 80;
+const CARDS_DELAY = 450;
+
+const formatCount = (value: number) => String(Math.round(value));
+
+function Stat({
+  value,
+  format,
+  label,
+  icon,
+  index,
+}: {
+  value: number;
+  format: (value: number) => string;
+  label: string;
+  icon: IconName;
+  index: number;
+}) {
+  const c = useColors();
   const styles = useThemedStyles(createStyles);
+  const delay = STAT_DELAY + index * STAT_STAGGER;
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
+    <Animated.View
+      entering={FadeInDown.duration(300).delay(delay)}
+      style={styles.stat}
+    >
+      <Ionicons name={icon} size={20} color={c.primary} />
+      <CountUpText
+        value={value}
+        format={format}
+        delay={delay}
+        style={styles.statValue}
+      />
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
 // Shown right after a workout is finished.
 export default function WorkoutSummaryScreen() {
+  const c = useColors();
   const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -49,7 +88,7 @@ export default function WorkoutSummaryScreen() {
   if (!summary) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -61,32 +100,83 @@ export default function WorkoutSummaryScreen() {
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>
-            {ups > 0 ? "Bom treino! 💪" : "Treino terminado"}
-          </Text>
-          <Text style={styles.subtitle}>
-            {detail.routineName ? `${detail.routineName} · ` : ""}
-            {formatLongDate(detail.workout.startedAt)}
-          </Text>
-          {detail.workout.finishedAt && (
-            <Text style={styles.subtitle}>
-              Duração:{" "}
-              {formatElapsed(
-                detail.workout.startedAt,
-                new Date(detail.workout.finishedAt),
-              )}
+          <Animated.View
+            entering={ZoomIn.springify().duration(500).dampingRatio(0.6)}
+            style={[styles.heroIcon, ups > 0 && styles.heroIconWin]}
+          >
+            <Ionicons
+              name={ups > 0 ? "trophy" : "checkmark-done"}
+              size={40}
+              color={ups > 0 ? c.onPrimary : c.onPrimarySoft}
+            />
+          </Animated.View>
+          <Animated.View
+            entering={FadeIn.duration(300).delay(100)}
+            style={styles.headerText}
+          >
+            <Text style={styles.title}>
+              {ups > 0 ? "Bom treino! 💪" : "Treino terminado"}
             </Text>
-          )}
+            <Text style={styles.subtitle}>
+              {detail.routineName ? `${detail.routineName} · ` : ""}
+              {formatLongDate(detail.workout.startedAt)}
+            </Text>
+            {detail.workout.finishedAt && (
+              <View style={styles.duration}>
+                <Ionicons
+                  name="stopwatch-outline"
+                  size={16}
+                  color={c.onPrimarySoft}
+                />
+                <Text style={styles.durationText}>
+                  Duração:{" "}
+                  {formatElapsed(
+                    detail.workout.startedAt,
+                    new Date(detail.workout.finishedAt),
+                  )}
+                </Text>
+              </View>
+            )}
+          </Animated.View>
         </View>
 
         <View style={styles.stats}>
-          <Stat value={String(totals.exerciseCount)} label="exercícios" />
-          <Stat value={String(totals.setCount)} label="séries" />
-          <Stat value={formatVolume(totals.volumeKg)} label="volume" />
+          <Stat
+            value={totals.exerciseCount}
+            format={formatCount}
+            label="exercícios"
+            icon="barbell-outline"
+            index={0}
+          />
+          <Stat
+            value={totals.setCount}
+            format={formatCount}
+            label="séries"
+            icon="layers-outline"
+            index={1}
+          />
+          <Stat
+            value={totals.volumeKg}
+            format={formatVolume}
+            label="volume"
+            icon="trending-up"
+            index={2}
+          />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Progressões</Text>
+        <Animated.View
+          entering={FadeInDown.duration(300).delay(CARDS_DELAY)}
+          style={styles.card}
+        >
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Progressões</Text>
+            {ups > 0 && (
+              <View style={styles.upsBadge}>
+                <Ionicons name="arrow-up" size={14} color={c.success} />
+                <Text style={styles.upsText}>{ups}</Text>
+              </View>
+            )}
+          </View>
           {changes.length === 0 ? (
             <Text style={styles.empty}>
               Sem alterações em relação à última vez.
@@ -96,9 +186,12 @@ export default function WorkoutSummaryScreen() {
               <ProgressChangeRow key={change.exerciseId} change={change} />
             ))
           )}
-        </View>
+        </Animated.View>
 
-        <View style={styles.card}>
+        <Animated.View
+          entering={FadeInDown.duration(300).delay(CARDS_DELAY + 100)}
+          style={styles.card}
+        >
           <Text style={styles.cardTitle}>Séries</Text>
           {detail.exercises.map((exercise) => {
             // Top sets and back-offs: the ones that count.
@@ -126,17 +219,17 @@ export default function WorkoutSummaryScreen() {
               </View>
             );
           })}
-        </View>
+        </Animated.View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
+        <PressableScale
           onPress={() => router.back()}
           style={styles.button}
           accessibilityRole="button"
         >
           <Text style={styles.buttonText}>Fechar</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );
@@ -148,49 +241,83 @@ function createStyles(c: ThemeColors) {
       flex: 1,
     },
     container: {
-      gap: 16,
-      padding: 16,
+      gap: spacing.lg,
+      padding: spacing.lg,
     },
     center: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      padding: 16,
+      padding: spacing.lg,
     },
     error: {
-      fontSize: 16,
+      ...type.body,
       color: c.danger,
       textAlign: "center",
     },
     header: {
       alignItems: "center",
-      gap: 4,
-      paddingVertical: 8,
+      gap: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    headerText: {
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    heroIcon: {
+      width: 84,
+      height: 84,
+      borderRadius: radius.full,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primarySoft,
+    },
+    heroIconWin: {
+      backgroundColor: c.primary,
     },
     title: {
       fontSize: 26,
-      fontWeight: "bold",
+      fontWeight: "700",
       color: c.text,
     },
     subtitle: {
-      fontSize: 15,
+      ...type.subhead,
+      textAlign: "center",
       color: c.textMuted,
+    },
+    duration: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      marginTop: spacing.xs,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.full,
+      backgroundColor: c.primarySoft,
+    },
+    durationText: {
+      ...type.captionStrong,
+      fontSize: 14,
+      fontVariant: ["tabular-nums"],
+      color: c.onPrimarySoft,
     },
     stats: {
       flexDirection: "row",
-      gap: 12,
+      gap: spacing.md,
     },
     stat: {
       flex: 1,
       alignItems: "center",
-      gap: 2,
-      paddingVertical: 16,
-      borderRadius: 12,
+      gap: spacing.xs,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xs,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
     },
     statValue: {
       fontSize: 20,
-      fontWeight: "bold",
+      fontWeight: "700",
+      fontVariant: ["tabular-nums"],
       color: c.text,
     },
     statLabel: {
@@ -198,37 +325,54 @@ function createStyles(c: ThemeColors) {
       color: c.textMuted,
     },
     card: {
-      gap: 4,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderRadius: 12,
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
     },
+    cardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      marginBottom: spacing.xs,
+    },
     cardTitle: {
+      ...type.headline,
       fontSize: 17,
-      fontWeight: "bold",
-      marginBottom: 4,
       color: c.text,
     },
+    upsBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xxs,
+      paddingVertical: spacing.xxs,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.full,
+      backgroundColor: c.successBg,
+    },
+    upsText: {
+      ...type.captionStrong,
+      color: c.success,
+    },
     exercise: {
-      gap: 6,
-      paddingVertical: 8,
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
     },
     exerciseName: {
-      fontSize: 16,
-      fontWeight: "600",
+      ...type.bodyStrong,
       color: c.text,
     },
     setRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: spacing.sm,
     },
     setText: {
+      ...type.subhead,
       flex: 1,
-      fontSize: 15,
       color: c.text,
     },
     assisted: {
@@ -236,11 +380,11 @@ function createStyles(c: ThemeColors) {
       color: c.accent,
     },
     empty: {
-      fontSize: 15,
+      ...type.subhead,
       color: c.textMuted,
     },
     footer: {
-      padding: 16,
+      padding: spacing.lg,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
       backgroundColor: c.card,
@@ -249,12 +393,12 @@ function createStyles(c: ThemeColors) {
       minHeight: 56,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 12,
+      borderRadius: radius.lg,
       backgroundColor: c.primary,
     },
     buttonText: {
+      ...type.bodyStrong,
       fontSize: 17,
-      fontWeight: "600",
       color: c.onPrimary,
     },
   });

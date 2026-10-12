@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { formatElapsed } from "@/lib/dates";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { radius, spacing, type } from "@/theme/tokens";
 
 type Props = {
   // When the workout started (ISO 8601).
@@ -30,7 +31,7 @@ export function WorkoutTimer({ startedAt }: Props) {
       accessible
       accessibilityLabel={`Tempo de treino: ${elapsed}`}
     >
-      <Ionicons name="stopwatch-outline" size={18} color={c.accent} />
+      <Ionicons name="stopwatch-outline" size={16} color={c.onPrimarySoft} />
       <Text style={styles.text}>{elapsed}</Text>
     </View>
   );
@@ -41,14 +42,17 @@ function createStyles(c: ThemeColors) {
     timer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.full,
+      backgroundColor: c.primarySoft,
     },
     text: {
-      fontSize: 17,
-      fontWeight: "700",
+      ...type.bodyStrong,
       // Digits of the same width, so the text does not jump every second.
       fontVariant: ["tabular-nums"],
-      color: c.accent,
+      color: c.onPrimarySoft,
     },
   });
 }

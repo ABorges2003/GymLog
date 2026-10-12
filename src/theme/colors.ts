@@ -11,9 +11,14 @@ export type ThemeColors = {
   input: string; // text input background
   primary: string; // main buttons, selected chips
   onPrimary: string; // text and icons on primary
+  primarySoft: string; // tonal buttons, timer pill
+  onPrimarySoft: string; // text and icons on primarySoft
   ripple: string;
   overlay: string; // behind popups
   accent: string; // charts
+  carbs: string; // diet macro rings
+  protein: string;
+  fat: string;
   star: string; // favorites
   danger: string;
   dangerBg: string;
@@ -34,11 +39,16 @@ export const LIGHT_COLORS: ThemeColors = {
   border: "#d0d4da",
   subtle: "#eef0f3",
   input: "#f9fafb",
-  primary: "#1f2937",
+  primary: "#7c3aed",
   onPrimary: "#ffffff",
+  primarySoft: "#ede9fe",
+  onPrimarySoft: "#5b21b6",
   ripple: "#e5e7eb",
   overlay: "rgba(0, 0, 0, 0.45)",
   accent: "#7c3aed",
+  carbs: "#f59e0b",
+  protein: "#0ea5e9",
+  fat: "#ec4899",
   star: "#f5a524",
   danger: "#dc2626",
   dangerBg: "#fee2e2",
@@ -59,11 +69,16 @@ export const DARK_COLORS: ThemeColors = {
   border: "#374151",
   subtle: "#262a31",
   input: "#14171c",
-  primary: "#e5e7eb",
-  onPrimary: "#111827",
+  primary: "#a78bfa",
+  onPrimary: "#1e1b4b",
+  primarySoft: "#2e2547",
+  onPrimarySoft: "#c4b5fd",
   ripple: "#2d323a",
   overlay: "rgba(0, 0, 0, 0.6)",
   accent: "#a78bfa",
+  carbs: "#fbbf24",
+  protein: "#38bdf8",
+  fat: "#f472b6",
   star: "#fbbf24",
   danger: "#f87171",
   dangerBg: "#3b1717",

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 
 import { GoalEditor } from "@/components/goal-editor";
+import { PressableScale } from "@/components/pressable-scale";
 import { WeightChart } from "@/components/weight-chart";
 import { useBodyWeight } from "@/hooks/use-body-weight";
 import { usePhases } from "@/hooks/use-phases";
@@ -35,6 +36,7 @@ import {
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { radius, spacing, type } from "@/theme/tokens";
 
 function formatChange(change: number): string {
   const rounded = Math.round(change * 10) / 10;
@@ -116,7 +118,7 @@ export default function BodyWeightScreen() {
   if (!entries) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -128,24 +130,24 @@ export default function BodyWeightScreen() {
     >
       <View style={styles.card}>
         <View style={styles.dayRow}>
-          <Pressable
+          <PressableScale
             onPress={() => setDay(addDaysToKey(day, -1))}
             style={styles.dayButton}
             accessibilityRole="button"
             accessibilityLabel="Dia anterior"
           >
-            <Ionicons name="chevron-back" size={26} color={c.text} />
-          </Pressable>
+            <Ionicons name="chevron-back" size={24} color={c.text} />
+          </PressableScale>
           <Text style={styles.dayLabel}>{formatDayLabel(day)}</Text>
-          <Pressable
+          <PressableScale
             onPress={() => setDay(addDaysToKey(day, 1))}
             disabled={day >= today}
             style={[styles.dayButton, day >= today && styles.disabled]}
             accessibilityRole="button"
             accessibilityLabel="Dia seguinte"
           >
-            <Ionicons name="chevron-forward" size={26} color={c.text} />
-          </Pressable>
+            <Ionicons name="chevron-forward" size={24} color={c.text} />
+          </PressableScale>
         </View>
 
         <View style={styles.inputRow}>
@@ -160,13 +162,14 @@ export default function BodyWeightScreen() {
             placeholder="—"
             placeholderTextColor={c.textFaint}
             maxLength={6}
+            cursorColor={c.primary}
             selectTextOnFocus
             accessibilityLabel="Peso em kg"
           />
           <Text style={styles.unit}>kg</Text>
         </View>
 
-        <Pressable
+        <PressableScale
           onPress={handleSave}
           disabled={weight === null || saving || weight === existing?.weightKg}
           style={[
@@ -183,7 +186,7 @@ export default function BodyWeightScreen() {
               {existing ? "Atualizar" : "Guardar"}
             </Text>
           )}
-        </Pressable>
+        </PressableScale>
       </View>
 
       <View style={styles.card}>
@@ -191,12 +194,14 @@ export default function BodyWeightScreen() {
       </View>
 
       <Link href="/phases" asChild>
-        <Pressable
+        <PressableScale
           // One style object: Link asChild does not accept style arrays.
           style={styles.phasesLink}
           accessibilityRole="button"
         >
-          <Ionicons name="calendar-outline" size={22} color={c.accent} />
+          <View style={styles.phasesIcon}>
+            <Ionicons name="calendar" size={20} color={c.onPrimarySoft} />
+          </View>
           <View style={styles.phasesText}>
             <Text style={styles.phasesTitle}>Épocas</Text>
             <Text style={styles.phasesDetail} numberOfLines={1}>
@@ -204,13 +209,14 @@ export default function BodyWeightScreen() {
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={c.textFaint} />
-        </Pressable>
+        </PressableScale>
       </Link>
 
       {summary && (
         <View style={[styles.card, styles.summary]}>
           <Text style={styles.summaryWeight}>
-            {formatWeight(summary.latest.weightKg)} kg
+            {formatWeight(summary.latest.weightKg)}
+            <Text style={styles.summaryUnit}> kg</Text>
           </Text>
           <Text style={styles.summaryLine}>
             Média de {MOVING_AVERAGE_DAYS} dias:{" "}
@@ -276,6 +282,11 @@ export default function BodyWeightScreen() {
       )}
 
       {entries.length === 0 && (
+        <View style={styles.emptyIcon}>
+          <Ionicons name="scale" size={36} color={c.onPrimarySoft} />
+        </View>
+      )}
+      {entries.length === 0 && (
         <Text style={styles.empty}>
           Regista o teu peso todos os dias, de preferência à mesma hora. A média
           de {MOVING_AVERAGE_DAYS} dias mostra a tendência real, sem as
@@ -289,46 +300,54 @@ export default function BodyWeightScreen() {
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: {
-      gap: 12,
-      padding: 16,
+      gap: spacing.md,
+      padding: spacing.lg,
     },
     center: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      padding: 16,
+      padding: spacing.lg,
     },
     error: {
-      fontSize: 16,
+      ...type.body,
       color: c.danger,
       textAlign: "center",
     },
     card: {
-      gap: 12,
-      padding: 16,
-      borderRadius: 12,
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
     },
     cardTitle: {
+      ...type.headline,
       fontSize: 17,
-      fontWeight: "bold",
       color: c.text,
     },
     phasesLink: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      padding: 16,
-      borderRadius: 12,
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
+    },
+    phasesIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.full,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primarySoft,
     },
     phasesText: {
       flex: 1,
-      gap: 2,
+      gap: spacing.xxs,
     },
     phasesTitle: {
+      ...type.headline,
       fontSize: 17,
-      fontWeight: "bold",
       color: c.text,
     },
     phasesDetail: {
@@ -340,15 +359,16 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
     },
     dayButton: {
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
+      borderRadius: radius.full,
       alignItems: "center",
       justifyContent: "center",
+      backgroundColor: c.subtle,
     },
     dayLabel: {
+      ...type.headline,
       flex: 1,
-      fontSize: 18,
-      fontWeight: "600",
       textAlign: "center",
       color: c.text,
     },
@@ -356,18 +376,19 @@ function createStyles(c: ThemeColors) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      gap: spacing.sm,
     },
     input: {
       width: 160,
       minHeight: 64,
       fontSize: 36,
-      fontWeight: "bold",
+      fontWeight: "700",
+      fontVariant: ["tabular-nums"],
       textAlign: "center",
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.input,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      backgroundColor: c.subtle,
       color: c.text,
     },
     inputError: {
@@ -382,12 +403,12 @@ function createStyles(c: ThemeColors) {
       minHeight: 52,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 12,
+      borderRadius: radius.md,
       backgroundColor: c.primary,
     },
     saveText: {
+      ...type.bodyStrong,
       fontSize: 17,
-      fontWeight: "600",
       color: c.onPrimary,
     },
     disabled: {
@@ -395,40 +416,47 @@ function createStyles(c: ThemeColors) {
     },
     summary: {
       alignItems: "center",
-      gap: 4,
+      gap: spacing.xs,
+      paddingVertical: spacing.xl,
     },
     summaryWeight: {
-      fontSize: 32,
-      fontWeight: "bold",
+      fontSize: 48,
+      fontWeight: "700",
+      fontVariant: ["tabular-nums"],
       color: c.text,
+    },
+    summaryUnit: {
+      fontSize: 22,
+      fontWeight: "600",
+      color: c.textMuted,
     },
     goalLine: {
       fontWeight: "600",
       color: c.warningText,
     },
     summaryLine: {
-      fontSize: 15,
+      ...type.subhead,
       color: c.textMuted,
     },
     legend: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: spacing.xs,
     },
     legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
+      width: 10,
+      height: 10,
+      borderRadius: radius.full,
     },
     legendDaily: {
       backgroundColor: c.accent,
     },
     legendGoal: {
-      marginLeft: 12,
+      marginLeft: spacing.md,
       backgroundColor: c.warning,
     },
     legendText: {
-      fontSize: 13,
+      ...type.caption,
       color: c.textMuted,
     },
     entryRow: {
@@ -439,28 +467,38 @@ function createStyles(c: ThemeColors) {
       borderBottomColor: c.subtle,
     },
     entryDate: {
+      ...type.subhead,
       flex: 1,
-      fontSize: 15,
       color: c.textMuted,
     },
     entryWeight: {
-      fontSize: 16,
-      fontWeight: "600",
+      ...type.bodyStrong,
+      fontVariant: ["tabular-nums"],
       color: c.text,
     },
     deleteButton: {
       width: 40,
       height: 40,
-      marginRight: -8,
+      marginRight: -spacing.sm,
       alignItems: "center",
       justifyContent: "center",
     },
+    emptyIcon: {
+      alignSelf: "center",
+      width: 80,
+      height: 80,
+      marginTop: spacing.lg,
+      borderRadius: radius.full,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primarySoft,
+    },
     empty: {
-      fontSize: 15,
+      ...type.subhead,
       color: c.textMuted,
       textAlign: "center",
       lineHeight: 22,
-      marginTop: 8,
+      paddingHorizontal: spacing.lg,
     },
   });
 }

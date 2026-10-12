@@ -1,8 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRef } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { ExerciseHistoryButton } from "@/components/exercise-history-button";
+import { PressableScale } from "@/components/pressable-scale";
 import { ProgressionNote } from "@/components/progression-note";
 import { WorkoutSetRow } from "@/components/workout-set-row";
 import { MAX_SETS_PER_EXERCISE } from "@/lib/sets";
@@ -11,6 +13,7 @@ import type { PlannedSet } from "@/types/set";
 import type { WorkoutExercise } from "@/types/workout";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { motion, radius, spacing, type } from "@/theme/tokens";
 
 type Props = {
   // Whether the exercise has history (null while loading).
@@ -66,8 +69,12 @@ export function WorkoutExerciseCard({
         }}
       >
         {item.sets.map((set, index) => (
-          <View
+          // Fades in when added and out when deleted (not on first render:
+          // see LayoutAnimationConfig in the workout screen).
+          <Animated.View
             key={set.id}
+            entering={FadeIn.duration(motion.enter)}
+            exiting={FadeOut.duration(motion.state)}
             onLayout={(event) =>
               rowY.current.set(set.id, event.nativeEvent.layout.y)
             }
@@ -85,11 +92,11 @@ export function WorkoutExerciseCard({
                 onInputFocus(setsY.current + (rowY.current.get(set.id) ?? 0))
               }
             />
-          </View>
+          </Animated.View>
         ))}
       </View>
 
-      <Pressable
+      <PressableScale
         onPress={onAddSet}
         disabled={item.sets.length >= MAX_SETS_PER_EXERCISE}
         style={[
@@ -98,9 +105,9 @@ export function WorkoutExerciseCard({
         ]}
         accessibilityRole="button"
       >
-        <Ionicons name="add" size={20} color={c.text} />
+        <Ionicons name="add" size={20} color={c.onPrimarySoft} />
         <Text style={styles.addText}>Série</Text>
-      </Pressable>
+      </PressableScale>
 
       {onProgressionChange && (
         <View style={styles.note}>
@@ -118,49 +125,49 @@ export function WorkoutExerciseCard({
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     card: {
-      gap: 8,
-      paddingTop: 14,
-      paddingHorizontal: 12,
-      paddingBottom: 4,
-      borderRadius: 12,
+      gap: spacing.sm,
+      paddingTop: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xs,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
     },
+    // Negative margins: the history button's touch area is bigger than its
+    // icon, so this keeps the name aligned with the card padding.
     header: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: -10,
-      marginRight: -8,
+      marginTop: -spacing.sm,
+      marginRight: -spacing.sm,
     },
     name: {
+      ...type.headline,
       flex: 1,
-      fontSize: 18,
-      fontWeight: "600",
       color: c.text,
     },
     sets: {
-      gap: 4,
+      gap: spacing.xs,
     },
+    // Tonal button: clearly tappable without competing with "Terminar".
     addButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 6,
+      gap: spacing.xs,
       minHeight: 44,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderStyle: "dashed",
-      borderColor: c.textFaint,
+      marginTop: spacing.xs,
+      borderRadius: radius.md,
+      backgroundColor: c.primarySoft,
     },
     addText: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: c.text,
+      ...type.bodyStrong,
+      color: c.onPrimarySoft,
     },
     disabled: {
       opacity: 0.4,
     },
     note: {
-      marginHorizontal: -12,
+      marginHorizontal: -spacing.md,
     },
   });
 }

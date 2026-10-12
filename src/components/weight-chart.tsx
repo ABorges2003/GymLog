@@ -61,13 +61,22 @@ export function WeightChart({ points }: Props) {
         endSpacing={24}
         color={c.accent}
         thickness={3}
+        // Soft gradient under the daily line (not under the goal line).
+        areaChart1
+        startFillColor1={c.accent}
+        endFillColor1={c.accent}
+        startOpacity1={0.3}
+        endOpacity1={0.02}
+        // Draws the line in when the chart appears.
+        isAnimated
+        animationDuration={600}
         dataPointsColor={c.accent}
         dataPointsRadius={5}
         textColor={c.text}
         textFontSize={12}
         textShiftY={-10}
         textShiftX={-8}
-        yAxisColor={c.border}
+        yAxisThickness={0}
         xAxisColor={c.border}
         rulesColor={c.subtle}
         yAxisTextStyle={styles.axisText}

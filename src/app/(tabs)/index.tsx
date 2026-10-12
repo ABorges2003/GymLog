@@ -1,16 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link, useRouter } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import Animated, {
+  FadeIn,
+  LayoutAnimationConfig,
+} from "react-native-reanimated";
 
+import { PressableScale } from "@/components/pressable-scale";
 import { RoutineList } from "@/components/routine-list";
 import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
 import { WorkoutTimer } from "@/components/workout-timer";
@@ -21,6 +25,7 @@ import { formatLongDate } from "@/lib/dates";
 import { progressKey } from "@/lib/progress";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { motion, radius, spacing, type } from "@/theme/tokens";
 
 export default function WorkoutScreen() {
   const c = useColors();
@@ -41,6 +46,20 @@ export default function WorkoutScreen() {
   const [busy, setBusy] = useState(false);
   const withHistory = useExercisesWithHistory();
   const router = useRouter();
+  const navigation = useNavigation();
+
+  // During a workout the tab header shows the routine name and the timer, so
+  // the screen doesn't need a second header of its own.
+  const routineTitle = detail ? (detail.routineName ?? "Treino") : null;
+  const startedAt = detail?.workout.startedAt ?? null;
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: routineTitle ?? undefined,
+      headerRight: startedAt
+        ? () => <WorkoutTimer startedAt={startedAt} />
+        : undefined,
+    });
+  }, [navigation, routineTitle, startedAt]);
 
   // Keeps the set being typed in visible above the keyboard (see the routine
   // set editor for the same idea).
@@ -131,7 +150,7 @@ export default function WorkoutScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -157,89 +176,90 @@ export default function WorkoutScreen() {
     );
   }
 
-  const { workout, routineName, exercises } = detail;
+  const { workout, exercises } = detail;
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{routineName ?? "Treino"}</Text>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerLabel}>
-            {formatLongDate(workout.startedAt)}
-          </Text>
-          <WorkoutTimer startedAt={workout.startedAt} />
-        </View>
-      </View>
-
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[
           styles.body,
-          { paddingBottom: 16 + keyboardHeight },
+          { paddingBottom: spacing.lg + keyboardHeight },
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        {exercises.map((item) => {
-          const { routineExerciseId } = item;
-          return (
-            <View
-              key={item.id}
-              onLayout={(event) =>
-                cardY.current.set(item.id, event.nativeEvent.layout.y)
-              }
-            >
-              <WorkoutExerciseCard
-                item={item}
-                routineId={workout.routineId}
-                hasHistory={
-                  withHistory
-                    ? withHistory.has(
-                        progressKey(workout.routineId, item.exercise.id),
-                      )
-                    : null
+        <Text style={styles.date}>{formatLongDate(workout.startedAt)}</Text>
+
+        {/* Cards and sets already there when the screen opens don't animate;
+            ones added later fade in. */}
+        <LayoutAnimationConfig skipEntering>
+          {exercises.map((item) => {
+            const { routineExerciseId } = item;
+            return (
+              <Animated.View
+                key={item.id}
+                entering={FadeIn.duration(motion.enter)}
+                onLayout={(event) =>
+                  cardY.current.set(item.id, event.nativeEvent.layout.y)
                 }
-                onUpdateSet={(setId, values) => {
-                  updateSet(setId, values).catch(
-                    showError("Não foi possível guardar a série."),
-                  );
-                }}
-                onAddSet={() => {
-                  addSet(item.id).catch(
-                    showError("Não foi possível adicionar a série."),
-                  );
-                }}
-                onDeleteSet={confirmDeleteSet}
-                onAssistedRepsChange={(setId, reps) => {
-                  setAssisted(setId, reps).catch(
-                    showError("Não foi possível guardar as reps com ajuda."),
-                  );
-                }}
-                onProgressionChange={
-                  routineExerciseId
-                    ? (progression) => {
-                        setProgression(routineExerciseId, progression).catch(
-                          showError("Não foi possível guardar a nota."),
-                        );
-                      }
-                    : null
-                }
-                onInputFocus={(offsetY) =>
-                  setFocusY((cardY.current.get(item.id) ?? 0) + offsetY)
-                }
-              />
-            </View>
-          );
-        })}
+              >
+                <WorkoutExerciseCard
+                  item={item}
+                  routineId={workout.routineId}
+                  hasHistory={
+                    withHistory
+                      ? withHistory.has(
+                          progressKey(workout.routineId, item.exercise.id),
+                        )
+                      : null
+                  }
+                  onUpdateSet={(setId, values) => {
+                    updateSet(setId, values).catch(
+                      showError("Não foi possível guardar a série."),
+                    );
+                  }}
+                  onAddSet={() => {
+                    addSet(item.id).catch(
+                      showError("Não foi possível adicionar a série."),
+                    );
+                  }}
+                  onDeleteSet={confirmDeleteSet}
+                  onAssistedRepsChange={(setId, reps) => {
+                    setAssisted(setId, reps).catch(
+                      showError("Não foi possível guardar as reps com ajuda."),
+                    );
+                  }}
+                  onProgressionChange={
+                    routineExerciseId
+                      ? (progression) => {
+                          setProgression(routineExerciseId, progression).catch(
+                            showError("Não foi possível guardar a nota."),
+                          );
+                        }
+                      : null
+                  }
+                  onInputFocus={(offsetY) =>
+                    setFocusY((cardY.current.get(item.id) ?? 0) + offsetY)
+                  }
+                />
+              </Animated.View>
+            );
+          })}
+        </LayoutAnimationConfig>
+
         <Link href="/workout/add-exercises" asChild>
-          <Pressable style={styles.addExercises} accessibilityRole="button">
-            <Ionicons name="add" size={22} color={c.text} />
+          <PressableScale
+            style={styles.addExercises}
+            accessibilityRole="button"
+          >
+            <Ionicons name="add" size={22} color={c.onPrimarySoft} />
             <Text style={styles.addExercisesText}>Adicionar exercícios</Text>
-          </Pressable>
+          </PressableScale>
         </Link>
       </ScrollView>
 
       <View style={styles.actions}>
-        <Pressable
+        <PressableScale
           onPress={confirmCancel}
           disabled={busy}
           style={[
@@ -250,8 +270,8 @@ export default function WorkoutScreen() {
           accessibilityRole="button"
         >
           <Text style={[styles.actionText, styles.cancelText]}>Cancelar</Text>
-        </Pressable>
-        <Pressable
+        </PressableScale>
+        <PressableScale
           onPress={confirmFinish}
           disabled={busy}
           style={[
@@ -261,8 +281,9 @@ export default function WorkoutScreen() {
           ]}
           accessibilityRole="button"
         >
+          <Ionicons name="checkmark" size={22} color={c.onPrimary} />
           <Text style={[styles.actionText, styles.finishText]}>Terminar</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );
@@ -277,91 +298,76 @@ function createStyles(c: ThemeColors) {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      padding: 16,
+      padding: spacing.lg,
     },
     error: {
-      fontSize: 16,
+      ...type.body,
       color: c.danger,
       textAlign: "center",
     },
     noWorkout: {
-      padding: 16,
-      gap: 32,
+      padding: spacing.lg,
+      gap: spacing.xxl,
     },
     disabled: {
-      opacity: 0.6,
+      opacity: 0.5,
     },
-    header: {
-      alignItems: "center",
-      gap: 2,
-      paddingVertical: 14,
-      backgroundColor: c.card,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-    },
-    headerLabel: {
-      fontSize: 15,
+    date: {
+      ...type.captionStrong,
       color: c.textMuted,
     },
-    headerTitle: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: c.text,
-    },
     body: {
-      gap: 12,
-      padding: 16,
+      gap: spacing.md,
+      padding: spacing.lg,
     },
+    // Tonal: clearly a button, without competing with "Terminar".
     addExercises: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      gap: spacing.sm,
       minHeight: 52,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderStyle: "dashed",
-      borderColor: c.textFaint,
+      borderRadius: radius.lg,
+      backgroundColor: c.primarySoft,
     },
     addExercisesText: {
-      fontSize: 17,
-      fontWeight: "600",
-      color: c.text,
+      ...type.bodyStrong,
+      color: c.onPrimarySoft,
     },
     actions: {
       flexDirection: "row",
-      gap: 12,
-      padding: 16,
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: c.card,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
     },
     actionButton: {
-      flex: 1,
+      flexDirection: "row",
+      gap: spacing.sm,
       minHeight: 56,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 12,
+      borderRadius: radius.lg,
     },
+    // Quiet: cancelling is rare and asks for confirmation anyway.
     cancelButton: {
-      borderWidth: 1,
-      borderColor: c.dangerBorder,
-      backgroundColor: c.card,
+      flex: 1,
     },
     cancelText: {
       color: c.danger,
     },
     finishButton: {
+      flex: 2,
       backgroundColor: c.primary,
     },
     finishText: {
       color: c.onPrimary,
     },
     actionText: {
+      ...type.bodyStrong,
       fontSize: 17,
-      fontWeight: "600",
       color: c.text,
     },
   });

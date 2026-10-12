@@ -77,7 +77,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         card: colors.card,
         text: colors.text,
         border: colors.border,
-        primary: isDark ? "#60a5fa" : "#2563eb",
+        primary: colors.primary,
       },
     };
   }, [isDark, colors]);

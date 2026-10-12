@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 
+import { AppHeader, headerTitleText } from "@/components/app-header";
 import { DATABASE_NAME, initDatabase } from "@/db/database";
 import { ThemeProvider } from "@/theme/theme";
 
@@ -8,7 +9,18 @@ export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
       <ThemeProvider>
-        <Stack>
+        <Stack
+          screenOptions={{
+            header: ({ options, route, navigation, back }) => (
+              <AppHeader
+                title={headerTitleText(options, route.name)}
+                onBack={back ? () => navigation.goBack() : undefined}
+                isModal={options.presentation === "modal"}
+                right={options.headerRight?.({ canGoBack: !!back })}
+              />
+            ),
+          }}
+        >
           {/* The tabs have their own header, so hide the stack one. */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
@@ -39,6 +51,7 @@ export default function RootLayout() {
             name="diet/add"
             options={{ title: "Adicionar alimento", presentation: "modal" }}
           />
+          <Stack.Screen name="diet/meal" options={{ title: "Refeição" }} />
           <Stack.Screen
             name="diet/foods"
             options={{ title: "Os meus alimentos" }}

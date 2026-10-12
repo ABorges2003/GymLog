@@ -22,6 +22,7 @@ import {
 } from "@/types/exercise";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { shadows } from "@/theme/tokens";
 
 const MUSCLE_GROUP_OPTIONS: ChipOption<MuscleGroup | null>[] = [
   { value: null, label: "Todos" },
@@ -184,7 +185,7 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: c.primary,
-      elevation: 4,
+      boxShadow: shadows.raised,
     },
     empty: {
       fontSize: 16,

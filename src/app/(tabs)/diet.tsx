@@ -1,9 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link } from "expo-router";
-import { useMemo, useState } from "react";
+import { Link, useRouter } from "expo-router";
+import { useMemo, useState, type ComponentProps } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,38 +10,68 @@ import {
   View,
 } from "react-native";
 
-import { FoodEntryPopup } from "@/components/food-entry-popup";
+import { PressableScale } from "@/components/pressable-scale";
 import { ProgressBar } from "@/components/progress-bar";
+import { ProgressRing } from "@/components/progress-ring";
 import { useDietDay } from "@/hooks/use-diet-day";
 import { addDaysToKey, formatDayLabel, toDateKey } from "@/lib/dates";
-import { MEAL_LABELS, formatAmount, formatMacros, sumMacros } from "@/lib/diet";
+import { MEAL_LABELS, formatAmount, sumMacros } from "@/lib/diet";
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
-import { MEALS, type FoodEntry } from "@/types/diet";
+import { radius, spacing, type } from "@/theme/tokens";
+import { MEALS, type Meal } from "@/types/diet";
 
 const round = (value: number) => Math.round(value);
 
+type IconName = ComponentProps<typeof Ionicons>["name"];
+
+// Only for the look of the bar of a meal without planned kcal (never shown
+// as a number): every meal gets a bar that fills up as food is added.
+const UNPLANNED_MEAL_BAR_KCAL = 300;
+
+// Icon and theme colour of each meal in the list.
+const MEAL_LOOK: Record<Meal, { icon: IconName; color: keyof ThemeColors }> = {
+  breakfast: { icon: "cafe", color: "carbs" },
+  morning_snack: { icon: "nutrition", color: "success" },
+  lunch: { icon: "restaurant", color: "danger" },
+  afternoon_snack: { icon: "ice-cream", color: "fat" },
+  dinner: { icon: "fish", color: "protein" },
+  supper: { icon: "moon", color: "primary" },
+};
+
+// Ring with the grams eaten inside; without a goal it is only the track.
 function MacroTile({
   label,
   value,
   goal,
+  color,
 }: {
   label: string;
   value: number;
   goal: number | null;
+  color: string;
 }) {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.macroTile}>
-      <Text style={styles.macroLabel}>{label}</Text>
-      <Text style={styles.macroValue}>
-        {formatWeight(round(value))}
-        {goal !== null && (
-          <Text style={styles.macroGoal}> / {formatWeight(goal)}g</Text>
-        )}
-      </Text>
-      {goal !== null && <ProgressBar value={value} max={goal} />}
+      <ProgressRing
+        value={value}
+        max={goal ?? 0}
+        size={76}
+        strokeWidth={7}
+        sweep={360}
+        color={color}
+      >
+        <Text style={styles.macroValue}>{formatWeight(round(value))}</Text>
+      </ProgressRing>
+      <View style={styles.macroLabelRow}>
+        <View style={[styles.macroDot, { backgroundColor: color }]} />
+        <Text style={styles.macroLabel}>{label}</Text>
+      </View>
+      {goal !== null && (
+        <Text style={styles.macroGoal}>{formatWeight(goal)}g</Text>
+      )}
     </View>
   );
 }
@@ -52,26 +81,11 @@ export default function DietScreen() {
   const styles = useThemedStyles(createStyles);
   const today = toDateKey(new Date());
   const [date, setDate] = useState(today);
-  const { day, error, deleteEntry, updateAmount } = useDietDay(date);
-  // The food whose amount is being changed, if any.
-  const [editing, setEditing] = useState<FoodEntry | null>(null);
+  // Changing or removing foods happens in the meal screen.
+  const { day, error } = useDietDay(date);
+  const router = useRouter();
 
   const totals = useMemo(() => sumMacros(day?.entries ?? []), [day]);
-
-  function confirmDelete(entry: FoodEntry) {
-    Alert.alert("Tirar alimento?", entry.foodName, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Tirar",
-        style: "destructive",
-        onPress: () => {
-          deleteEntry(entry.id).catch(() =>
-            Alert.alert("Erro", "Não foi possível tirar o alimento."),
-          );
-        },
-      },
-    ]);
-  }
 
   if (error) {
     return (
@@ -84,7 +98,7 @@ export default function DietScreen() {
   if (!day) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -95,72 +109,92 @@ export default function DietScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.dayRow}>
-        <Pressable
+        <PressableScale
           onPress={() => setDate(addDaysToKey(date, -1))}
           style={styles.dayButton}
           accessibilityRole="button"
           accessibilityLabel="Dia anterior"
         >
-          <Ionicons name="chevron-back" size={26} color={c.text} />
-        </Pressable>
+          <Ionicons name="chevron-back" size={24} color={c.text} />
+        </PressableScale>
         <Text style={styles.dayLabel}>{formatDayLabel(date)}</Text>
-        <Pressable
+        <PressableScale
           onPress={() => setDate(addDaysToKey(date, 1))}
           disabled={date >= today}
           style={[styles.dayButton, date >= today && styles.disabled]}
           accessibilityRole="button"
           accessibilityLabel="Dia seguinte"
         >
-          <Ionicons name="chevron-forward" size={26} color={c.text} />
-        </Pressable>
+          <Ionicons name="chevron-forward" size={24} color={c.text} />
+        </PressableScale>
       </View>
 
       {goals === null || target === null ? (
         <Link href="/diet/goals" asChild>
-          <Pressable style={styles.card} accessibilityRole="button">
+          <PressableScale
+            // One style object: Link asChild does not accept style arrays.
+            style={styles.emptyCard}
+            accessibilityRole="button"
+          >
+            <View style={styles.emptyIcon}>
+              <Ionicons name="flag" size={28} color={c.onPrimarySoft} />
+            </View>
             <Text style={styles.cardTitle}>Define os teus objetivos</Text>
-            <Text style={styles.muted}>
+            <Text style={[styles.muted, styles.centerText]}>
               Kcal, proteína, carbos e gordura por dia. Toca aqui.
             </Text>
-          </Pressable>
+          </PressableScale>
         </Link>
       ) : (
         <View style={styles.card}>
-          <View style={styles.summaryTop}>
-            <View style={styles.remaining}>
+          <Link href="/diet/goals" asChild>
+            <PressableScale
+              style={styles.editGoals}
+              accessibilityRole="button"
+              accessibilityLabel="Mudar objetivos"
+            >
+              <Ionicons name="create-outline" size={22} color={c.textMuted} />
+            </PressableScale>
+          </Link>
+          <View style={styles.kcalRing}>
+            <ProgressRing
+              value={totals.kcal}
+              max={target}
+              size={210}
+              strokeWidth={16}
+              color={c.primary}
+            >
               <Text style={styles.remainingValue}>
                 {formatWeight(round(target - totals.kcal))}
               </Text>
               <Text style={styles.muted}>kcal restantes</Text>
-            </View>
-            <Link href="/diet/goals" asChild>
-              <Pressable
-                style={styles.iconButton}
-                accessibilityRole="button"
-                accessibilityLabel="Mudar objetivos"
-              >
-                <Ionicons name="create-outline" size={22} color={c.textMuted} />
-              </Pressable>
-            </Link>
+            </ProgressRing>
+            {/* Sits in the ring's open bottom. */}
+            <Text style={[styles.muted, styles.consumed]}>
+              Consumido {formatWeight(round(totals.kcal))} de{" "}
+              {formatWeight(target)} kcal
+            </Text>
           </View>
-          <ProgressBar value={totals.kcal} max={target} />
-          <Text style={styles.muted}>
-            Consumido {formatWeight(round(totals.kcal))} de{" "}
-            {formatWeight(target)} kcal
-          </Text>
 
           <View style={styles.macros}>
             <MacroTile
               label="Carbs"
               value={totals.carbsG}
               goal={goals.carbsG}
+              color={c.carbs}
             />
             <MacroTile
               label="Proteína"
               value={totals.proteinG}
               goal={goals.proteinG}
+              color={c.protein}
             />
-            <MacroTile label="Gordura" value={totals.fatG} goal={goals.fatG} />
+            <MacroTile
+              label="Gordura"
+              value={totals.fatG}
+              goal={goals.fatG}
+              color={c.fat}
+            />
           </View>
         </View>
       )}
@@ -168,81 +202,77 @@ export default function DietScreen() {
       <View style={styles.mealsHeader}>
         <Text style={styles.sectionTitle}>Refeições</Text>
         <Link href="/diet/foods" asChild>
-          <Pressable accessibilityRole="button">
+          <Pressable accessibilityRole="button" hitSlop={8}>
             <Text style={styles.link}>Os meus alimentos</Text>
           </Pressable>
         </Link>
       </View>
 
-      <View style={styles.card}>
+      <View style={styles.mealsCard}>
         {MEALS.map((meal, index) => {
           const mealEntries = entries.filter((entry) => entry.meal === meal);
           const mealKcal = sumMacros(mealEntries).kcal;
           const planned = goals?.mealKcal?.[meal];
+          const look = MEAL_LOOK[meal];
+          const color = c[look.color];
           return (
-            <View
-              key={meal}
-              style={[styles.meal, index > 0 && styles.mealDivider]}
-            >
-              <View style={styles.mealHeader}>
-                <Text style={styles.mealName}>{MEAL_LABELS[meal]}</Text>
-                {/* Eaten, or eaten / planned when the meal has a plan. */}
-                <Text style={styles.muted}>
-                  {formatWeight(round(mealKcal))}
-                  {planned !== undefined && ` / ${formatWeight(planned)}`} kcal
-                </Text>
-                <Link
-                  href={{ pathname: "/diet/add", params: { date, meal } }}
-                  asChild
-                >
-                  <Pressable
-                    style={styles.addButton}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Adicionar a ${MEAL_LABELS[meal]}`}
-                  >
-                    <Ionicons name="add" size={24} color={c.accent} />
-                  </Pressable>
-                </Link>
-              </View>
-              {mealEntries.map((entry) => (
-                <View key={entry.id} style={styles.entry}>
-                  <Pressable
-                    onPress={() => setEditing(entry)}
-                    style={styles.entryText}
-                    accessibilityRole="button"
-                    accessibilityHint="Mudar a quantidade"
-                  >
-                    <Text style={styles.entryName}>
-                      {entry.foodName}{" "}
-                      <Text style={styles.muted}>
+            <View key={meal}>
+              {index > 0 && <View style={styles.mealDivider} />}
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/diet/meal",
+                    params: { date, meal },
+                  })
+                }
+                android_ripple={{ color: c.ripple }}
+                style={styles.meal}
+                accessibilityRole="button"
+                accessibilityHint="Abrir a refeição"
+              >
+                <Ionicons name={look.icon} size={34} color={color} />
+                <View style={styles.mealBody}>
+                  <View style={styles.mealHeader}>
+                    <Text style={styles.mealName} numberOfLines={1}>
+                      {MEAL_LABELS[meal]}
+                    </Text>
+                    {/* Eaten, or eaten / planned when the meal has a plan. */}
+                    <Text style={styles.mealKcal}>
+                      {formatWeight(round(mealKcal))}
+                      {planned !== undefined && `/${formatWeight(planned)}`}{" "}
+                      kcal
+                    </Text>
+                  </View>
+                  <ProgressBar
+                    value={mealKcal}
+                    // Without a plan the bar just stays full past 300 kcal
+                    // (never red: there is no limit to go over).
+                    max={
+                      planned ?? Math.max(UNPLANNED_MEAL_BAR_KCAL, mealKcal)
+                    }
+                    color={color}
+                  />
+                  {mealEntries.map((entry) => (
+                    <View key={entry.id} style={styles.entry}>
+                      <Text style={styles.entryName} numberOfLines={1}>
+                        {entry.foodName}
+                      </Text>
+                      <Text style={styles.entryAmount}>
                         {formatAmount(entry.amount, entry.basis)}
                       </Text>
-                    </Text>
-                    <Text style={styles.entryMacros}>
-                      {formatMacros(entry)}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => confirmDelete(entry)}
-                    style={styles.iconButton}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Tirar ${entry.foodName}`}
-                  >
-                    <Ionicons name="close" size={20} color={c.textFaint} />
-                  </Pressable>
+                    </View>
+                  ))}
                 </View>
-              ))}
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={c.textFaint}
+                />
+              </Pressable>
             </View>
           );
         })}
       </View>
-      {editing && (
-        <FoodEntryPopup
-          entry={editing}
-          onClose={() => setEditing(null)}
-          onSave={(amount) => updateAmount(editing, amount)}
-        />
-      )}
     </ScrollView>
   );
 }
@@ -250,17 +280,20 @@ export default function DietScreen() {
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: {
-      gap: 12,
-      padding: 16,
+      gap: spacing.md,
+      padding: spacing.lg,
     },
     center: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      padding: 16,
+      padding: spacing.lg,
+    },
+    centerText: {
+      textAlign: "center",
     },
     error: {
-      fontSize: 16,
+      ...type.body,
       color: c.danger,
       textAlign: "center",
     },
@@ -269,15 +302,16 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
     },
     dayButton: {
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
+      borderRadius: radius.full,
       alignItems: "center",
       justifyContent: "center",
+      backgroundColor: c.card,
     },
     dayLabel: {
+      ...type.headline,
       flex: 1,
-      fontSize: 18,
-      fontWeight: "600",
       textAlign: "center",
       color: c.text,
     },
@@ -285,30 +319,56 @@ function createStyles(c: ThemeColors) {
       opacity: 0.35,
     },
     card: {
-      gap: 12,
-      padding: 16,
-      borderRadius: 12,
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: radius.lg,
       backgroundColor: c.card,
     },
+    emptyCard: {
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: radius.lg,
+      backgroundColor: c.card,
+      alignItems: "center",
+      paddingVertical: spacing.xl,
+    },
+    emptyIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: radius.full,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: c.primarySoft,
+    },
     cardTitle: {
-      fontSize: 17,
-      fontWeight: "bold",
+      ...type.headline,
       color: c.text,
     },
     muted: {
       fontSize: 14,
       color: c.textMuted,
     },
-    summaryTop: {
-      flexDirection: "row",
-      alignItems: "flex-start",
+    editGoals: {
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      position: "absolute",
+      top: spacing.sm,
+      right: spacing.sm,
+      zIndex: 1,
     },
-    remaining: {
-      flex: 1,
+    kcalRing: {
+      alignItems: "center",
+    },
+    // Pulled up into the ring's open bottom.
+    consumed: {
+      marginTop: -spacing.xl,
     },
     remainingValue: {
       fontSize: 40,
-      fontWeight: "bold",
+      fontWeight: "700",
+      fontVariant: ["tabular-nums"],
       color: c.text,
     },
     iconButton: {
@@ -319,88 +379,105 @@ function createStyles(c: ThemeColors) {
     },
     macros: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.sm,
+      paddingTop: spacing.sm,
     },
     macroTile: {
       flex: 1,
-      gap: 6,
-      padding: 10,
-      borderRadius: 10,
-      backgroundColor: c.subtle,
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    macroLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    macroDot: {
+      width: 8,
+      height: 8,
+      borderRadius: radius.full,
     },
     macroLabel: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: c.textMuted,
+      ...type.captionStrong,
+      color: c.text,
     },
     macroValue: {
-      fontSize: 16,
-      fontWeight: "bold",
+      ...type.bodyStrong,
+      fontVariant: ["tabular-nums"],
       color: c.text,
     },
     macroGoal: {
-      fontSize: 13,
-      fontWeight: "400",
+      ...type.caption,
       color: c.textMuted,
     },
     mealsHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 4,
+      marginTop: spacing.xs,
     },
     sectionTitle: {
+      ...type.title,
       fontSize: 20,
-      fontWeight: "bold",
       color: c.text,
     },
     link: {
-      fontSize: 15,
+      ...type.subhead,
       fontWeight: "600",
-      color: c.accent,
+      color: c.primary,
+    },
+    mealsCard: {
+      borderRadius: radius.lg,
+      backgroundColor: c.card,
+      overflow: "hidden",
     },
     meal: {
-      gap: 6,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.lg,
+      minHeight: 76,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
     },
+    // Inset hairline between meals, like a grouped list.
     mealDivider: {
-      paddingTop: 12,
+      marginHorizontal: spacing.lg,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
+    },
+    mealBody: {
+      flex: 1,
+      gap: spacing.sm,
     },
     mealHeader: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: spacing.sm,
     },
     mealName: {
+      ...type.headline,
       flex: 1,
-      fontSize: 17,
-      fontWeight: "600",
       color: c.text,
     },
-    addButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: c.subtle,
+    mealKcal: {
+      ...type.subhead,
+      fontVariant: ["tabular-nums"],
+      color: c.textMuted,
     },
     entry: {
       flexDirection: "row",
       alignItems: "center",
-    },
-    entryText: {
-      flex: 1,
-      gap: 2,
+      gap: spacing.sm,
     },
     entryName: {
-      fontSize: 15,
-      color: c.text,
-    },
-    entryMacros: {
-      fontSize: 13,
+      ...type.subhead,
+      flex: 1,
       color: c.textMuted,
+    },
+    entryAmount: {
+      ...type.caption,
+      fontVariant: ["tabular-nums"],
+      color: c.textFaint,
     },
   });
 }

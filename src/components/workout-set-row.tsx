@@ -25,6 +25,7 @@ import { SET_TYPES, type PlannedSet, type SetType } from "@/types/set";
 import type { WorkoutSet } from "@/types/workout";
 import type { ThemeColors } from "@/theme/colors";
 import { useColors, useThemedStyles } from "@/theme/theme";
+import { radius, spacing, type } from "@/theme/tokens";
 
 type Props = {
   set: WorkoutSet;
@@ -69,6 +70,8 @@ export function WorkoutSetRow({
   const [toFailure, setToFailure] = useState(set.toFailure);
   // Kept here too: the database drops it when the set stops being a top set.
   const [assistedReps, setAssistedReps] = useState(set.assistedReps);
+  // Which input has focus (only for its highlighted border).
+  const [focused, setFocused] = useState<"weight" | "reps" | null>(null);
 
   const hasReps = setTypeHasReps(setType);
   const failed = toFailure && setTypeCanFail(setType);
@@ -120,6 +123,7 @@ export function WorkoutSetRow({
         style={[
           styles.input,
           { fontSize: inputFontSize(weightText) },
+          focused === "weight" && styles.inputFocused,
           !weight.ok && styles.inputError,
         ]}
         value={weightText}
@@ -127,10 +131,15 @@ export function WorkoutSetRow({
           setWeightText(text);
           save({ setType, weightText: text, repsText, toFailure });
         }}
-        onFocus={onFocus}
+        onFocus={() => {
+          setFocused("weight");
+          onFocus();
+        }}
+        onBlur={() => setFocused(null)}
         keyboardType="decimal-pad"
         placeholder="—"
         placeholderTextColor={c.textFaint}
+        cursorColor={c.primary}
         maxLength={7}
         selectTextOnFocus
         accessibilityLabel={`Kg da série ${index + 1}`}
@@ -154,6 +163,7 @@ export function WorkoutSetRow({
                 style={[
                   styles.input,
                   { fontSize: inputFontSize(repsText) },
+                  focused === "reps" && styles.inputFocused,
                   !reps.ok && styles.inputError,
                 ]}
                 value={repsText}
@@ -161,10 +171,15 @@ export function WorkoutSetRow({
                   setRepsText(text);
                   save({ setType, weightText, repsText: text, toFailure });
                 }}
-                onFocus={onFocus}
+                onFocus={() => {
+                  setFocused("reps");
+                  onFocus();
+                }}
+                onBlur={() => setFocused(null)}
                 keyboardType="decimal-pad"
                 placeholder="—"
                 placeholderTextColor={c.textFaint}
+                cursorColor={c.primary}
                 maxLength={5}
                 selectTextOnFocus
                 accessibilityLabel={`Reps da série ${index + 1}`}
@@ -202,6 +217,7 @@ export function WorkoutSetRow({
       <Pressable
         onPress={onDelete}
         style={styles.deleteButton}
+        hitSlop={4}
         accessibilityRole="button"
         accessibilityLabel={`Apagar série ${index + 1}`}
       >
@@ -216,28 +232,34 @@ function createStyles(c: ThemeColors) {
     row: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: spacing.sm,
       minHeight: 52,
     },
+    // Filled, no visible border until focused: calmer than a grid of boxes.
     input: {
       flex: 1,
       minHeight: 46,
-      paddingHorizontal: 2,
+      paddingHorizontal: spacing.xxs,
       fontSize: 20,
       fontWeight: "600",
+      fontVariant: ["tabular-nums"],
       textAlign: "center",
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.input,
+      borderRadius: radius.sm,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      backgroundColor: c.subtle,
       color: c.text,
+    },
+    inputFocused: {
+      borderColor: c.primary,
+      backgroundColor: c.card,
     },
     inputError: {
       borderColor: c.danger,
       backgroundColor: c.dangerBg,
     },
     unit: {
-      fontSize: 15,
+      ...type.subhead,
       color: c.textMuted,
     },
     hidden: {
