@@ -6,6 +6,8 @@ import {
   replaceData,
 } from "@/db/repositories/backup";
 import { saveBodyWeight } from "@/db/repositories/body-weight";
+import { createPhase } from "@/db/repositories/body-weight-phases";
+import { addWater, getWaterMl } from "@/db/repositories/diet";
 import { setSetting } from "@/db/repositories/settings";
 import {
   addExercisesToRoutine,
@@ -143,5 +145,72 @@ describe("backup", () => {
     await replaceData(phone, parsed.backup, BACKUP_PARTS);
 
     expect((await readAllTables(phone)).exercises).toHaveLength(2);
+  });
+
+  // Bug: importing "Peso" from a backup made before phases existed (v15 or
+  // older) deleted all the phases on the phone.
+  it("keeps tables an older backup could not have, like the phases", async () => {
+    const source = await createTestDatabase();
+    await saveBodyWeight(source, "2026-10-01", 80);
+    const old = JSON.parse(await exportToText(source, ["body_weight"]));
+    old.schemaVersion = 15;
+    delete old.tables.body_weight_phases;
+
+    const phone = await createTestDatabase();
+    await saveBodyWeight(phone, "2026-10-02", 79);
+    await createPhase(phone, {
+      name: "Bulk",
+      startDate: "2026-09-01",
+      endDate: null,
+    });
+    const parsed = parseBackup(JSON.stringify(old), await getSchemaVersion(phone));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await replaceData(phone, parsed.backup, ["body_weight"]);
+
+    const tables = await readAllTables(phone);
+    expect(tables.body_weight_entries.map((e) => e.date)).toEqual([
+      "2026-10-01",
+    ]);
+    expect(tables.body_weight_phases.map((p) => p.name)).toEqual(["Bulk"]);
+  });
+
+  it("still replaces the phases when the backup has them, even none", async () => {
+    const text = await exportToText(await createTestDatabase(), [
+      "body_weight",
+    ]);
+    const phone = await createTestDatabase();
+    await createPhase(phone, {
+      name: "Bulk",
+      startDate: "2026-09-01",
+      endDate: null,
+    });
+    const parsed = parseBackup(text, await getSchemaVersion(phone));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await replaceData(phone, parsed.backup, ["body_weight"]);
+
+    expect((await readAllTables(phone)).body_weight_phases).toEqual([]);
+  });
+
+  it("takes the water with the diet, and an older backup keeps the phone's", async () => {
+    const source = await createTestDatabase();
+    await addWater(source, "2026-10-12", 1500);
+    const text = await exportToText(source, ["diet"]);
+
+    const phone = await createTestDatabase();
+    await addWater(phone, "2026-10-13", 500);
+    const parsed = parseBackup(text, await getSchemaVersion(phone));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await replaceData(phone, parsed.backup, ["diet"]);
+    expect(await getWaterMl(phone, "2026-10-12")).toBe(1500);
+    expect(await getWaterMl(phone, "2026-10-13")).toBe(0);
+
+    // A backup made before water existed (v16) leaves it alone.
+    const old = JSON.parse(text);
+    old.schemaVersion = 16;
+    delete old.tables.water_days;
+    const oldParsed = parseBackup(JSON.stringify(old), await getSchemaVersion(phone));
+    if (!oldParsed.ok) throw new Error(oldParsed.error);
+    await replaceData(phone, oldParsed.backup, ["diet"]);
+    expect(await getWaterMl(phone, "2026-10-12")).toBe(1500);
   });
 });

@@ -11,6 +11,7 @@ import {
   readAllTables,
   replaceData,
 } from "@/db/repositories/backup";
+import { getEventsFrom } from "@/db/repositories/planner";
 import {
   backupFileName,
   createBackup,
@@ -18,6 +19,8 @@ import {
   type Backup,
   type BackupPart,
 } from "@/lib/backup";
+import { toDateKey } from "@/lib/dates";
+import { syncEventReminders } from "@/notifications/agenda-reminders";
 
 // Reads a picked file's text. The picker gives a content:// URI (not copied:
 // Expo Go cannot read its own copy). Ways of reading differ between phones and
@@ -113,6 +116,16 @@ export function useBackup(onImported: () => void) {
           "Não foi possível importar. Os dados da app não foram alterados.",
         );
         return;
+      }
+      // The imported events need their reminders on this phone.
+      if (parts.includes("agenda")) {
+        try {
+          await syncEventReminders(
+            await getEventsFrom(db, toDateKey(new Date())),
+          );
+        } catch {
+          // Reminders are rebuilt at the next start-up anyway.
+        }
       }
       Alert.alert("Backup importado", "Os dados foram restaurados.");
       onImported();

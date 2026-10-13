@@ -19,6 +19,8 @@ export type ThemeColors = {
   carbs: string; // diet macro rings
   protein: string;
   fat: string;
+  water: string; // water bottle and buttons
+  waterSoft: string;
   star: string; // favorites
   danger: string;
   dangerBg: string;
@@ -49,6 +51,8 @@ export const LIGHT_COLORS: ThemeColors = {
   carbs: "#f59e0b",
   protein: "#0ea5e9",
   fat: "#ec4899",
+  water: "#0891b2",
+  waterSoft: "#cffafe",
   star: "#f5a524",
   danger: "#dc2626",
   dangerBg: "#fee2e2",
@@ -79,6 +83,8 @@ export const DARK_COLORS: ThemeColors = {
   carbs: "#fbbf24",
   protein: "#38bdf8",
   fat: "#f472b6",
+  water: "#22d3ee",
+  waterSoft: "#123840",
   star: "#fbbf24",
   danger: "#f87171",
   dangerBg: "#3b1717",

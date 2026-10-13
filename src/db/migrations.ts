@@ -329,6 +329,71 @@ const migrations: Migration[] = [
       );
     `);
   },
+
+  // v17: water drunk each day, in ml: one row per day with the day's total.
+  // The daily goal is in the diet goals (app_settings).
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE water_days (
+        date TEXT PRIMARY KEY NOT NULL,
+        ml INTEGER NOT NULL CHECK (ml >= 0)
+      );
+    `);
+  },
+
+  // v18: Agenda tab. Tasks of each day (ticked when done) and agenda events
+  // (a day and time, optional notes and a reminder some minutes before).
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE day_tasks (
+        id TEXT PRIMARY KEY NOT NULL,
+        date TEXT NOT NULL,
+        title TEXT NOT NULL,
+        done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX idx_day_tasks_date ON day_tasks (date);
+
+      CREATE TABLE agenda_events (
+        id TEXT PRIMARY KEY NOT NULL,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        title TEXT NOT NULL,
+        notes TEXT,
+        remind_minutes INTEGER CHECK (remind_minutes IS NULL OR remind_minutes IN (15, 60, 1440)),
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX idx_agenda_events_date ON agenda_events (date);
+    `);
+  },
+
+  // v19: tasks that repeat on some days of the week (weekdays: bit 0 =
+  // Sunday ... bit 6 = Saturday), from a start date and until an optional
+  // end date. Each day they fall on gets its own day_tasks row (recurring_id)
+  // when that day is opened; skipped hides one day's row without it coming
+  // back. recurring_id has no foreign key on purpose: a stopped repetition
+  // keeps the days already done, and backups stay independent per table.
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE recurring_tasks (
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT NOT NULL,
+        weekdays INTEGER NOT NULL CHECK (weekdays BETWEEN 1 AND 127),
+        start_date TEXT NOT NULL,
+        end_date TEXT CHECK (end_date IS NULL OR end_date >= start_date),
+        created_at TEXT NOT NULL
+      );
+
+      ALTER TABLE day_tasks ADD COLUMN recurring_id TEXT;
+      ALTER TABLE day_tasks
+        ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0 CHECK (skipped IN (0, 1));
+
+      CREATE UNIQUE INDEX idx_day_tasks_recurring
+        ON day_tasks (recurring_id, date) WHERE recurring_id IS NOT NULL;
+    `);
+  },
 ];
 
 // Upgrades the schema to the latest version (tests may stop at an older one).

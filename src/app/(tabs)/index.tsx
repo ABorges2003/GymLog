@@ -14,6 +14,7 @@ import Animated, {
   LayoutAnimationConfig,
 } from "react-native-reanimated";
 
+import { HeaderIconButton } from "@/components/header-icon-button";
 import { PressableScale } from "@/components/pressable-scale";
 import { RoutineList } from "@/components/routine-list";
 import { WorkoutExerciseCard } from "@/components/workout-exercise-card";
@@ -48,18 +49,26 @@ export default function WorkoutScreen() {
   const router = useRouter();
   const navigation = useNavigation();
 
-  // During a workout the tab header shows the routine name and the timer, so
-  // the screen doesn't need a second header of its own.
+  // The header has the button to the exercises. During a workout it also
+  // shows the routine name and the timer, so the screen needs no header of
+  // its own.
   const routineTitle = detail ? (detail.routineName ?? "Treino") : null;
   const startedAt = detail?.workout.startedAt ?? null;
   useEffect(() => {
     navigation.setOptions({
       headerTitle: routineTitle ?? undefined,
-      headerRight: startedAt
-        ? () => <WorkoutTimer startedAt={startedAt} />
-        : undefined,
+      headerRight: () => (
+        <View style={styles.headerRight}>
+          {startedAt && <WorkoutTimer startedAt={startedAt} />}
+          <HeaderIconButton
+            icon="list"
+            label="Exercícios"
+            onPress={() => router.push("/exercises")}
+          />
+        </View>
+      ),
     });
-  }, [navigation, routineTitle, startedAt]);
+  }, [navigation, routineTitle, startedAt, router, styles]);
 
   // Keeps the set being typed in visible above the keyboard (see the routine
   // set editor for the same idea).
@@ -293,6 +302,11 @@ function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     screen: {
       flex: 1,
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
     },
     center: {
       flex: 1,

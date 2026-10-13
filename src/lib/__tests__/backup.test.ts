@@ -39,7 +39,12 @@ const sample = () => {
 describe("createBackup", () => {
   it("keeps everything but the theme", () => {
     const backup = sample();
-    expect(backup.parts).toEqual(["training", "body_weight", "diet"]);
+    expect(backup.parts).toEqual([
+      "training",
+      "body_weight",
+      "diet",
+      "agenda",
+    ]);
     expect(backup.tables.exercises).toHaveLength(1);
     expect(backup.tables.app_settings.map((row) => row.key)).toEqual([
       "body_weight_goal_kg",
@@ -73,8 +78,18 @@ describe("parseBackup", () => {
     const backup = sample();
     expect(parseBackup(JSON.stringify(backup), 8)).toEqual({
       ok: true,
-      backup,
+      backup: { ...backup, missingTables: [] },
     });
+  });
+
+  it("lists the tables an older file did not have", () => {
+    const old = JSON.parse(JSON.stringify(sample()));
+    old.schemaVersion = 15;
+    delete old.tables.body_weight_phases;
+    const result = parseBackup(JSON.stringify(old), 16);
+    expect(result.ok && result.backup.missingTables).toEqual([
+      "body_weight_phases",
+    ]);
   });
 
   it("accepts backups from older versions, filling missing tables", () => {
@@ -85,12 +100,16 @@ describe("parseBackup", () => {
     expect(result.ok && result.backup.tables.routine_sets).toEqual([]);
   });
 
-  it("reads version 1 files as holding everything", () => {
+  it("reads version 1 files as holding everything there was then", () => {
     const old = JSON.parse(JSON.stringify(sample()));
     old.version = 1;
     delete old.parts;
     const result = parseBackup(JSON.stringify(old), 8);
-    expect(result.ok && result.backup.parts).toEqual(BACKUP_PARTS);
+    expect(result.ok && result.backup.parts).toEqual([
+      "training",
+      "body_weight",
+      "diet",
+    ]);
   });
 
   it("rejects unknown or missing parts", () => {
@@ -131,6 +150,16 @@ describe("describePart", () => {
       "1 exercício, 1 rotina, 0 treinos",
     );
     expect(describePart(backup, "body_weight")).toBe("1 registo, 0 épocas");
-    expect(describePart(backup, "diet")).toBe("0 alimentos, 0 registos");
+    expect(describePart(backup, "diet")).toBe(
+      "0 alimentos, 0 registos, 0 dias de água",
+    );
+    expect(describePart(backup, "agenda")).toBe(
+      "0 tarefas, 0 tarefas que se repetem, 0 eventos",
+    );
+  });
+
+  it("leaves out tables the file did not have (they are kept)", () => {
+    const backup = { ...sample(), missingTables: ["body_weight_phases" as const] };
+    expect(describePart(backup, "body_weight")).toBe("1 registo");
   });
 });

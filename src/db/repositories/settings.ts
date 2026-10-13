@@ -1,7 +1,11 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
 // Keys of the app_settings table.
-export type SettingKey = "body_weight_goal_kg" | "theme" | "diet_goals";
+export type SettingKey =
+  | "body_weight_goal_kg"
+  | "theme"
+  | "diet_goals"
+  | "water_goal_ml";
 
 export async function getSetting(
   db: SQLiteDatabase,

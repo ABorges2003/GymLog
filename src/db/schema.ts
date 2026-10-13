@@ -13,6 +13,10 @@ export const TABLES = [
   "app_settings",
   "foods",
   "food_entries",
+  "water_days",
+  "recurring_tasks",
+  "day_tasks",
+  "agenda_events",
 ] as const;
 
 export type TableName = (typeof TABLES)[number];

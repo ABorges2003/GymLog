@@ -30,8 +30,8 @@ const FIELDS: { key: Field; label: string; unit: string; max: number }[] = [
 
 const MAX_MEAL_KCAL = 5000;
 
-// Daily diet goals. Calories are required; macros and the kcal planned for
-// each meal are optional.
+// Daily diet goals. Calories are required; macros and the kcal planned
+// for each meal are optional.
 export default function DietGoalsScreen() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);

@@ -2,6 +2,11 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import {
   addFoodEntry,
+  addWater,
+  getWaterGoalMl,
+  getWaterMl,
+  setWaterGoalMl,
+  setWaterMl,
   getLastAmount,
   updateFoodEntryAmount,
   createFood,
@@ -217,5 +222,44 @@ describe("diet repository", () => {
       }),
     );
     expect((await getDietGoals(db))?.mealKcal).toEqual({ lunch: 900 });
+  });
+
+  it("adds water to each day on its own", async () => {
+    expect(await getWaterMl(db, "2026-10-13")).toBe(0);
+    expect(await addWater(db, "2026-10-13", 250)).toBe(250);
+    expect(await addWater(db, "2026-10-13", 500)).toBe(750);
+    await addWater(db, "2026-10-12", 1000);
+    expect(await getWaterMl(db, "2026-10-13")).toBe(750);
+    expect(await getWaterMl(db, "2026-10-12")).toBe(1000);
+  });
+
+  it("takes water away, never below zero", async () => {
+    await addWater(db, "2026-10-13", 250);
+    expect(await addWater(db, "2026-10-13", -500)).toBe(0);
+    // A day back at zero has no row left.
+    expect(await db.getAllAsync("SELECT * FROM water_days")).toEqual([]);
+  });
+
+  it("corrects the day's total", async () => {
+    await addWater(db, "2026-10-13", 750);
+    await setWaterMl(db, "2026-10-13", 1800);
+    expect(await getWaterMl(db, "2026-10-13")).toBe(1800);
+    await setWaterMl(db, "2026-10-13", 0);
+    expect(await getWaterMl(db, "2026-10-13")).toBe(0);
+  });
+
+  it("saves and removes the daily water goal, on its own", async () => {
+    expect(await getWaterGoalMl(db)).toBeNull();
+    await setWaterGoalMl(db, 2500);
+    expect(await getWaterGoalMl(db)).toBe(2500);
+    // No diet goals needed.
+    expect(await getDietGoals(db)).toBeNull();
+    await setWaterGoalMl(db, null);
+    expect(await getWaterGoalMl(db)).toBeNull();
+  });
+
+  it("ignores a water goal that is not valid", async () => {
+    await setSetting(db, "water_goal_ml", "-1");
+    expect(await getWaterGoalMl(db)).toBeNull();
   });
 });

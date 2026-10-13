@@ -13,7 +13,7 @@ const TAB_ICONS: Record<string, { tab: IconName; header: IconName }> = {
   index: { tab: "barbell-outline", header: "barbell" },
   diet: { tab: "nutrition-outline", header: "nutrition" },
   "body-weight": { tab: "scale-outline", header: "scale" },
-  exercises: { tab: "list-outline", header: "list" },
+  agenda: { tab: "calendar-outline", header: "calendar" },
   settings: { tab: "settings-outline", header: "settings" },
 };
 
@@ -57,10 +57,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="exercises"
+        name="agenda"
         options={{
-          title: "Exercícios",
-          tabBarIcon: tabIcon(TAB_ICONS.exercises.tab),
+          title: "Agenda",
+          tabBarIcon: tabIcon(TAB_ICONS.agenda.tab),
         }}
       />
       <Tabs.Screen

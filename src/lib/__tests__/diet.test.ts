@@ -1,5 +1,8 @@
 import {
+  addWaterMl,
   foodToInput,
+  formatWater,
+  parseWaterAmount,
   formatAmount,
   formatMacros,
   parseAmount,
@@ -175,5 +178,37 @@ describe("rescaleEntry", () => {
       carbsG: 25,
       fatG: 15,
     });
+  });
+});
+
+describe("addWaterMl", () => {
+  it("adds and takes away, between 0 and the maximum", () => {
+    expect(addWaterMl(500, 250)).toBe(750);
+    expect(addWaterMl(250, -500)).toBe(0);
+    expect(addWaterMl(19900, 500)).toBe(20000);
+  });
+});
+
+describe("formatWater", () => {
+  it("shows ml below a litre and litres from there on", () => {
+    expect(formatWater(0)).toBe("0 ml");
+    expect(formatWater(750)).toBe("750 ml");
+    expect(formatWater(1000)).toBe("1 L");
+    expect(formatWater(1250)).toBe("1,25 L");
+    expect(formatWater(2500)).toBe("2,5 L");
+  });
+});
+
+describe("parseWaterAmount", () => {
+  it("reads ml or litres as whole ml", () => {
+    expect(parseWaterAmount("330", "ml", 20000)).toBe(330);
+    expect(parseWaterAmount("1,5", "L", 20000)).toBe(1500);
+    expect(parseWaterAmount("0,33", "L", 20000)).toBe(330);
+  });
+
+  it("rejects empty, zero and too much", () => {
+    expect(parseWaterAmount("", "ml", 20000)).toBeNull();
+    expect(parseWaterAmount("0", "L", 20000)).toBeNull();
+    expect(parseWaterAmount("11", "L", 10000)).toBeNull();
   });
 });

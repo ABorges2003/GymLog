@@ -2,12 +2,14 @@ import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 
 import { AppHeader, headerTitleText } from "@/components/app-header";
+import { AppStartup } from "@/components/app-startup";
 import { DATABASE_NAME, initDatabase } from "@/db/database";
 import { ThemeProvider } from "@/theme/theme";
 
 export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
+      <AppStartup />
       <ThemeProvider>
         <Stack
           screenOptions={{
@@ -50,6 +52,30 @@ export default function RootLayout() {
           <Stack.Screen
             name="diet/add"
             options={{ title: "Adicionar alimento", presentation: "modal" }}
+          />
+          <Stack.Screen name="exercises" options={{ title: "Exercícios" }} />
+          <Stack.Screen
+            name="agenda/recurring/index"
+            options={{ title: "Tarefas que se repetem" }}
+          />
+          <Stack.Screen
+            name="agenda/recurring/new"
+            options={{
+              title: "Nova tarefa que se repete",
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="agenda/recurring/[id]"
+            options={{ title: "Editar repetição", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="agenda/new"
+            options={{ title: "Novo evento", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="agenda/edit/[id]"
+            options={{ title: "Editar evento", presentation: "modal" }}
           />
           <Stack.Screen name="diet/meal" options={{ title: "Refeição" }} />
           <Stack.Screen

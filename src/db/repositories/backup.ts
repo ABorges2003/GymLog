@@ -55,10 +55,50 @@ async function insertRow(
   );
 }
 
+// Tables the given table points to with a foreign key.
+async function getParents(
+  db: SQLiteDatabase,
+  table: TableName,
+): Promise<string[]> {
+  const rows = await db.getAllAsync<{ table: string }>(
+    `PRAGMA foreign_key_list(${table})`,
+  );
+  return rows.map((row) => row.table);
+}
+
+// Tables of the import that a backup made before they existed must not touch:
+// it has no rows for them, so replacing would only delete the phone's. Only
+// tables with no foreign keys to or from the other imported tables; a missing
+// child of a replaced table (e.g. routine_sets in very old files) is still
+// replaced, as its rows belong to parents that are being replaced too.
+async function tablesToKeep(
+  db: SQLiteDatabase,
+  backup: Backup,
+  tables: TableName[],
+): Promise<Set<TableName>> {
+  const keep = new Set<TableName>();
+  const missing = (backup.missingTables ?? []).filter((table) =>
+    tables.includes(table),
+  );
+  if (missing.length === 0) return keep;
+  const parents = new Map<TableName, string[]>();
+  for (const table of tables) parents.set(table, await getParents(db, table));
+  for (const table of missing) {
+    const hasParents = (parents.get(table) ?? []).length > 0;
+    const hasChildren = tables.some((other) =>
+      (parents.get(other) ?? []).includes(table),
+    );
+    if (!hasParents && !hasChildren) keep.add(table);
+  }
+  return keep;
+}
+
 // Replaces the data of the chosen parts with the backup's, in one
 // transaction: if anything fails, nothing changes. The other parts stay as
 // they are. Columns the backup lacks (older app versions) get their default
-// values; columns this version does not know are ignored.
+// values; columns this version does not know are ignored. Tables the backup
+// lacks altogether keep the phone's rows when they stand alone (see
+// tablesToKeep).
 export async function replaceData(
   db: SQLiteDatabase,
   backup: Backup,
@@ -66,7 +106,8 @@ export async function replaceData(
 ): Promise<void> {
   // Only parts the file really holds: the others are empty in it.
   const chosen = parts.filter((part) => backup.parts.includes(part));
-  const tables = partTables(chosen);
+  const keep = await tablesToKeep(db, backup, partTables(chosen));
+  const tables = partTables(chosen).filter((table) => !keep.has(table));
   const keys = partSettingKeys(chosen);
 
   await db.withExclusiveTransactionAsync(async (txn) => {

@@ -55,6 +55,7 @@ describe("date keys", () => {
     expect(formatDayLabel("2026-10-05", today)).toBe("Hoje");
     expect(formatDayLabel("2026-10-04", today)).toBe("Ontem");
     expect(formatDayLabel("2026-10-03", today)).toBe("Sábado, 3 de outubro");
+    expect(formatDayLabel("2026-10-06", today)).toBe("Amanhã");
   });
 });
 

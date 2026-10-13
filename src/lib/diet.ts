@@ -209,3 +209,38 @@ export function searchFoods<T extends { name: string }>(
     )
     .sort((a, b) => a.name.localeCompare(b.name, "pt"));
 }
+
+// Water: quick amounts to add, the most a day can hold, and the scale of the
+// bottle when there is no goal (never shown as a number).
+export const WATER_STEPS_ML = [250, 500] as const;
+export const MAX_WATER_ML = 20000;
+export const MAX_WATER_GOAL_ML = 10000;
+export const WATER_BOTTLE_DEFAULT_ML = 2000;
+
+// The day's water after adding (or, if negative, taking away) some ml:
+// never below 0 or above the maximum.
+export function addWaterMl(current: number, deltaMl: number): number {
+  return Math.min(MAX_WATER_ML, Math.max(0, Math.round(current + deltaMl)));
+}
+
+// "750 ml", "1 L", "1,25 L": litres from 1000 ml on, up to 2 decimals.
+export function formatWater(ml: number): string {
+  if (ml < 1000) return `${Math.round(ml)} ml`;
+  const litres = Math.round(ml / 10) / 100;
+  return `${String(litres).replace(".", ",")} L`;
+}
+
+export type WaterUnit = "ml" | "L";
+
+// Water typed in ml or litres ("330", "1,5"), as whole ml; null when it is
+// not a positive amount up to `maxMl`.
+export function parseWaterAmount(
+  text: string,
+  unit: WaterUnit,
+  maxMl: number,
+): number | null {
+  const value = parsePositive(text, unit === "L" ? maxMl / 1000 : maxMl);
+  if (value === null) return null;
+  const ml = Math.round(unit === "L" ? value * 1000 : value);
+  return ml > 0 ? ml : null;
+}

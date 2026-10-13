@@ -2,7 +2,12 @@ import { randomUUID } from "expo-crypto";
 import type { SQLiteDatabase } from "expo-sqlite";
 
 import { getSetting, setSetting } from "@/db/repositories/settings";
-import { rescaleEntry, scaleMacros, type FoodValues } from "@/lib/diet";
+import {
+  addWaterMl,
+  rescaleEntry,
+  scaleMacros,
+  type FoodValues,
+} from "@/lib/diet";
 import {
   MEALS,
   type DietGoals,
@@ -287,4 +292,69 @@ export async function setDietGoals(
   goals: DietGoals,
 ): Promise<void> {
   await setSetting(db, "diet_goals", JSON.stringify(goals));
+}
+
+// Water drunk on a day, in ml (0 when nothing was logged).
+export async function getWaterMl(
+  db: SQLiteDatabase,
+  date: string,
+): Promise<number> {
+  const row = await db.getFirstAsync<{ ml: number }>(
+    "SELECT ml FROM water_days WHERE date = ?",
+    date,
+  );
+  return row?.ml ?? 0;
+}
+
+// Sets the day's total (used to correct it). 0 removes the day's row.
+export async function setWaterMl(
+  db: SQLiteDatabase,
+  date: string,
+  ml: number,
+): Promise<void> {
+  const value = addWaterMl(ml, 0);
+  if (value === 0) {
+    await db.runAsync("DELETE FROM water_days WHERE date = ?", date);
+    return;
+  }
+  await db.runAsync(
+    `INSERT INTO water_days (date, ml) VALUES (?, ?)
+     ON CONFLICT (date) DO UPDATE SET ml = excluded.ml`,
+    date,
+    value,
+  );
+}
+
+// Adds (or, if negative, takes away) water from the day; returns the new total.
+export async function addWater(
+  db: SQLiteDatabase,
+  date: string,
+  deltaMl: number,
+): Promise<number> {
+  let total = 0;
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    total = addWaterMl(await getWaterMl(txn, date), deltaMl);
+    await setWaterMl(txn, date, total);
+  });
+  return total;
+}
+
+// Daily water goal in ml, or null when not set.
+export async function getWaterGoalMl(
+  db: SQLiteDatabase,
+): Promise<number | null> {
+  const value = Number(await getSetting(db, "water_goal_ml"));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+// null removes the goal.
+export async function setWaterGoalMl(
+  db: SQLiteDatabase,
+  ml: number | null,
+): Promise<void> {
+  await setSetting(
+    db,
+    "water_goal_ml",
+    ml === null ? null : String(Math.round(ml)),
+  );
 }

@@ -66,11 +66,12 @@ export function addDaysToKey(key: string, days: number): string {
   return toDateKey(date);
 }
 
-// "Hoje", "Ontem" or e.g. "Sábado, 3 de outubro".
+// "Hoje", "Ontem", "Amanhã" or e.g. "Sábado, 3 de outubro".
 export function formatDayLabel(key: string, today: Date = new Date()): string {
   const todayKey = toDateKey(today);
   if (key === todayKey) return "Hoje";
   if (key === addDaysToKey(todayKey, -1)) return "Ontem";
+  if (key === addDaysToKey(todayKey, 1)) return "Amanhã";
   return formatLongDate(dateFromKey(key).toISOString(), today);
 }
 

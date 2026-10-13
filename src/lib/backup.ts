@@ -7,20 +7,30 @@ export const BACKUP_FORMAT_VERSION = 2;
 export type BackupRow = Record<string, string | number | null>;
 
 // What can be exported or imported on its own.
-export type BackupPart = "training" | "body_weight" | "diet";
+export type BackupPart = "training" | "body_weight" | "diet" | "agenda";
 
-export const BACKUP_PARTS: BackupPart[] = ["training", "body_weight", "diet"];
+export const BACKUP_PARTS: BackupPart[] = [
+  "training",
+  "body_weight",
+  "diet",
+  "agenda",
+];
+
+// Parts that existed when files were version 1 (they held all of them).
+const VERSION_1_PARTS: BackupPart[] = ["training", "body_weight", "diet"];
 
 export const BACKUP_PART_LABELS: Record<BackupPart, string> = {
   training: "Treinos",
   body_weight: "Peso",
   diet: "Dieta",
+  agenda: "Agenda",
 };
 
 export const BACKUP_PART_DETAILS: Record<BackupPart, string> = {
   training: "Exercícios, rotinas e treinos",
   body_weight: "Registos de peso, objetivo e épocas",
-  diet: "Alimentos, refeições e objetivos",
+  diet: "Alimentos, refeições, água e objetivos",
+  agenda: "Tarefas do dia a dia e eventos",
 };
 
 // Tables of each part. The parts never point to each other's rows, so each
@@ -36,7 +46,8 @@ const PART_TABLES: Record<BackupPart, TableName[]> = {
     "workout_sets",
   ],
   body_weight: ["body_weight_entries", "body_weight_phases"],
-  diet: ["foods", "food_entries"],
+  diet: ["foods", "food_entries", "water_days"],
+  agenda: ["recurring_tasks", "day_tasks", "agenda_events"],
 };
 
 // app_settings is shared: its rows belong to a part by key. The theme belongs
@@ -44,7 +55,8 @@ const PART_TABLES: Record<BackupPart, TableName[]> = {
 const PART_SETTING_KEYS: Record<BackupPart, string[]> = {
   training: [],
   body_weight: ["body_weight_goal_kg"],
-  diet: ["diet_goals"],
+  diet: ["diet_goals", "water_goal_ml"],
+  agenda: [],
 };
 
 // Tables of the given parts, parents before children (app_settings apart).
@@ -68,6 +80,9 @@ export type Backup = {
   // The parts the file holds; tables of other parts are empty.
   parts: BackupPart[];
   tables: Record<TableName, BackupRow[]>;
+  // Tables the file did not have at all (it was made before they existed).
+  // Only set when reading a file; they are empty in `tables`.
+  missingTables?: TableName[];
 };
 
 // Backup of the chosen parts only.
@@ -160,9 +175,9 @@ export function parseBackup(
     };
   }
 
-  // Version 1 files always hold everything.
+  // Version 1 files always hold everything there was then.
   const parts: unknown =
-    candidate.version === 1 ? BACKUP_PARTS : candidate.parts;
+    candidate.version === 1 ? VERSION_1_PARTS : candidate.parts;
   if (
     !Array.isArray(parts) ||
     parts.length === 0 ||
@@ -172,9 +187,12 @@ export function parseBackup(
   }
 
   const tables = {} as Record<TableName, BackupRow[]>;
+  const missingTables: TableName[] = [];
   for (const table of TABLES) {
     // Tables added in later versions may be missing from older backups.
-    const rows = (candidate.tables as Record<string, unknown>)[table] ?? [];
+    const raw = (candidate.tables as Record<string, unknown>)[table];
+    if (raw === undefined) missingTables.push(table);
+    const rows = raw ?? [];
     if (!Array.isArray(rows) || !rows.every(isRow)) {
       return { ok: false, error: `O backup está danificado (${table}).` };
     }
@@ -190,32 +208,48 @@ export function parseBackup(
       exportedAt: String(candidate.exportedAt ?? ""),
       parts: BACKUP_PARTS.filter((part) => parts.includes(part)),
       tables,
+      missingTables,
     },
   };
 }
 
 // What a part of a backup holds, e.g. "12 exercícios, 3 rotinas, 20 treinos".
+// Tables the file did not have are left out: importing keeps the phone's.
 export function describePart(backup: Backup, part: BackupPart): string {
   const count = (table: TableName, one: string, many: string) => {
+    if (backup.missingTables?.includes(table)) return null;
     const n = backup.tables[table].length;
     return `${n} ${n === 1 ? one : many}`;
   };
+  const join = (items: (string | null)[]) =>
+    items.filter((item) => item !== null).join(", ");
   switch (part) {
     case "training":
-      return [
+      return join([
         count("exercises", "exercício", "exercícios"),
         count("routines", "rotina", "rotinas"),
         count("workouts", "treino", "treinos"),
-      ].join(", ");
+      ]);
     case "body_weight":
-      return [
+      return join([
         count("body_weight_entries", "registo", "registos"),
         count("body_weight_phases", "época", "épocas"),
-      ].join(", ");
+      ]);
     case "diet":
-      return [
+      return join([
         count("foods", "alimento", "alimentos"),
         count("food_entries", "registo", "registos"),
-      ].join(", ");
+        count("water_days", "dia de água", "dias de água"),
+      ]);
+    case "agenda":
+      return join([
+        count("day_tasks", "tarefa", "tarefas"),
+        count(
+          "recurring_tasks",
+          "tarefa que se repete",
+          "tarefas que se repetem",
+        ),
+        count("agenda_events", "evento", "eventos"),
+      ]);
   }
 }

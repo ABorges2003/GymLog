@@ -13,7 +13,9 @@ import {
 import { PressableScale } from "@/components/pressable-scale";
 import { ProgressBar } from "@/components/progress-bar";
 import { ProgressRing } from "@/components/progress-ring";
+import { WaterCard } from "@/components/water-card";
 import { useDietDay } from "@/hooks/use-diet-day";
+import { useWaterDay } from "@/hooks/use-water-day";
 import { addDaysToKey, formatDayLabel, toDateKey } from "@/lib/dates";
 import { MEAL_LABELS, formatAmount, sumMacros } from "@/lib/diet";
 import { formatWeight } from "@/lib/sets";
@@ -83,6 +85,7 @@ export default function DietScreen() {
   const [date, setDate] = useState(today);
   // Changing or removing foods happens in the meal screen.
   const { day, error } = useDietDay(date);
+  const water = useWaterDay(date);
   const router = useRouter();
 
   const totals = useMemo(() => sumMacros(day?.entries ?? []), [day]);
@@ -273,6 +276,14 @@ export default function DietScreen() {
           );
         })}
       </View>
+
+      <WaterCard
+        ml={water.ml}
+        goalMl={water.goalMl}
+        onAdd={water.add}
+        onSet={water.set}
+        onSetGoal={water.setGoal}
+      />
     </ScrollView>
   );
 }
