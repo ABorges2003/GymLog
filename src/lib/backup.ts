@@ -121,6 +121,11 @@ export function backupFileName(now: Date = new Date()): string {
   return `gymlog-backup-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`;
 }
 
+// Whether a file name is one of our exported backups (see backupFileName).
+export function isBackupFileName(name: string): boolean {
+  return /^gymlog-backup-\d{4}-\d{2}-\d{2}\.json$/.test(name);
+}
+
 export type ParseResult =
   { ok: true; backup: Backup } | { ok: false; error: string };
 
@@ -198,6 +203,10 @@ export function parseBackup(
     }
     tables[table] = rows;
   }
+  // Notes saved before v20 could be "keep", which is no longer a note.
+  tables.routine_exercises = tables.routine_exercises.map((row) =>
+    row.progression === "keep" ? { ...row, progression: null } : row,
+  );
 
   return {
     ok: true,

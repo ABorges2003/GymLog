@@ -30,7 +30,7 @@ export function useExerciseProgress(
     let active = true;
     Promise.all([
       getExerciseById(db, exerciseId),
-      getFinishedExerciseEntries(db),
+      getFinishedExerciseEntries(db, [exerciseId]),
     ])
       .then(([result, allEntries]) => {
         if (!active) return;

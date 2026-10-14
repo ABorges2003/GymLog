@@ -115,7 +115,7 @@ Cada exercício novo começa com **W · F · F · T · B**. Para mudar:
 
 No separador **Treino**, toca no botão redondo roxo **▶** da rotina do dia. A rotina que fizeste mais recentemente está sempre no topo da lista, e cada rotina mostra quando a fizeste pela última vez (ex.: **Ontem**). O treino abre **já preenchido** com os pesos da rotina, que são os da última vez que a fizeste.
 
-<p align="center"><img src="images/05-treino.jpg" width="280" alt="Treino a decorrer: +1 rep com ajuda no top set e o back-off até à falha"></p>
+<p align="center"><img src="images/05-treino.jpg" width="280" alt="Treino a decorrer: reps com ajuda no top set e o back-off até à falha"></p>
 
 ### 4.2 Durante o treino
 
@@ -132,9 +132,11 @@ No separador **Treino**, toca no botão redondo roxo **▶** da rotina do dia. A
 
 No fundo de cada exercício há uma nota para te lembrares do que fazer da próxima vez:
 
-- 🟢 **"Não aumentar na próxima semana"**: mantém o peso.
+- 🟢 **"Aumentar carga na próxima semana"**: está na altura de subir.
 - 🟡 **"Em princípio aumentar na próxima semana"**: sobe se nesse dia te sentires bem.
-- 🔴 **"Aumentar carga na próxima semana"**: está na altura de subir.
+- 🔴 **"Diminuir carga na próxima semana"**: desce o peso.
+
+Para manter o mesmo peso não precisas de nota: deixa o exercício sem nenhuma (ou tira-a).
 
 Toca em **+ Nota para a próxima semana**, ou na própria nota: abre-se um popup para escolher uma das três, ou **Tirar nota**. A nota fica guardada na rotina e aparece no treino seguinte.
 
@@ -163,7 +165,7 @@ Toca nele para ver o histórico desse exercício (as reps com ajuda também apar
 - ▲ **verde**: subiste (ex.: `100 kg × 6 → 102,5 kg × 5`)
 - ▼ **vermelho**: desceste
 
-O botão **Gráfico** abre um gráfico do peso do top set ao longo do tempo.
+O botão **Gráfico** abre um gráfico do peso do top set ao longo do tempo. Mostra o primeiro treino e depois só os treinos em que o top set subiu ou desceu; os treinos com o mesmo top set que o anterior ficam de fora. Se o primeiro treino já subiu ou desceu, o gráfico começa em **Início**: os valores que a rotina tinha.
 
 <p align="center"><img src="images/07-historico.jpg" width="280" alt="Popup do histórico de um exercício"></p>
 

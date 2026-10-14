@@ -115,7 +115,7 @@ Every new exercise starts with **W · F · F · T · B**. To change it:
 
 In the **Treino** (Workout) tab, tap the round purple **▶** button on the day's routine. The routine you did most recently is always at the top of the list, and each routine shows when you last did it (e.g. **Ontem**, yesterday). The workout opens **already filled in** with the routine's weights, which are the ones from the last time you did it.
 
-<p align="center"><img src="images/05-treino.jpg" width="280" alt="Workout in progress: +1 rep with help on the top set and the back-off to failure"></p>
+<p align="center"><img src="images/05-treino.jpg" width="280" alt="Workout in progress: reps with help on the top set and the back-off to failure"></p>
 
 ### 4.2 During the workout
 
@@ -132,9 +132,11 @@ In the **Treino** (Workout) tab, tap the round purple **▶** button on the day'
 
 At the bottom of each exercise there is a note to remind you what to do next time:
 
-- 🟢 **"Não aumentar na próxima semana"** (don't increase next week): keep the weight.
+- 🟢 **"Aumentar carga na próxima semana"** (increase the weight next week): time to go up.
 - 🟡 **"Em princípio aumentar na próxima semana"** (probably increase next week): go up if you feel good that day.
-- 🔴 **"Aumentar carga na próxima semana"** (increase the weight next week): time to go up.
+- 🔴 **"Diminuir carga na próxima semana"** (decrease the weight next week): go down.
+
+Keeping the same weight needs no note: just leave it without one (or remove it).
 
 Tap **+ Nota para a próxima semana** (note for next week), or the note itself: a popup opens to pick one of the three, or **Tirar nota** (remove the note). The note is stored in the routine and shows up in the next workout.
 
@@ -163,7 +165,7 @@ Tap it to see that exercise's history (reps with help are shown too, e.g. `100 k
 - ▲ **green**: you went up (e.g. `100 kg × 6 → 102,5 kg × 5`)
 - ▼ **red**: you went down
 
-The **Gráfico** (chart) button opens a chart of the top set weight over time.
+The **Gráfico** (chart) button opens a chart of the top set weight over time. It shows the first workout and then only the workouts where the top set went up or down; workouts with the same top set as before are left out. If your first workout already went up or down, the chart starts at **Início** (start): the values the routine had.
 
 <p align="center"><img src="images/07-historico.jpg" width="280" alt="History popup of an exercise"></p>
 

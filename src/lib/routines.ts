@@ -50,7 +50,7 @@ export function sortRoutines<
 }
 
 export const PROGRESSION_LABELS: Record<Progression, string> = {
-  keep: "Não aumentar na próxima semana",
-  maybe: "Em princípio aumentar na próxima semana",
   increase: "Aumentar carga na próxima semana",
+  maybe: "Em princípio aumentar na próxima semana",
+  decrease: "Diminuir carga na próxima semana",
 };

@@ -2,6 +2,7 @@ import { TABLES, type TableName } from "@/db/schema";
 import {
   BACKUP_PARTS,
   backupFileName,
+  isBackupFileName,
   createBackup,
   describePart,
   parseBackup,
@@ -161,5 +162,28 @@ describe("describePart", () => {
   it("leaves out tables the file did not have (they are kept)", () => {
     const backup = { ...sample(), missingTables: ["body_weight_phases" as const] };
     expect(describePart(backup, "body_weight")).toBe("1 registo");
+  });
+});
+
+describe("parseBackup and old notes", () => {
+  it("drops the old 'keep' note, which no longer exists", () => {
+    const old = JSON.parse(JSON.stringify(sample()));
+    old.tables.routine_exercises = [
+      { id: "re1", progression: "keep" },
+      { id: "re2", progression: "increase" },
+    ];
+    const result = parseBackup(JSON.stringify(old), 8);
+    expect(result.ok && result.backup.tables.routine_exercises).toEqual([
+      { id: "re1", progression: null },
+      { id: "re2", progression: "increase" },
+    ]);
+  });
+});
+
+describe("isBackupFileName", () => {
+  it("knows our exported files and nothing else", () => {
+    expect(isBackupFileName(backupFileName(new Date(2026, 9, 14)))).toBe(true);
+    expect(isBackupFileName("gymlog-backup-2026-10-14 (1).json")).toBe(false);
+    expect(isBackupFileName("photo.jpg")).toBe(false);
   });
 });

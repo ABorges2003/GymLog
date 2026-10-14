@@ -19,7 +19,7 @@ export type RoutineSummary = Routine & {
 
 // Note for the next time the exercise is done: keep the weight, probably
 // increase it, or increase it.
-export type Progression = "keep" | "maybe" | "increase";
+export type Progression = "increase" | "maybe" | "decrease";
 
 // An exercise inside a routine, in the routine's order.
 export type RoutineExercise = {

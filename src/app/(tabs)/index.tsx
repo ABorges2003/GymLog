@@ -45,7 +45,9 @@ export default function WorkoutScreen() {
     setAssisted,
   } = useActiveWorkout();
   const [busy, setBusy] = useState(false);
-  const withHistory = useExercisesWithHistory();
+  const withHistory = useExercisesWithHistory(
+    (detail?.exercises ?? []).map((item) => item.exercise.id),
+  );
   const router = useRouter();
   const navigation = useNavigation();
 

@@ -54,14 +54,14 @@ Mais capturas no [guia de utilização](docs/user-guide.pt.md).
 | Gerir exercícios | Criar, editar e arquivar os meus próprios exercícios (a lista começa vazia) |
 | Exercícios favoritos | Marcar exercícios com estrela para aparecerem primeiro nas listas |
 | Rotinas | Uma por cada treino da semana (ex.: Push, Pull, Pernas): exercícios por ordem e séries planeadas (W/F/T/B, peso, reps). A rotina feita mais recentemente aparece primeiro, com o dia em que foi feita pela última vez |
-| Nota para a próxima semana | Por exercício: verde "não aumentar", amarelo "em princípio aumentar" ou vermelho "aumentar carga" |
+| Nota para a próxima semana | Por exercício: verde "aumentar carga", amarelo "em princípio aumentar" ou vermelho "diminuir carga" (sem nota mantém o peso) |
 | Registo do treino | Começar a partir de uma rotina, já preenchido com os últimos pesos; mudar peso e reps (meias reps permitidas), adicionar ou tirar séries, adicionar exercícios (também entram na rotina). Terminar copia o que foi feito para a rotina |
 | Back-off até à falha | Uma chama em cada back-off (na rotina e no treino) marca-o como feito até à falha em vez de um número de reps ("85 kg × falha") |
 | Reps com ajuda | Um ícone de mão no fim de cada top set regista as reps feitas com ajuda ("100 kg × 6 +2"). Tal como os pesos, passam para a rotina e o treino seguinte começa com elas; nunca contam como progresso |
 | Cronómetro do treino | O cabeçalho do treino mostra há quanto tempo estás a treinar (⏱ 42:13) |
 | Resumo do treino | Depois de terminar: duração, exercícios, séries, volume, progressões e os top sets e back-offs feitos ("12 kg × 5 +1 com ajuda") |
 | Histórico do exercício | Ícone em cada exercício: popup com as progressões (▲ verde) e regressões (▼ vermelho), top set antes → depois, por rotina |
-| Progresso do exercício | Gráfico do peso do top set ao longo do tempo, por exercício e rotina |
+| Progresso do exercício | Gráfico do peso do top set ao longo do tempo, por exercício e rotina: só os treinos em que o top set subiu ou desceu |
 | Registo do peso | Um registo por dia (hoje ou dias passados); guardar de novo no mesmo dia atualiza-o |
 | Gráfico do peso | Valores diários e uma linha no peso objetivo; o resumo mostra a média de 7 dias e quanto falta para o objetivo |
 | Épocas de peso | Períodos com nome, como um bulk ou um cut, com data de início e de fim (opcional); cada uma tem o seu gráfico, variação total, ritmo semanal (kg e % do peso corporal), peso mais baixo/mais alto e quanto já passou |
@@ -115,7 +115,7 @@ GymLog/
 │   ├── hooks/              → lógica dos ecrãs (carregar dados, ações)
 │   ├── db/
 │   │   ├── schema.ts       → lista das tabelas (ordem usada nos backups)
-│   │   ├── migrations.ts   → definição das tabelas e migrations (v1 a v19)
+│   │   ├── migrations.ts   → definição das tabelas e migrations (v1 a v20)
 │   │   ├── repositories/   → funções de acesso aos dados (um ficheiro por entidade, + testes)
 │   │   └── __tests__/      → testes das migrations
 │   ├── lib/                → lógica pura: pesquisa, nomes, séries, progresso, datas, peso, dieta, agenda, backup (+ testes)
@@ -135,7 +135,7 @@ GymLog/
 |-------|-------------|
 | exercises | id, name, muscle_group, equipment, is_custom (não usado), is_archived, is_favorite |
 | routines | id, name, created_at |
-| routine_exercises | id, routine_id, exercise_id, position, progression (keep, maybe, increase ou vazio), target_sets (não usado), target_reps (não usado) |
+| routine_exercises | id, routine_id, exercise_id, position, progression (increase, maybe, decrease ou vazio), target_sets (não usado), target_reps (não usado) |
 | routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (opcional), weight_kg (opcional), to_failure (back-off até à falha, então sem reps), assisted_reps (top sets: reps feitas com ajuda da última vez) |
 | workouts | id, started_at, finished_at, notes, routine_id (opcional) |
 | workout_exercises | id, workout_id, exercise_id, position |
@@ -173,7 +173,7 @@ erDiagram
         TEXT routine_id FK
         TEXT exercise_id FK
         INTEGER position
-        TEXT progression "keep | maybe | increase"
+        TEXT progression "increase | maybe | decrease"
         INTEGER target_sets
         INTEGER target_reps
     }

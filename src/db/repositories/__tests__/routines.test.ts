@@ -251,9 +251,9 @@ describe("routines repository", () => {
         "increase",
       );
 
-      await setRoutineExerciseProgression(db, item.id, "keep");
+      await setRoutineExerciseProgression(db, item.id, "decrease");
       expect((await getRoutineExerciseById(db, item.id))?.progression).toBe(
-        "keep",
+        "decrease",
       );
 
       await setRoutineExerciseProgression(db, item.id, null);

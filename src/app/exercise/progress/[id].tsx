@@ -81,7 +81,9 @@ export default function ExerciseProgressScreen() {
             <Text style={styles.cardTitle}>Carga do top set</Text>
             <WeightChart
               points={points.map((point) => ({
-                label: formatShortDate(point.startedAt),
+                label: point.isStart
+                  ? "Início"
+                  : formatShortDate(point.startedAt),
                 weightKg: point.best.weightKg,
               }))}
             />
@@ -95,7 +97,9 @@ export default function ExerciseProgressScreen() {
               return (
                 <View key={point.workoutId} style={styles.row}>
                   <Text style={styles.rowDate}>
-                    {formatLongDate(point.startedAt)}
+                    {point.isStart
+                      ? "Início (valores da rotina)"
+                      : formatLongDate(point.startedAt)}
                   </Text>
                   <Text style={styles.rowValue}>
                     {formatBestSet(point.best)}

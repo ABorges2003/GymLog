@@ -16,24 +16,25 @@ type Props = {
   onChange: (progression: Progression | null) => void;
 };
 
-const OPTIONS: Progression[] = ["keep", "maybe", "increase"];
+const OPTIONS: Progression[] = ["increase", "maybe", "decrease"];
 
 const ICONS: Record<Progression, ComponentProps<typeof Ionicons>["name"]> = {
-  keep: "pause-circle",
-  maybe: "help-circle",
   increase: "arrow-up-circle",
+  maybe: "help-circle",
+  decrease: "arrow-down-circle",
 };
 
-// Green "keep", yellow "maybe" or red "increase" for the next workout.
+// Green "increase", yellow "maybe" or red "decrease" for the next workout.
+// To keep the weight there is no note.
 function useNoteColors(): Record<
   Progression,
   { text: string; background: string }
 > {
   const c = useColors();
   return {
-    keep: { text: c.success, background: c.successBg },
+    increase: { text: c.success, background: c.successBg },
     maybe: { text: c.warningText, background: c.warningBg },
-    increase: { text: c.danger, background: c.dangerBg },
+    decrease: { text: c.danger, background: c.dangerBg },
   };
 }
 

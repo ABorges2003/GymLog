@@ -27,8 +27,18 @@ export function useWorkoutSummary(id: string) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([getWorkoutDetail(db, id), getFinishedExerciseEntries(db)])
-      .then(([detail, entries]) => {
+    // Only the history of this workout's exercises is needed.
+    getWorkoutDetail(db, id)
+      .then(async (detail) => {
+        const entries = detail
+          ? await getFinishedExerciseEntries(
+              db,
+              detail.exercises.map((item) => item.exercise.id),
+            )
+          : [];
+        return { detail, entries };
+      })
+      .then(({ detail, entries }) => {
         if (!active) return;
         if (!detail) {
           setError("Este treino já não existe.");

@@ -332,6 +332,15 @@ describe("workouts repository", () => {
     });
   });
 
+  it("loads the history of only the exercises asked for", async () => {
+    await finishWorkout(db, await startWorkoutFromRoutine(db, routineId));
+
+    const bench = await getFinishedExerciseEntries(db, ["bench"]);
+    expect(bench.map((entry) => entry.exerciseName)).toEqual(["Supino"]);
+    expect(bench[0]).toMatchObject({ sets: benchSets });
+    expect(await getFinishedExerciseEntries(db, [])).toEqual([]);
+  });
+
   it("the very first workout of a routine already shows progressions", async () => {
     // A fresh install: no workout was ever finished.
     const workoutId = await startWorkoutFromRoutine(db, routineId);

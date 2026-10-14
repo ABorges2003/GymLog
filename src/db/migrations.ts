@@ -394,6 +394,43 @@ const migrations: Migration[] = [
         ON day_tasks (recurring_id, date) WHERE recurring_id IS NOT NULL;
     `);
   },
+
+  // v20: the notes for next week are now increase (green), maybe (yellow) or
+  // decrease (red); keeping the weight needs no note, so old "keep" notes are
+  // removed. SQLite cannot change a CHECK, so routine_exercises is rebuilt;
+  // its routine_sets are kept aside and put back, as in v12.
+  async (db) => {
+    await db.execAsync(`
+      CREATE TABLE routine_sets_copy AS SELECT * FROM routine_sets;
+      DELETE FROM routine_sets;
+
+      CREATE TABLE routine_exercises_new (
+        id TEXT PRIMARY KEY NOT NULL,
+        routine_id TEXT NOT NULL REFERENCES routines (id) ON DELETE CASCADE,
+        exercise_id TEXT NOT NULL REFERENCES exercises (id) ON DELETE RESTRICT,
+        position INTEGER NOT NULL,
+        target_sets INTEGER CHECK (target_sets > 0),
+        target_reps INTEGER CHECK (target_reps > 0),
+        progression TEXT CHECK (progression IS NULL OR progression IN ('increase', 'maybe', 'decrease'))
+      );
+
+      INSERT INTO routine_exercises_new (id, routine_id, exercise_id, position, target_sets, target_reps, progression)
+      SELECT id, routine_id, exercise_id, position, target_sets, target_reps,
+             CASE WHEN progression = 'keep' THEN NULL ELSE progression END
+      FROM routine_exercises;
+
+      DROP TABLE routine_exercises;
+      ALTER TABLE routine_exercises_new RENAME TO routine_exercises;
+
+      CREATE INDEX idx_routine_exercises_routine ON routine_exercises (routine_id);
+      CREATE INDEX idx_routine_exercises_exercise ON routine_exercises (exercise_id);
+
+      INSERT INTO routine_sets (id, routine_exercise_id, position, set_type, reps, weight_kg, to_failure, assisted_reps)
+      SELECT id, routine_exercise_id, position, set_type, reps, weight_kg, to_failure, assisted_reps
+      FROM routine_sets_copy;
+      DROP TABLE routine_sets_copy;
+    `);
+  },
 ];
 
 // Upgrades the schema to the latest version (tests may stop at an older one).

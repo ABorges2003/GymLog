@@ -311,10 +311,19 @@ export async function deleteWorkout(
 }
 
 // Every exercise done in a finished workout, with its sets, to work out
-// progressions (see buildProgressHistory).
+// progressions (see buildProgressHistory). With `exerciseIds`, only those
+// exercises: screens load just what they show, so the history can grow for
+// years without slowing them down.
 export async function getFinishedExerciseEntries(
   db: SQLiteDatabase,
+  exerciseIds?: string[],
 ): Promise<ExerciseEntry[]> {
+  if (exerciseIds && exerciseIds.length === 0) return [];
+  const only = exerciseIds
+    ? ` AND we.exercise_id IN (${exerciseIds.map(() => "?").join(", ")})`
+    : "";
+  const params = exerciseIds ?? [];
+
   const rows = await db.getAllAsync<{
     workout_exercise_id: string;
     workout_id: string;
@@ -330,8 +339,9 @@ export async function getFinishedExerciseEntries(
      JOIN workouts w ON w.id = we.workout_id
      JOIN exercises e ON e.id = we.exercise_id
      LEFT JOIN routines r ON r.id = w.routine_id
-     WHERE w.finished_at IS NOT NULL
+     WHERE w.finished_at IS NOT NULL${only}
      ORDER BY w.started_at, we.position`,
+    ...params,
   );
   const sets = await db.getAllAsync<
     WorkoutSetRow & {
@@ -345,33 +355,30 @@ export async function getFinishedExerciseEntries(
      FROM workout_sets ws
      JOIN workout_exercises we ON we.id = ws.workout_exercise_id
      JOIN workouts w ON w.id = we.workout_id
-     WHERE w.finished_at IS NOT NULL
+     WHERE w.finished_at IS NOT NULL${only}
      ORDER BY ws.position`,
+    ...params,
   );
 
   const done = new Map<string, LoggedSet[]>();
   const planned = new Map<string, PlannedSet[]>();
   for (const set of sets) {
     const id = set.workout_exercise_id;
-    done.set(id, [
-      ...(done.get(id) ?? []),
-      {
-        setType: set.set_type,
-        reps: set.reps,
-        weightKg: set.weight_kg,
-        toFailure: set.to_failure === 1,
-        assistedReps: set.assisted_reps,
-      },
-    ]);
-    planned.set(id, [
-      ...(planned.get(id) ?? []),
-      {
-        setType: set.set_type,
-        reps: set.planned_reps,
-        weightKg: set.planned_weight_kg,
-        toFailure: false,
-      },
-    ]);
+    if (!done.has(id)) done.set(id, []);
+    if (!planned.has(id)) planned.set(id, []);
+    done.get(id)?.push({
+      setType: set.set_type,
+      reps: set.reps,
+      weightKg: set.weight_kg,
+      toFailure: set.to_failure === 1,
+      assistedReps: set.assisted_reps,
+    });
+    planned.get(id)?.push({
+      setType: set.set_type,
+      reps: set.planned_reps,
+      weightKg: set.planned_weight_kg,
+      toFailure: false,
+    });
   }
 
   return rows.map((row) => ({

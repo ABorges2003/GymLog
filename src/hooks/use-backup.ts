@@ -1,5 +1,5 @@
 import * as DocumentPicker from "expo-document-picker";
-import { File, Paths } from "expo-file-system";
+import { Directory, File, Paths } from "expo-file-system";
 import { readAsStringAsync } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useSQLiteContext } from "expo-sqlite";
@@ -15,6 +15,7 @@ import { getEventsFrom } from "@/db/repositories/planner";
 import {
   backupFileName,
   createBackup,
+  isBackupFileName,
   parseBackup,
   type Backup,
   type BackupPart,
@@ -55,6 +56,16 @@ export function useBackup(onImported: () => void) {
         await getSchemaVersion(db),
         parts,
       );
+      // Earlier exports would pile up in the cache (one per day exported).
+      try {
+        for (const item of new Directory(Paths.cache).list()) {
+          if (item instanceof File && isBackupFileName(item.name)) {
+            item.delete();
+          }
+        }
+      } catch {
+        // Not worth stopping the export for.
+      }
       const file = new File(Paths.cache, backupFileName());
       if (file.exists) file.delete();
       file.create();

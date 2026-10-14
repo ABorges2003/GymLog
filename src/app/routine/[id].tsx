@@ -33,7 +33,9 @@ export default function RoutineScreen() {
     moveExercise,
     setProgression,
   } = useRoutine(id);
-  const withHistory = useExercisesWithHistory();
+  const withHistory = useExercisesWithHistory(
+    (exercises ?? []).map((item) => item.exercise.id),
+  );
 
   function handleError(message: string) {
     return () => Alert.alert("Erro", message);

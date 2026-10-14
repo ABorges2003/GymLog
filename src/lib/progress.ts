@@ -194,10 +194,16 @@ export type ProgressPoint = {
   best: BestSet;
   // Compared with the previous point; null for the first one.
   direction: Direction | null;
+  // The values the first workout started with (from the routine), shown
+  // before it when it already went up or down, as the history popup does.
+  isStart?: true;
 };
 
-// Best set of an exercise in each finished workout of a routine, oldest
-// first. Workouts where no set has a weight are left out.
+// Best set of an exercise in the finished workouts of a routine, oldest
+// first: the first workout, then only those where the best set went up or
+// down. Workouts with the same best set as before, or where no set has a
+// weight, are left out. If the first workout already changed from the values
+// it started with, those come first (isStart), like in buildProgressHistory.
 export function buildExerciseProgress(
   entries: ExerciseEntry[],
   exerciseId: string,
@@ -214,12 +220,26 @@ export function buildExerciseProgress(
   for (const entry of chronological) {
     const best = bestSet(entry.sets);
     if (!best) continue;
+    if (points.length === 0) {
+      const planned = bestSet(entry.plannedSets);
+      if (planned && compareBestSets(planned, best) !== "same") {
+        points.push({
+          workoutId: `${entry.workoutId}:start`,
+          startedAt: entry.startedAt,
+          best: planned,
+          direction: null,
+          isStart: true,
+        });
+      }
+    }
     const previous = points.at(-1);
+    const direction = previous ? compareBestSets(previous.best, best) : null;
+    if (direction === "same") continue;
     points.push({
       workoutId: entry.workoutId,
       startedAt: entry.startedAt,
       best,
-      direction: previous ? compareBestSets(previous.best, best) : null,
+      direction,
     });
   }
   return points;

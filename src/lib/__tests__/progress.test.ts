@@ -321,14 +321,16 @@ describe("buildExerciseProgress", () => {
     plannedSets,
   });
 
-  it("lists the best set of each workout, oldest first, with the change", () => {
+  it("lists the first workout, then only the ones where the best set changed", () => {
     const points = buildExerciseProgress(
       [
         entry("w3", "2026-10-11T18:00:00Z", "bench", [top(102.5, 5)]),
         entry("w1", "2026-09-27T18:00:00Z", "bench", [top(100, 6)]),
         entry("w2", "2026-10-04T18:00:00Z", "bench", [top(null, null)]),
         entry("w2", "2026-10-04T18:00:00Z", "press", [top(60, 8)]),
+        // Same as w3: left out.
         entry("w4", "2026-10-18T18:00:00Z", "bench", [top(102.5, 5)]),
+        entry("w5", "2026-10-25T18:00:00Z", "bench", [top(100, 6)]),
       ],
       "bench",
       "push",
@@ -347,10 +349,10 @@ describe("buildExerciseProgress", () => {
         direction: "up",
       },
       {
-        workoutId: "w4",
-        startedAt: "2026-10-18T18:00:00Z",
-        best: { weightKg: 102.5, reps: 5 },
-        direction: "same",
+        workoutId: "w5",
+        startedAt: "2026-10-25T18:00:00Z",
+        best: { weightKg: 100, reps: 6 },
+        direction: "down",
       },
     ]);
   });
@@ -430,5 +432,55 @@ describe("reps done with help", () => {
     expect(formatBestSet({ weightKg: 12, reps: 5, assistedReps: null })).toBe(
       "12 kg × 5",
     );
+  });
+});
+
+describe("buildExerciseProgress and the starting values", () => {
+  const entry = (
+    workoutId: string,
+    startedAt: string,
+    sets: PlannedSet[],
+    plannedSets: PlannedSet[],
+  ): ExerciseEntry => ({
+    workoutId,
+    startedAt,
+    routineId: "push",
+    routineName: "Push",
+    exerciseId: "bench",
+    exerciseName: "Supino",
+    sets,
+    plannedSets,
+  });
+
+  it("starts from the planned values when the first workout changed them", () => {
+    const points = buildExerciseProgress(
+      [entry("w1", "2026-10-01T18:00:00Z", [top(102.5, 6)], [top(100, 6)])],
+      "bench",
+      "push",
+    );
+    expect(points).toEqual([
+      {
+        workoutId: "w1:start",
+        startedAt: "2026-10-01T18:00:00Z",
+        best: { weightKg: 100, reps: 6 },
+        direction: null,
+        isStart: true,
+      },
+      {
+        workoutId: "w1",
+        startedAt: "2026-10-01T18:00:00Z",
+        best: { weightKg: 102.5, reps: 6 },
+        direction: "up",
+      },
+    ]);
+  });
+
+  it("has no starting point when the first workout kept the planned values", () => {
+    const points = buildExerciseProgress(
+      [entry("w1", "2026-10-01T18:00:00Z", [top(100, 6)], [top(100, 6)])],
+      "bench",
+      "push",
+    );
+    expect(points.map((point) => point.workoutId)).toEqual(["w1"]);
   });
 });

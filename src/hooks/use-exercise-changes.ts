@@ -19,7 +19,7 @@ export function useExerciseChanges(
     if (!enabled) return;
     let active = true;
     setChanges(null);
-    getFinishedExerciseEntries(db)
+    getFinishedExerciseEntries(db, [exerciseId])
       .then((entries) => {
         if (active)
           setChanges(buildExerciseChanges(entries, exerciseId, routineId));

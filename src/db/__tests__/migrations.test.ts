@@ -102,3 +102,55 @@ describe.each([["ON"], ["OFF (as on a phone)"]])(
     });
   },
 );
+
+describe.each([["ON"], ["OFF"]])(
+  "migration v20 with foreign keys %s",
+  (pragma) => {
+    it("turns the notes into increase / maybe / decrease, keeping the sets", async () => {
+      const db = await createTestDatabase(19);
+      await db.execAsync(`PRAGMA foreign_keys = ${pragma};`);
+      await db.execAsync(`
+        INSERT INTO exercises (id, name, muscle_group) VALUES ('bench', 'Supino', 'chest');
+        INSERT INTO routines (id, name, created_at) VALUES ('push', 'Push', '2026-10-01');
+        INSERT INTO routine_exercises (id, routine_id, exercise_id, position, progression)
+          VALUES ('re1', 'push', 'bench', 1, 'keep'), ('re2', 'push', 'bench', 2, 'increase');
+        INSERT INTO routine_sets (id, routine_exercise_id, position, set_type, reps, weight_kg, to_failure, assisted_reps)
+          VALUES ('s1', 're1', 1, 'top', 6, 100, 0, 2), ('s2', 're2', 1, 'backoff', NULL, 85, 1, NULL);
+      `);
+
+      await migrate(db);
+      await db.execAsync("PRAGMA foreign_keys = ON;");
+
+      // "Keep" needs no note any more.
+      expect(
+        await db.getAllAsync(
+          "SELECT id, progression FROM routine_exercises ORDER BY position",
+        ),
+      ).toEqual([
+        { id: "re1", progression: null },
+        { id: "re2", progression: "increase" },
+      ]);
+      expect(
+        await db.getAllAsync(
+          "SELECT id, reps, weight_kg, to_failure, assisted_reps FROM routine_sets ORDER BY id",
+        ),
+      ).toEqual([
+        { id: "s1", reps: 6, weight_kg: 100, to_failure: 0, assisted_reps: 2 },
+        { id: "s2", reps: null, weight_kg: 85, to_failure: 1, assisted_reps: null },
+      ]);
+
+      await db.runAsync(
+        "UPDATE routine_exercises SET progression = 'decrease' WHERE id = 're1'",
+      );
+      await expect(
+        db.runAsync(
+          "UPDATE routine_exercises SET progression = 'keep' WHERE id = 're1'",
+        ),
+      ).rejects.toThrow();
+
+      // Deleting the routine still deletes its exercises and sets.
+      await db.runAsync("DELETE FROM routines WHERE id = 'push'");
+      expect(await db.getAllAsync("SELECT id FROM routine_sets")).toEqual([]);
+    });
+  },
+);

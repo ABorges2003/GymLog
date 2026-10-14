@@ -54,14 +54,14 @@ More screenshots in the [user guide](docs/user-guide.md).
 | Manage exercises | Create, edit and archive my own exercises (the list starts empty) |
 | Favorite exercises | Star exercises so they appear first in lists |
 | Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps). The routine done most recently is listed first, with the day it was last done |
-| Note for next week | Per exercise: green "keep the weight", yellow "probably increase" or red "increase the weight" |
+| Note for next week | Per exercise: green "increase the weight", yellow "probably increase" or red "decrease the weight" (no note keeps the weight) |
 | Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets, add exercises (they are added to the routine too). Finishing copies what was done into the routine |
 | Back-off to failure | A flame on each back-off set (in the routine and in the workout) marks it done to failure instead of a number of reps ("85 kg × falha") |
 | Assisted reps | A hand icon at the end of each top set logs the reps done with help ("100 kg × 6 +2"). Like the weights, they pass to the routine and the next workout starts with them; they never count as progress |
 | Workout timer | The header of the workout shows how long you have been training (⏱ 42:13) |
 | Workout summary | After finishing: duration, exercises, sets, volume, progressions and the top/back-off sets done ("12 kg × 5 +1 com ajuda") |
 | Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after, per routine |
-| Exercise progress | Chart of the top set weight over time, per exercise and routine |
+| Exercise progress | Chart of the top set weight over time, per exercise and routine: only the workouts where the top set went up or down |
 | Body weight log | One entry per day (today or past days); saving the same day again updates it |
 | Body weight chart | Daily values and a line at the weight goal; the summary shows the 7-day average and how much is left to the goal |
 | Body weight phases | Named periods like a bulk or a cut, with start and (optional) end dates; each one has its own chart, total change, weekly rate (kg and % of body weight), lowest/highest weight and how far along it is |
@@ -115,7 +115,7 @@ GymLog/
 │   ├── hooks/              → screen logic (loading data, actions)
 │   ├── db/
 │   │   ├── schema.ts       → list of tables (order used by backups)
-│   │   ├── migrations.ts   → table definitions and migrations (v1 to v19)
+│   │   ├── migrations.ts   → table definitions and migrations (v1 to v20)
 │   │   ├── repositories/   → data access functions (one file per entity, + tests)
 │   │   └── __tests__/      → migration tests
 │   ├── lib/                → pure logic: search, labels, sets, progress, dates, body weight, diet, agenda, backup (+ tests)
@@ -135,7 +135,7 @@ GymLog/
 |-------|-------------|
 | exercises | id, name, muscle_group, equipment, is_custom (unused), is_archived, is_favorite |
 | routines | id, name, created_at |
-| routine_exercises | id, routine_id, exercise_id, position, progression (keep, maybe, increase or empty), target_sets (unused), target_reps (unused) |
+| routine_exercises | id, routine_id, exercise_id, position, progression (increase, maybe, decrease or empty), target_sets (unused), target_reps (unused) |
 | routine_sets | id, routine_exercise_id, position, set_type (warmup, feeder, top, backoff), reps (optional), weight_kg (optional), to_failure (back-off done to failure, then no reps), assisted_reps (top sets: reps done with help last time) |
 | workouts | id, started_at, finished_at, notes, routine_id (optional) |
 | workout_exercises | id, workout_id, exercise_id, position |
@@ -173,7 +173,7 @@ erDiagram
         TEXT routine_id FK
         TEXT exercise_id FK
         INTEGER position
-        TEXT progression "keep | maybe | increase"
+        TEXT progression "increase | maybe | decrease"
         INTEGER target_sets
         INTEGER target_reps
     }
