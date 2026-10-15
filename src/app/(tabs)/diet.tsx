@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useRouter } from "expo-router";
-import { useMemo, useState, type ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,8 +15,9 @@ import { ProgressBar } from "@/components/progress-bar";
 import { ProgressRing } from "@/components/progress-ring";
 import { WaterCard } from "@/components/water-card";
 import { useDietDay } from "@/hooks/use-diet-day";
+import { useSelectedDay } from "@/hooks/use-today";
 import { useWaterDay } from "@/hooks/use-water-day";
-import { addDaysToKey, formatDayLabel, toDateKey } from "@/lib/dates";
+import { addDaysToKey, formatDayLabel } from "@/lib/dates";
 import { MEAL_LABELS, formatAmount, sumMacros } from "@/lib/diet";
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
@@ -81,8 +82,8 @@ function MacroTile({
 export default function DietScreen() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
-  const today = toDateKey(new Date());
-  const [date, setDate] = useState(today);
+  // Follows the date when the app stays open overnight (see useSelectedDay).
+  const { date, setDate, today } = useSelectedDay();
   // Changing or removing foods happens in the meal screen.
   const { day, error } = useDietDay(date);
   const water = useWaterDay(date);

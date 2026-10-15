@@ -18,6 +18,7 @@ import { PressableScale } from "@/components/pressable-scale";
 import { WeightChart } from "@/components/weight-chart";
 import { useBodyWeight } from "@/hooks/use-body-weight";
 import { usePhases } from "@/hooks/use-phases";
+import { useSelectedDay } from "@/hooks/use-today";
 import { phaseStatus } from "@/lib/body-weight-phases";
 import {
   MOVING_AVERAGE_DAYS,
@@ -31,7 +32,6 @@ import {
   dateFromKey,
   formatDayLabel,
   formatShortDate,
-  toDateKey,
 } from "@/lib/dates";
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
@@ -63,8 +63,8 @@ export default function BodyWeightScreen() {
     : phases && phases.length > 0
       ? `${phases.length} ${phases.length === 1 ? "época" : "épocas"}`
       : "Bulk, cut… marca períodos e vê o progresso de cada um";
-  const today = toDateKey(new Date());
-  const [day, setDay] = useState(today);
+  // Follows the date when the app stays open overnight (see useSelectedDay).
+  const { date: day, setDate: setDay, today } = useSelectedDay();
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
 

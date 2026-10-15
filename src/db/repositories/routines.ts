@@ -220,12 +220,22 @@ export async function setRoutineExerciseSets(
   sets: PlannedSet[],
 ): Promise<void> {
   await db.withExclusiveTransactionAsync(async (txn) => {
-    await txn.runAsync(
-      "DELETE FROM routine_sets WHERE routine_exercise_id = ?",
-      routineExerciseId,
-    );
-    await insertRoutineSets(txn, routineExerciseId, sets);
+    await replaceRoutineSets(txn, routineExerciseId, sets);
   });
+}
+
+// Same as setRoutineExerciseSets, with no transaction of its own, so it can
+// run inside another one.
+export async function replaceRoutineSets(
+  db: SQLiteDatabase,
+  routineExerciseId: string,
+  sets: PlannedSet[],
+): Promise<void> {
+  await db.runAsync(
+    "DELETE FROM routine_sets WHERE routine_exercise_id = ?",
+    routineExerciseId,
+  );
+  await insertRoutineSets(db, routineExerciseId, sets);
 }
 
 // Adds exercises at the end of the routine, in the given order, each with

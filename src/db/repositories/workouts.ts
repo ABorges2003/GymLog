@@ -6,11 +6,12 @@ import {
   getRoutineExerciseById,
   getRoutineExercises,
   insertRoutineExercises,
+  replaceRoutineSets,
   updateRoutineSetValues,
 } from "@/db/repositories/routines";
 import type { ExerciseEntry, LoggedSet } from "@/lib/progress";
 import { DEFAULT_SETS, normalizeSet, setTypeHasAssistedReps } from "@/lib/sets";
-import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
+import { buildWorkoutSets, planAfterWorkout } from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
 import type { PlannedSet, SetType } from "@/types/set";
 import type { Workout, WorkoutDetail, WorkoutExercise } from "@/types/workout";
@@ -271,7 +272,9 @@ export async function deleteWorkoutSet(
 
 // Finishes a workout and copies the values done into its routine, so the
 // routine (and the next workout) show the current weights. The routine's
-// structure is not changed. Does nothing if the workout is already finished.
+// structure is not changed, except for exercises with nothing planned yet
+// (e.g. added during this workout): those take the sets as they were done
+// (see planAfterWorkout). Does nothing if the workout is already finished.
 export async function finishWorkout(
   db: SQLiteDatabase,
   id: string,
@@ -293,11 +296,12 @@ export async function finishWorkout(
         item.routineExerciseId,
       );
       if (!routineExercise) continue;
-      await updateRoutineSetValues(
-        txn,
-        item.routineExerciseId,
-        mergeIntoPlanned(routineExercise.sets, item.sets),
-      );
+      const plan = planAfterWorkout(routineExercise.sets, item.sets);
+      if (plan.replaceStructure) {
+        await replaceRoutineSets(txn, item.routineExerciseId, plan.sets);
+      } else {
+        await updateRoutineSetValues(txn, item.routineExerciseId, plan.sets);
+      }
     }
   });
 }

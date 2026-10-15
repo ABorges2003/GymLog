@@ -39,6 +39,12 @@ const benchSets: PlannedSet[] = [
   { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
 ];
 
+const set = (
+  setType: PlannedSet["setType"],
+  reps: number | null,
+  weightKg: number | null,
+): PlannedSet => ({ setType, reps, weightKg, toFailure: false });
+
 beforeEach(async () => {
   db = await createTestDatabase();
   await db.execAsync(`
@@ -398,6 +404,39 @@ describe("workouts repository", () => {
       "press",
       "fly",
     ]);
+  });
+
+  // Bug: an exercise added during a workout lost its weights when a set was
+  // deleted in the workout (the sets no longer lined up with W, F, F, T, B).
+  it("an exercise added during a workout keeps the sets done in it", async () => {
+    await db.execAsync(
+      "INSERT INTO exercises (id, name, muscle_group) VALUES ('row', 'Remada', 'back')",
+    );
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    await addExercisesToWorkout(db, workoutId, ["row"]);
+    const added = (await getWorkoutDetail(db, workoutId))?.exercises[2];
+    if (!added) throw new Error("not added");
+
+    // W, F, F, T, B: one feeder deleted, the rest filled in.
+    const [warmup, feeder, extraFeeder, topSet, backoff] = added.sets;
+    await deleteWorkoutSet(db, extraFeeder.id);
+    await updateWorkoutSet(db, warmup.id, set("warmup", null, 30));
+    await updateWorkoutSet(db, feeder.id, set("feeder", null, 45));
+    await updateWorkoutSet(db, topSet.id, set("top", 8, 60));
+    await updateWorkoutSet(db, backoff.id, set("backoff", 10, 50));
+    await finishWorkout(db, workoutId);
+
+    const routine = await getRoutineExercises(db, routineId);
+    expect(routine[2].sets).toEqual([
+      set("warmup", null, 30),
+      set("feeder", null, 45),
+      set("top", 8, 60),
+      set("backoff", 10, 50),
+    ]);
+    // The next workout starts with them.
+    const next = await startWorkoutFromRoutine(db, routineId);
+    const nextRow = (await getWorkoutDetail(db, next))?.exercises[2];
+    expect(nextRow?.sets.map((s) => s.weightKg)).toEqual([30, 45, 60, 50]);
   });
 
   it("never has two active workouts", async () => {

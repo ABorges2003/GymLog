@@ -3,7 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 
 import { getEventsBefore, getEventsFrom } from "@/db/repositories/planner";
-import { toDateKey } from "@/lib/dates";
+import { useToday } from "@/hooks/use-today";
 import type { AgendaEvent } from "@/types/planner";
 
 type Events = {
@@ -14,16 +14,17 @@ type Events = {
 };
 
 // The agenda (null while loading); reloads every time the screen gets focus,
-// e.g. after adding or editing an event.
+// e.g. after adding or editing an event, and when the date changes.
 export function useAgendaEvents() {
   const db = useSQLiteContext();
   const [events, setEvents] = useState<Events | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Coming and past events split again when the date changes.
+  const today = useToday();
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      const today = toDateKey(new Date());
       Promise.all([getEventsFrom(db, today), getEventsBefore(db, today)])
         .then(([coming, past]) => {
           if (active) setEvents({ coming, past });
@@ -34,7 +35,7 @@ export function useAgendaEvents() {
       return () => {
         active = false;
       };
-    }, [db]),
+    }, [db, today]),
   );
 
   return { events, error };

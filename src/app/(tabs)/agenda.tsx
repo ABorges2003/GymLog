@@ -24,7 +24,8 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { TaskPopup } from "@/components/task-popup";
 import { useAgendaEvents } from "@/hooks/use-agenda-events";
 import { useDayTasks } from "@/hooks/use-day-tasks";
-import { addDaysToKey, formatDayLabel, toDateKey } from "@/lib/dates";
+import { useSelectedDay } from "@/hooks/use-today";
+import { addDaysToKey, formatDayLabel } from "@/lib/dates";
 import {
   REMINDER_LABELS,
   TASK_TITLE_MAX_LENGTH,
@@ -59,8 +60,8 @@ export default function AgendaScreen() {
 function TasksView() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
-  const today = toDateKey(new Date());
-  const [date, setDate] = useState(today);
+  // Follows the date when the app stays open overnight (see useSelectedDay).
+  const { date, setDate, today } = useSelectedDay();
   const {
     tasks,
     error,

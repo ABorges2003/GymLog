@@ -1,4 +1,8 @@
-import { buildWorkoutSets, mergeIntoPlanned } from "@/lib/workouts";
+import {
+  buildWorkoutSets,
+  mergeIntoPlanned,
+  planAfterWorkout,
+} from "@/lib/workouts";
 import type { PlannedSet } from "@/types/set";
 
 const planned: PlannedSet[] = [
@@ -128,5 +132,65 @@ describe("mergeIntoPlanned with reps done with help", () => {
     expect(
       mergeIntoPlanned([backoff], [backoff])[0].assistedReps,
     ).toBeUndefined();
+  });
+});
+
+describe("mergeIntoPlanned when a set was deleted in the workout", () => {
+  it("matches each set with the one of the same type, not just position", () => {
+    const routine: PlannedSet[] = [
+      { setType: "warmup", reps: null, weightKg: 40, toFailure: false },
+      { setType: "feeder", reps: null, weightKg: 60, toFailure: false },
+      { setType: "feeder", reps: null, weightKg: 80, toFailure: false },
+      { setType: "top", reps: 6, weightKg: 100, toFailure: false },
+      { setType: "backoff", reps: 8, weightKg: 85, toFailure: false },
+    ];
+    // The second feeder was deleted: every set after it moved up one place.
+    const done: PlannedSet[] = [
+      { setType: "warmup", reps: null, weightKg: 42.5, toFailure: false },
+      { setType: "feeder", reps: null, weightKg: 62.5, toFailure: false },
+      { setType: "top", reps: 6, weightKg: 102.5, toFailure: false },
+      { setType: "backoff", reps: 8, weightKg: 87.5, toFailure: false },
+    ];
+    expect(mergeIntoPlanned(routine, done)).toEqual([
+      done[0],
+      done[1],
+      // No second feeder was done: the planned one stays.
+      routine[2],
+      done[2],
+      done[3],
+    ]);
+  });
+});
+
+describe("planAfterWorkout", () => {
+  const blank: PlannedSet[] = ["warmup", "feeder", "feeder", "top", "backoff"]
+    .map((setType) => ({
+      setType: setType as PlannedSet["setType"],
+      reps: null,
+      weightKg: null,
+      toFailure: false,
+    }));
+
+  it("gives an exercise with nothing planned the sets done, as they were", () => {
+    const done: PlannedSet[] = [
+      { setType: "warmup", reps: null, weightKg: 20, toFailure: false },
+      { setType: "top", reps: 10, weightKg: 40, toFailure: false },
+      { setType: "top", reps: 8, weightKg: 45, toFailure: false },
+    ];
+    expect(planAfterWorkout(blank, done)).toEqual({
+      sets: done,
+      replaceStructure: true,
+    });
+  });
+
+  it("leaves an empty plan alone when nothing was filled in", () => {
+    expect(planAfterWorkout(blank, blank)).toEqual({
+      sets: blank,
+      replaceStructure: false,
+    });
+  });
+
+  it("merges into a plan that already has values", () => {
+    expect(planAfterWorkout(planned, planned).replaceStructure).toBe(false);
   });
 });
