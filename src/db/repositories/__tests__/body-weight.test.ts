@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import {
   deleteBodyWeight,
+  getBodyWeightBetween,
   getBodyWeightEntries,
   saveBodyWeight,
 } from "@/db/repositories/body-weight";
@@ -51,5 +52,17 @@ describe("body weight repository", () => {
 
   it("rejects impossible weights", async () => {
     await expect(saveBodyWeight(db, "2026-10-05", 0)).rejects.toThrow();
+  });
+
+  it("lists the entries between two dates", async () => {
+    await saveBodyWeight(db, "2026-10-04", 73);
+    await saveBodyWeight(db, "2026-10-05", 72.4);
+    await saveBodyWeight(db, "2026-10-11", 72.2);
+    await saveBodyWeight(db, "2026-10-12", 72);
+
+    expect(await getBodyWeightBetween(db, "2026-10-05", "2026-10-11")).toEqual([
+      { date: "2026-10-05", weightKg: 72.4 },
+      { date: "2026-10-11", weightKg: 72.2 },
+    ]);
   });
 });

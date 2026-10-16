@@ -8,6 +8,7 @@ import {
   scaleMacros,
   type FoodValues,
 } from "@/lib/diet";
+import type { DayTotals } from "@/lib/weekly-report";
 import {
   MEALS,
   type DietGoals,
@@ -357,4 +358,35 @@ export async function setWaterGoalMl(
     "water_goal_ml",
     ml === null ? null : String(Math.round(ml)),
   );
+}
+
+// What was eaten each day from `from` to `to` (both included), summed per
+// day. Days with nothing logged are not listed.
+export async function getDailyTotals(
+  db: SQLiteDatabase,
+  from: string,
+  to: string,
+): Promise<DayTotals[]> {
+  const rows = await db.getAllAsync<{
+    date: string;
+    kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  }>(
+    `SELECT date, SUM(kcal) AS kcal, SUM(protein_g) AS protein_g,
+            SUM(carbs_g) AS carbs_g, SUM(fat_g) AS fat_g
+     FROM food_entries
+     WHERE date BETWEEN ? AND ?
+     GROUP BY date ORDER BY date`,
+    from,
+    to,
+  );
+  return rows.map((row) => ({
+    date: row.date,
+    kcal: row.kcal,
+    proteinG: row.protein_g,
+    carbsG: row.carbs_g,
+    fatG: row.fat_g,
+  }));
 }

@@ -68,6 +68,7 @@ Mais capturas no [guia de utilização](docs/user-guide.pt.md).
 | Registo da dieta | Dia a dia (‹ › para mudar de dia): um anel com as kcal restantes e um anel por macro (vermelho quando passa); 6 refeições (Pequeno-almoço … Ceia), cada uma com o seu ícone, kcal comidas / planeadas (ex.: 420/400) e uma barra. Tocar numa refeição abre-a: os seus alimentos (toca num para mudar a quantidade), um donut com a parte das kcal que vem dos carbos, proteína e gordura, e **Adicionar alimento** (é sugerida a quantidade da última vez, ex.: 2 tostas) |
 | Objetivos da dieta | Kcal por dia (obrigatório), proteína / carbos / gordura (opcionais) e mais ou menos quantas kcal planeio para cada refeição (opcional) |
 | Água | Uma garrafa que enche à medida que bebo: +250 / +500 ml, qualquer outra quantidade em ml ou L, − para tirar um copo, tocar no total para o corrigir e uma meta diária; guardada por dia |
+| Resumo semanal | Na primeira vez que a app abre em cada semana (a partir de segunda): um popup com o peso e as kcal, proteína, carbos e gordura de cada dia da semana passada, com as médias, e **Exportar Excel** para guardar ou enviar como ficheiro .xlsx (ex.: a um nutricionista). Também nas Definições nesse dia e no seguinte. Nada a mais é guardado |
 | Biblioteca de alimentos | Os meus alimentos com kcal e macros por X gramas, por X ml ou por unidade, com pesquisa; editar um alimento nunca muda os dias já registados |
 | Agenda: dia a dia | As tarefas do dia com checkbox (‹ › para mudar de dia): adicionar, marcar, mudar o nome, passar para o dia seguinte ou apagar |
 | Tarefas que se repetem | Tarefas que voltam em dias escolhidos de todas as semanas (ex.: às terças e quintas, todos os sábados, todos os dias): aparecem sozinhas nesses dias; saltar um dia, mudar os dias ou deixar de repetir (os dias feitos ficam) |
@@ -335,6 +336,7 @@ erDiagram
 - [X] Extras: backups por partes, nota amarela, back-offs até à falha, reps com ajuda e cronómetro do treino
 - [X] Extras: épocas de peso (bulk/cut), exercícios e alimentos de exemplo, última quantidade de cada alimento, mudar uma quantidade registada, kcal planeadas por refeição
 - [X] Extras: aspeto novo, ecrã da refeição, água, separador Agenda (tarefas, tarefas que se repetem e eventos com avisos) e limpeza automática de tarefas e eventos antigos
+- [X] Extras: resumo semanal com exportação para Excel, nota "diminuir", gráfico de progresso mais limpo e histórico mais rápido
 - [ ] Em curso: pequenos ajustes do uso diário
 
 ## 📖 Como correr (desenvolvimento)

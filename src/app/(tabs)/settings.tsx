@@ -20,14 +20,23 @@ import {
   type MuscleGroupCount,
   type TableInfo,
 } from "@/db/repositories/diagnostics";
+import { getSetting } from "@/db/repositories/settings";
 import {
   BackupPartsPopup,
   type BackupRequest,
 } from "@/components/backup-parts-popup";
 import { FilterChips, type ChipOption } from "@/components/filter-chips";
+import { WeeklyReportPopup } from "@/components/weekly-report-popup";
 import { useBackup } from "@/hooks/use-backup";
 import { useStarterPack } from "@/hooks/use-starter-pack";
+import { useToday } from "@/hooks/use-today";
+import { useWeeklyReport } from "@/hooks/use-weekly-report";
 import { MUSCLE_GROUP_LABELS } from "@/lib/labels";
+import {
+  hasWeeklyData,
+  weeklyReportInSettings,
+  type WeeklyReport,
+} from "@/lib/weekly-report";
 import type { ThemeColors } from "@/theme/colors";
 import {
   useColors,
@@ -54,6 +63,10 @@ export default function SettingsScreen() {
   const [busy, setBusy] = useState<"export" | "import" | null>(null);
   // The popup to choose what to export or import, while open.
   const [request, setRequest] = useState<BackupRequest | null>(null);
+  // Last week's summary, while its popup is open.
+  const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
+  const today = useToday();
+  const weeklyReport = useWeeklyReport();
 
   const loadDiagnostics = useCallback(() => {
     Promise.all([
@@ -70,6 +83,28 @@ export default function SettingsScreen() {
   }, [db]);
 
   useFocusEffect(loadDiagnostics);
+
+  // Last week's summary stays here the day it popped up and the next one.
+  const [listedWeek, setListedWeek] = useState<WeeklyReport | null>(null);
+  const loadWeek = weeklyReport.load;
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getSetting(db, "weekly_report_shown")
+        .then(async (shownOn) => {
+          const report = weeklyReportInSettings(today, shownOn)
+            ? await loadWeek(today)
+            : null;
+          if (active) {
+            setListedWeek(report && hasWeeklyData(report) ? report : null);
+          }
+        })
+        .catch(() => {});
+      return () => {
+        active = false;
+      };
+    }, [db, today, loadWeek]),
+  );
 
   const { exportBackup, pickBackup, importBackup } = useBackup(loadDiagnostics);
   const starterPack = useStarterPack(loadDiagnostics);
@@ -189,6 +224,32 @@ export default function SettingsScreen() {
           <Text style={styles.buttonText}>Adicionar exemplos</Text>
         </Pressable>
       </View>
+
+      {listedWeek && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Resumo semanal</Text>
+          <Text style={styles.hint}>
+            O peso e o que comeste em cada dia da semana passada, com as
+            médias, para exportar em Excel. Fica aqui até amanhã.
+          </Text>
+          <Pressable
+            onPress={() => setWeekly(listedWeek)}
+            style={[styles.button, styles.secondaryButton]}
+            accessibilityRole="button"
+          >
+            <Ionicons name="calendar-outline" size={22} color={c.text} />
+            <Text style={styles.buttonText}>Ver a semana passada</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {weekly && (
+        <WeeklyReportPopup
+          report={weekly}
+          onClose={() => setWeekly(null)}
+          onExport={weeklyReport.exportExcel}
+        />
+      )}
 
       {request && (
         <BackupPartsPopup

@@ -3,6 +3,7 @@ import { SQLiteProvider } from "expo-sqlite";
 
 import { AppHeader, headerTitleText } from "@/components/app-header";
 import { AppStartup } from "@/components/app-startup";
+import { WeeklyReportPrompt } from "@/components/weekly-report-prompt";
 import { DATABASE_NAME, initDatabase } from "@/db/database";
 import { ThemeProvider } from "@/theme/theme";
 
@@ -113,6 +114,8 @@ export default function RootLayout() {
             options={{ title: "Resumo", presentation: "modal" }}
           />
         </Stack>
+        {/* Last week's summary, once a week from Monday on. */}
+        <WeeklyReportPrompt />
       </ThemeProvider>
     </SQLiteProvider>
   );

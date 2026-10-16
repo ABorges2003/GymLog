@@ -89,3 +89,15 @@ export function formatElapsed(fromIso: string, to: Date = new Date()): string {
     ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}`
     : `${minutes}:${seconds}`;
 }
+
+// "6 de outubro" for a local date "YYYY-MM-DD".
+export function formatDayMonth(key: string): string {
+  const date = dateFromKey(key);
+  return `${date.getDate()} de ${MONTHS[date.getMonth()]}`;
+}
+
+// Monday of the week a local date "YYYY-MM-DD" is in (weeks start on Monday).
+export function mondayOf(key: string): string {
+  const daysSinceMonday = (dateFromKey(key).getDay() + 6) % 7;
+  return addDaysToKey(key, -daysSinceMonday);
+}

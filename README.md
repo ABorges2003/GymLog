@@ -68,6 +68,7 @@ More screenshots in the [user guide](docs/user-guide.md).
 | Diet log | Day by day (‹ › to change day): a ring with the kcal left and a ring per macro (red when over); 6 meals (Pequeno-almoço … Ceia), each with its icon, eaten / planned kcal (e.g. 420/400) and a bar. Tapping a meal opens it: its foods (tap one to change the amount), a donut with the share of kcal from carbs, protein and fat, and **Adicionar alimento** (the amount of last time is suggested, e.g. 2 tostas) |
 | Diet goals | Daily kcal (required), protein / carbs / fat (optional) and roughly how many kcal I plan for each meal (optional) |
 | Water | A bottle that fills up as I drink: +250 / +500 ml, any other amount in ml or L, − to take a glass away, tapping the total to correct it and a daily goal; saved per day |
+| Weekly summary | The first time the app opens each week (from Monday on): a popup with last week's body weight and kcal, protein, carbs and fat of each day, with the averages, and **Exportar Excel** to save or send it as an .xlsx file (e.g. to a nutritionist). Also in Settings that day and the next. Nothing extra is stored |
 | Food library | My own foods with kcal and macros per X grams, per X ml or per unit, with search; editing a food never changes days already logged |
 | Agenda: day to day | The day's tasks with a checkbox (‹ › to change day): add, tick, rename, move to the next day or delete |
 | Repeating tasks | Tasks that come back on chosen days of every week (e.g. Tuesdays and Thursdays, every Saturday, every day): they show up by themselves on those days; skip one day, change the days or stop repeating (the days done stay) |
@@ -335,6 +336,7 @@ erDiagram
 - [X] Extras: backups by parts, yellow note, back-offs to failure, reps with help and workout timer
 - [X] Extras: body weight phases (bulk/cut), example exercises and foods, last amount of each food, edit a logged amount, kcal planned per meal
 - [X] Extras: new look, meal screen, water, Agenda tab (tasks, repeating tasks and events with reminders) and automatic clean-up of old tasks and events
+- [X] Extras: weekly summary with Excel export, "decrease" note, cleaner progress chart and faster history
 - [ ] Ongoing: small adjustments from daily use
 
 ## 📖 How to run (development)

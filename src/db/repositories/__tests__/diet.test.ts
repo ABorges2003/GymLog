@@ -11,6 +11,7 @@ import {
   updateFoodEntryAmount,
   createFood,
   deleteFoodEntry,
+  getDailyTotals,
   getDayEntries,
   getDietGoals,
   getFoodById,
@@ -261,5 +262,19 @@ describe("diet repository", () => {
   it("ignores a water goal that is not valid", async () => {
     await setSetting(db, "water_goal_ml", "-1");
     expect(await getWaterGoalMl(db)).toBeNull();
+  });
+
+  it("sums what was eaten each day between two dates", async () => {
+    const log = (date: string, amount: number) =>
+      addFoodEntry(db, { date, meal: "lunch", food: oats, amount });
+    await log("2026-10-04", 100);
+    await log("2026-10-05", 100);
+    await log("2026-10-05", 50);
+    await log("2026-10-07", 200);
+
+    expect(await getDailyTotals(db, "2026-10-05", "2026-10-11")).toEqual([
+      { date: "2026-10-05", kcal: 570, proteinG: 19.5, carbsG: 100.5, fatG: 10.5 },
+      { date: "2026-10-07", kcal: 760, proteinG: 26, carbsG: 134, fatG: 14 },
+    ]);
   });
 });

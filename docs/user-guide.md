@@ -295,6 +295,15 @@ With a goal you see **1,25 L de 2,5 L** and a ✓ when you reach it. Water is sa
   <img src="images/24-agua-popup.jpg" width="280" alt="Popup to add any amount of water in ml or L">
 </p>
 
+### 7.6 Weekly summary
+
+The first time you open the app each week (on Monday, or later if you don't open it that day), a **Resumo da semana** (week summary) popup shows last week, Monday to Sunday: your body weight and the kcal, protein (P), carbs (C) and fat (G) of each day, and the **Média** (average) of the days you logged.
+
+- **Exportar Excel** (export Excel) makes an .xlsx file with the same table and opens the share menu: save it to the phone or send it (e.g. to the nutritionist or the AI assistant you use for your weekly check).
+- It only shows when that week has something logged, and only once a week. Closed it too soon? On that day and the next one, **Definições → Resumo semanal → Ver a semana passada** opens it again; after that it leaves Settings until the next week.
+
+<p align="center"><img src="images/28-resumo-semanal.jpg" width="280" alt="Week summary popup: body weight, kcal and macros of each day, the averages and the Excel export"></p>
+
 ---
 
 ## 8. Agenda

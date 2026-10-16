@@ -35,3 +35,18 @@ export async function deleteBodyWeight(
 ): Promise<void> {
   await db.runAsync("DELETE FROM body_weight_entries WHERE date = ?", date);
 }
+
+// Entries from `from` to `to` (both included), oldest first.
+export async function getBodyWeightBetween(
+  db: SQLiteDatabase,
+  from: string,
+  to: string,
+): Promise<BodyWeightEntry[]> {
+  const rows = await db.getAllAsync<{ date: string; weight_kg: number }>(
+    `SELECT date, weight_kg FROM body_weight_entries
+     WHERE date BETWEEN ? AND ? ORDER BY date`,
+    from,
+    to,
+  );
+  return rows.map((row) => ({ date: row.date, weightKg: row.weight_kg }));
+}

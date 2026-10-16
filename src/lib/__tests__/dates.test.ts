@@ -2,10 +2,12 @@ import {
   addDaysToKey,
   formatClockTime,
   formatDayLabel,
+  formatDayMonth,
   formatLongDate,
   formatShortDate,
   toDateKey,
   formatElapsed,
+  mondayOf,
 } from "@/lib/dates";
 
 describe("formatLongDate", () => {
@@ -76,5 +78,17 @@ describe("formatElapsed", () => {
 
   it("never goes below zero", () => {
     expect(formatElapsed(start, at("2026-10-10T16:59:00.000Z"))).toBe("0:00");
+  });
+});
+
+describe("weeks", () => {
+  it("finds the Monday of any day of the week", () => {
+    expect(mondayOf("2026-10-12")).toBe("2026-10-12"); // Monday
+    expect(mondayOf("2026-10-16")).toBe("2026-10-12"); // Friday
+    expect(mondayOf("2026-10-18")).toBe("2026-10-12"); // Sunday
+  });
+
+  it("writes a day and month", () => {
+    expect(formatDayMonth("2026-10-06")).toBe("6 de outubro");
   });
 });
