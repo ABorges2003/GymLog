@@ -5,9 +5,7 @@ export type SettingKey =
   | "body_weight_goal_kg"
   | "theme"
   | "diet_goals"
-  | "water_goal_ml"
-  // Monday of the week whose summary was last shown (not in backups).
-  | "weekly_report_shown";
+  | "water_goal_ml";
 
 export async function getSetting(
   db: SQLiteDatabase,

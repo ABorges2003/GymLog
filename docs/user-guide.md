@@ -295,14 +295,18 @@ With a goal you see **1,25 L de 2,5 L** and a ✓ when you reach it. Water is sa
   <img src="images/24-agua-popup.jpg" width="280" alt="Popup to add any amount of water in ml or L">
 </p>
 
-### 7.6 Weekly summary
+### 7.6 Export body weight and diet to Excel
 
-The first time you open the app each week (on Monday, or later if you don't open it that day), a **Resumo da semana** (week summary) popup shows last week, Monday to Sunday: your body weight and the kcal, protein (P), carbs (C) and fat (G) of each day, and the **Média** (average) of the days you logged.
+**Definições → Exportar peso e dieta → Exportar para Excel** (Settings → export body weight and diet) makes an Excel file with your body weight and the kcal, protein, carbs and fat of each day, e.g. to send to the nutritionist or the AI assistant you use for your weekly check.
 
-- **Exportar Excel** (export Excel) makes an .xlsx file with the same table and opens the share menu: save it to the phone or send it (e.g. to the nutritionist or the AI assistant you use for your weekly check).
-- It only shows when that week has something logged, and only once a week. Closed it too soon? On that day and the next one, **Definições → Resumo semanal → Ver a semana passada** opens it again; after that it leaves Settings until the next week.
+1. At the top you see from when to when you have data (e.g. *Tens registos de 3 de outubro a 18 de outubro de 2026*).
+2. Choose the days: **Tudo** (everything), **Semana passada** (last week, Monday to Sunday), **Últimos 30 dias** (last 30 days) or **Escolher datas** (pick the **De** / from and **Até** / to dates).
+3. A summary shows how many days, weigh-ins and days with food that is, and the daily averages.
+4. Tap **Exportar Excel**: an .xlsx file with one row per day and the averages is made, and the share menu opens to save it to the phone or send it.
 
-<p align="center"><img src="images/28-resumo-semanal.jpg" width="280" alt="Week summary popup: body weight, kcal and macros of each day, the averages and the Excel export"></p>
+Nothing extra is stored: the file is made from your logs each time.
+
+<p align="center"><img src="images/28-exportar.jpg" width="280" alt="Export screen: the dates with data, the choice of days, the summary and the Excel export"></p>
 
 ---
 

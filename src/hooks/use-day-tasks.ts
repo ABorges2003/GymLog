@@ -27,7 +27,10 @@ export function useDayTasks(date: string) {
       let active = true;
       getTasks(db, date)
         .then((result) => {
-          if (active) setTasks(result);
+          if (!active) return;
+          setTasks(result);
+          // A failed read earlier (e.g. the database was busy) is over.
+          setError(null);
         })
         .catch((e: unknown) => {
           if (active) setError(String(e));
@@ -38,10 +41,10 @@ export function useDayTasks(date: string) {
     }, [db, date]),
   );
 
-  const reload = useCallback(
-    async () => setTasks(await getTasks(db, date)),
-    [db, date],
-  );
+  const reload = useCallback(async () => {
+    setTasks(await getTasks(db, date));
+    setError(null);
+  }, [db, date]);
 
   const add = useCallback(
     async (title: string) => {

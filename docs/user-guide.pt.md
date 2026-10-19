@@ -295,14 +295,18 @@ Com uma meta vês **1,25 L de 2,5 L** e um ✓ quando a atinges. A água é guar
   <img src="images/24-agua-popup.jpg" width="280" alt="Popup para adicionar qualquer quantidade de água em ml ou L">
 </p>
 
-### 7.6 Resumo semanal
+### 7.6 Exportar peso e dieta para Excel
 
-Na primeira vez que abres a app em cada semana (à segunda, ou mais tarde se não a abrires nesse dia), um popup **Resumo da semana** mostra a semana passada, de segunda a domingo: o teu peso e as kcal, proteína (P), carbos (C) e gordura (G) de cada dia, e a **Média** dos dias com registos.
+**Definições → Exportar peso e dieta → Exportar para Excel** cria um ficheiro Excel com o teu peso e as kcal, proteína, carbos e gordura de cada dia, ex.: para mandar ao nutricionista ou ao assistente de IA que usas para a avaliação semanal.
 
-- **Exportar Excel** cria um ficheiro .xlsx com a mesma tabela e abre o menu de partilha: guarda-o no telemóvel ou envia-o (ex.: ao nutricionista ou ao assistente de IA que usas para a avaliação semanal).
-- Só aparece quando essa semana tem registos, e só uma vez por semana. Fechaste-o cedo demais? Nesse dia e no seguinte, **Definições → Resumo semanal → Ver a semana passada** volta a abri-lo; depois sai das Definições até à semana seguinte.
+1. No topo vês de quando a quando tens registos (ex.: *Tens registos de 3 de outubro a 18 de outubro de 2026*).
+2. Escolhe os dias: **Tudo**, **Semana passada** (de segunda a domingo), **Últimos 30 dias** ou **Escolher datas** (as datas **De** e **Até**).
+3. Um resumo mostra quantos dias, pesagens e dias com dieta isso tem, e as médias por dia.
+4. Toca em **Exportar Excel**: é criado um ficheiro .xlsx com uma linha por dia e as médias, e abre-se o menu de partilha para o guardares no telemóvel ou o enviares.
 
-<p align="center"><img src="images/28-resumo-semanal.jpg" width="280" alt="Popup do resumo da semana: peso, kcal e macros de cada dia, as médias e a exportação para Excel"></p>
+Nada a mais é guardado: o ficheiro é feito a partir dos teus registos de cada vez.
+
+<p align="center"><img src="images/28-exportar.jpg" width="280" alt="Ecrã de exportação: as datas com registos, a escolha dos dias, o resumo e a exportação para Excel"></p>
 
 ---
 

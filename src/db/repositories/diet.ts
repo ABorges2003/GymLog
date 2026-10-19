@@ -8,7 +8,7 @@ import {
   scaleMacros,
   type FoodValues,
 } from "@/lib/diet";
-import type { DayTotals } from "@/lib/weekly-report";
+import type { DayTotals } from "@/lib/data-report";
 import {
   MEALS,
   type DietGoals,

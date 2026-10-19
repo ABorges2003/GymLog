@@ -30,6 +30,7 @@ expo-env.d.ts
 # App backups (personal data, never commit)
 gymlog-backup-*.json
 gymlog-semana-*.xlsx
+gymlog-dados-*.xlsx
 backups/
 
 # Logs and debug

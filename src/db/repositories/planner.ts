@@ -356,33 +356,30 @@ export async function deleteEvent(
 
 // Deletes old tasks and events (see the KEEP_* rules in lib/planner). Their
 // days are long past, so no reminder is left to cancel. Returns how many
-// rows were deleted.
+// rows were deleted. Runs at start-up, alongside screens that write, so it
+// uses no exclusive transaction (that locks the whole database for the
+// others); each DELETE stands on its own.
 export async function cleanupPlanner(
   db: SQLiteDatabase,
   today: string,
 ): Promise<number> {
   const cutoffs = cleanupCutoffs(today);
-  let deleted = 0;
-  await db.withExclusiveTransactionAsync(async (txn) => {
-    const done = await txn.runAsync(
-      "DELETE FROM day_tasks WHERE done = 1 AND date < ?",
-      cutoffs.doneTasksBefore,
-    );
-    const open = await txn.runAsync(
-      "DELETE FROM day_tasks WHERE done = 0 AND date < ?",
-      cutoffs.openTasksBefore,
-    );
-    const events = await txn.runAsync(
-      "DELETE FROM agenda_events WHERE date < ?",
-      cutoffs.eventsBefore,
-    );
-    // Repetitions stopped long ago: their days are gone by now too.
-    const stopped = await txn.runAsync(
-      "DELETE FROM recurring_tasks WHERE end_date < ?",
-      cutoffs.openTasksBefore,
-    );
-    deleted =
-      done.changes + open.changes + events.changes + stopped.changes;
-  });
-  return deleted;
+  const done = await db.runAsync(
+    "DELETE FROM day_tasks WHERE done = 1 AND date < ?",
+    cutoffs.doneTasksBefore,
+  );
+  const open = await db.runAsync(
+    "DELETE FROM day_tasks WHERE done = 0 AND date < ?",
+    cutoffs.openTasksBefore,
+  );
+  const events = await db.runAsync(
+    "DELETE FROM agenda_events WHERE date < ?",
+    cutoffs.eventsBefore,
+  );
+  // Repetitions stopped long ago: their days are gone by now too.
+  const stopped = await db.runAsync(
+    "DELETE FROM recurring_tasks WHERE end_date < ?",
+    cutoffs.openTasksBefore,
+  );
+  return done.changes + open.changes + events.changes + stopped.changes;
 }

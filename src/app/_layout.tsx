@@ -3,7 +3,6 @@ import { SQLiteProvider } from "expo-sqlite";
 
 import { AppHeader, headerTitleText } from "@/components/app-header";
 import { AppStartup } from "@/components/app-startup";
-import { WeeklyReportPrompt } from "@/components/weekly-report-prompt";
 import { DATABASE_NAME, initDatabase } from "@/db/database";
 import { ThemeProvider } from "@/theme/theme";
 
@@ -55,6 +54,10 @@ export default function RootLayout() {
             options={{ title: "Adicionar alimento", presentation: "modal" }}
           />
           <Stack.Screen name="exercises" options={{ title: "Exercícios" }} />
+          <Stack.Screen
+            name="export"
+            options={{ title: "Exportar peso e dieta" }}
+          />
           <Stack.Screen
             name="agenda/recurring/index"
             options={{ title: "Tarefas que se repetem" }}
@@ -114,8 +117,6 @@ export default function RootLayout() {
             options={{ title: "Resumo", presentation: "modal" }}
           />
         </Stack>
-        {/* Last week's summary, once a week from Monday on. */}
-        <WeeklyReportPrompt />
       </ThemeProvider>
     </SQLiteProvider>
   );
