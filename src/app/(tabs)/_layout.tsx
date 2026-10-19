@@ -18,9 +18,15 @@ const TAB_ICONS: Record<string, { tab: IconName; header: IconName }> = {
 };
 
 function tabIcon(name: IconName) {
-  return ({ color, size }: { color: ColorValue; size: number }) => (
-    <Ionicons name={name} color={color} size={size} />
-  );
+  return function TabIcon({
+    color,
+    size,
+  }: {
+    color: ColorValue;
+    size: number;
+  }) {
+    return <Ionicons name={name} color={color} size={size} />;
+  };
 }
 
 export default function TabsLayout() {
@@ -28,16 +34,18 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        header: ({ options }) => (
-          <AppHeader
-            title={headerTitleText(options, route.name)}
-            icon={TAB_ICONS[route.name]?.header}
-            right={options.headerRight?.({
-              tintColor: c.text,
-              canGoBack: false,
-            })}
-          />
-        ),
+        header: function TabHeader({ options }) {
+          return (
+            <AppHeader
+              title={headerTitleText(options, route.name)}
+              icon={TAB_ICONS[route.name]?.header}
+              right={options.headerRight?.({
+                tintColor: c.text,
+                canGoBack: false,
+              })}
+            />
+          );
+        },
         tabBarInactiveTintColor: c.textMuted,
       })}
     >

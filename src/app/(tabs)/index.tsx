@@ -87,9 +87,13 @@ export default function WorkoutScreen() {
     });
   }, [focusY, keyboardHeight]);
 
-  useEffect(() => {
+  // Forget the focused set when the keyboard closes (while rendering, not in
+  // an effect).
+  const [lastKeyboardHeight, setLastKeyboardHeight] = useState(keyboardHeight);
+  if (keyboardHeight !== lastKeyboardHeight) {
+    setLastKeyboardHeight(keyboardHeight);
     if (keyboardHeight === 0) setFocusY(null);
-  }, [keyboardHeight]);
+  }
 
   function showError(message: string) {
     return () => Alert.alert("Erro", message);

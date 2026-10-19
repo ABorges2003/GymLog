@@ -10,7 +10,7 @@ import {
 } from "@/lib/diet";
 import { formatWeight } from "@/lib/sets";
 import type { ThemeColors } from "@/theme/colors";
-import { useColors, useThemedStyles } from "@/theme/theme";
+import { useThemedStyles } from "@/theme/theme";
 import type { FoodEntry } from "@/types/diet";
 
 type Props = {
@@ -23,7 +23,6 @@ type Props = {
 // Changes only the amount of a food already in a meal. Render it only while
 // open, so it starts with the entry's amount.
 export function FoodEntryPopup({ entry, onClose, onSave }: Props) {
-  const c = useColors();
   const styles = useThemedStyles(createStyles);
   const [text, setText] = useState(formatWeight(entry.amount));
   const [saving, setSaving] = useState(false);

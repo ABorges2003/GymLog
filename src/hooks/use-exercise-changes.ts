@@ -15,10 +15,18 @@ export function useExerciseChanges(
   const [changes, setChanges] = useState<ExerciseChange[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Clear the old list while rendering when the exercise changes or the
+  // popup opens again.
+  const loadKey = `${exerciseId}|${routineId ?? ""}|${enabled}`;
+  const [lastLoadKey, setLastLoadKey] = useState(loadKey);
+  if (loadKey !== lastLoadKey) {
+    setLastLoadKey(loadKey);
+    setChanges(null);
+  }
+
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    setChanges(null);
     getFinishedExerciseEntries(db, [exerciseId])
       .then((entries) => {
         if (active)

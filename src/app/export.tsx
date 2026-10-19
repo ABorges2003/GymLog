@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import DateTimePicker from "@expo/ui/community/datetime-picker";
+import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -72,10 +72,16 @@ export default function ExportScreen() {
 
   const rangeFrom = range?.from;
   const rangeTo = range?.to;
+  // Clear the old summary while rendering when the range changes.
+  const rangeKey = `${rangeFrom ?? ""}|${rangeTo ?? ""}`;
+  const [reportKey, setReportKey] = useState(rangeKey);
+  if (rangeKey !== reportKey) {
+    setReportKey(rangeKey);
+    setReport(null);
+  }
   useEffect(() => {
     if (!rangeFrom || !rangeTo) return;
     let active = true;
-    setReport(null);
     load({ from: rangeFrom, to: rangeTo })
       .then((next) => {
         if (active) setReport(next);

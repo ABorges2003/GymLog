@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -70,10 +70,14 @@ export default function BodyWeightScreen() {
 
   const existing = entries?.find((entry) => entry.date === day) ?? null;
 
-  // Show the saved weight of the selected day, or an empty field.
-  useEffect(() => {
+  // Show the saved weight of the selected day, or an empty field. Reset while
+  // rendering (not in an effect) when the day or its saved weight changes.
+  const shownKey = `${day}|${existing?.weightKg ?? ""}`;
+  const [lastShownKey, setLastShownKey] = useState<string | null>(null);
+  if (shownKey !== lastShownKey) {
+    setLastShownKey(shownKey);
     setText(existing ? formatWeight(existing.weightKg) : "");
-  }, [day, existing]);
+  }
 
   const points = useMemo(() => withMovingAverage(entries ?? []), [entries]);
   const summary = summarizeBodyWeight(points);

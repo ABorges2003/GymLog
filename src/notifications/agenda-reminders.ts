@@ -13,7 +13,8 @@ import type { AgendaEvent } from "@/types/planner";
 // reminders are simply off; everything else works.
 const Notifications: typeof NotificationsModule | null = isRunningInExpoGo()
   ? null
-  : (require("expo-notifications") as typeof NotificationsModule);
+  : // eslint-disable-next-line @typescript-eslint/no-require-imports -- must stay a lazy require (see above)
+    (require("expo-notifications") as typeof NotificationsModule);
 
 const CHANNEL_ID = "agenda";
 const ID_PREFIX = "agenda-";

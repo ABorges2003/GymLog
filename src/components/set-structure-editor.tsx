@@ -48,6 +48,17 @@ type DraftSet = {
   assistedReps?: number | null;
 };
 
+function draftFrom(set: PlannedSet, key: number): DraftSet {
+  return {
+    key,
+    setType: set.setType,
+    repsText: set.reps === null ? "" : formatReps(set.reps),
+    weightText: set.weightKg === null ? "" : formatWeight(set.weightKg),
+    toFailure: set.toFailure,
+    assistedReps: set.assistedReps,
+  };
+}
+
 type Props = {
   initialSets: PlannedSet[];
   // Saves the sets; throws if saving fails.
@@ -60,18 +71,13 @@ export function SetStructureEditor({ initialSets, onSave }: Props) {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
   // Stable keys so inputs keep focus when sets are added or removed.
-  const nextKey = useRef(0);
-  const toDraft = (set: PlannedSet): DraftSet => ({
-    key: nextKey.current++,
-    setType: set.setType,
-    repsText: set.reps === null ? "" : formatReps(set.reps),
-    weightText: set.weightKg === null ? "" : formatWeight(set.weightKg),
-    toFailure: set.toFailure,
-    assistedReps: set.assistedReps,
-  });
+  // The first drafts use keys 0..n-1, so new ones start after them.
+  const nextKey = useRef(initialSets.length);
+  const toDraft = (set: PlannedSet): DraftSet =>
+    draftFrom(set, nextKey.current++);
 
   const [drafts, setDrafts] = useState<DraftSet[]>(() =>
-    initialSets.map(toDraft),
+    initialSets.map((set, index) => draftFrom(set, index)),
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
