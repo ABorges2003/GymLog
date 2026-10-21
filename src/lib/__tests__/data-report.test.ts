@@ -55,7 +55,25 @@ describe("buildDataReport", () => {
       { date: "2026-10-12", kcal: 2850.4, proteinG: 180.04, carbsG: 350, fatG: 80 },
       { date: "2026-10-13", kcal: 3050, proteinG: 200, carbsG: 390, fatG: 90 },
     ],
+    [
+      { date: "2026-10-12", meal: "breakfast", kcal: 600.4 },
+      { date: "2026-10-12", meal: "lunch", kcal: 2250 },
+      { date: "2026-10-13", meal: "breakfast", kcal: 800 },
+      { date: "2026-10-13", meal: "dinner", kcal: 2250 },
+    ],
   );
+  const meals = (
+    breakfast: number | null,
+    lunch: number | null,
+    dinner: number | null,
+  ) => ({
+    breakfast,
+    morning_snack: null,
+    lunch,
+    afternoon_snack: null,
+    dinner,
+    supper: null,
+  });
 
   it("has every day, with what is known, and the counts", () => {
     expect(report.from).toBe("2026-10-12");
@@ -65,11 +83,13 @@ describe("buildDataReport", () => {
       date: "2026-10-12",
       weightKg: 72.4,
       food: { kcal: 2850, proteinG: 180, carbsG: 350, fatG: 80 },
+      meals: meals(600, 2250, null),
     });
     expect(report.days[2]).toEqual({
       date: "2026-10-14",
       weightKg: 72.8,
       food: null,
+      meals: null,
     });
     expect(report.weighIns).toBe(2);
     expect(report.foodDays).toBe(2);
@@ -79,13 +99,22 @@ describe("buildDataReport", () => {
     expect(report.average).toEqual({
       weightKg: 72.6,
       food: { kcal: 2950, proteinG: 190, carbsG: 370, fatG: 85 },
+      // An empty meal counts as 0, so the meals add up to the average kcal.
+      meals: {
+        breakfast: 700,
+        morning_snack: 0,
+        lunch: 1125,
+        afternoon_snack: 0,
+        dinner: 1125,
+        supper: 0,
+      },
     });
     expect(hasReportData(report)).toBe(true);
   });
 
   it("knows when there is nothing", () => {
     const empty = buildDataReport(days, [], []);
-    expect(empty.average).toEqual({ weightKg: null, food: null });
+    expect(empty.average).toEqual({ weightKg: null, food: null, meals: null });
     expect(hasReportData(empty)).toBe(false);
   });
 
@@ -93,9 +122,26 @@ describe("buildDataReport", () => {
     const rows = reportRows(report);
     expect(rows[0]).toEqual(["Peso e dieta: 12 a 18 de outubro de 2026"]);
     expect(rows[2][0]).toBe("Dia");
-    expect(rows[3]).toEqual(["Seg", "2026-10-12", 72.4, 2850, 180, 350, 80]);
-    expect(rows[5]).toEqual(["Qua", "2026-10-14", 72.8, null, null, null, null]);
-    expect(rows[10]).toEqual(["Média", "", 72.6, 2950, 190, 370, 85]);
+    expect(rows[2].slice(7)).toEqual([
+      "Pequeno-almoço (kcal)",
+      "Lanche da manhã (kcal)",
+      "Almoço (kcal)",
+      "Lanche da tarde (kcal)",
+      "Jantar (kcal)",
+      "Ceia (kcal)",
+    ]);
+    expect(rows[3]).toEqual([
+      "Seg", "2026-10-12", 72.4, 2850, 180, 350, 80,
+      600, null, 2250, null, null, null,
+    ]);
+    expect(rows[5]).toEqual([
+      "Qua", "2026-10-14", 72.8, null, null, null, null,
+      null, null, null, null, null, null,
+    ]);
+    expect(rows[10]).toEqual([
+      "Média", "", 72.6, 2950, 190, 370, 85,
+      700, 0, 1125, 0, 1125, 0,
+    ]);
     expect(reportBoldRows(report)).toEqual([0, 2, 10]);
   });
 });

@@ -4,7 +4,9 @@ import {
   formatDayMonth,
   mondayOf,
 } from "@/lib/dates";
+import { MEAL_LABELS } from "@/lib/diet";
 import type { Cell } from "@/lib/xlsx";
+import { MEALS, type Meal } from "@/types/diet";
 
 const WEEKDAY_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -22,12 +24,20 @@ export type DayTotals = {
 
 export type Macros = Omit<DayTotals, "date">;
 
+// Kcal eaten in one meal of one day.
+export type MealKcal = { date: string; meal: Meal; kcal: number };
+
+// Kcal of each meal of a day; null for a meal with nothing logged.
+export type MealsKcal = Record<Meal, number | null>;
+
 export type ReportDay = {
   // Local date "YYYY-MM-DD".
   date: string;
   weightKg: number | null;
   // null when nothing was logged that day.
   food: Macros | null;
+  // null when nothing was logged that day.
+  meals: MealsKcal | null;
 };
 
 // Body weight and what was eaten each day from `from` to `to`.
@@ -38,7 +48,13 @@ export type DataReport = {
   weighIns: number;
   foodDays: number;
   // Averages over the days with a value (days without one are not counted).
-  average: { weightKg: number | null; food: Macros | null };
+  // Meals: kcal per day with food, a meal with nothing logged counting as 0,
+  // so they add up to the average kcal.
+  average: {
+    weightKg: number | null;
+    food: Macros | null;
+    meals: MealsKcal | null;
+  };
 };
 
 export type DateRange = { from: string; to: string };
@@ -66,6 +82,10 @@ export function lastDaysRange(today: string, count: number): DateRange {
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
 
+function emptyMeals(): MealsKcal {
+  return Object.fromEntries(MEALS.map((meal) => [meal, null])) as MealsKcal;
+}
+
 function average(values: number[]): number | null {
   if (values.length === 0) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -75,12 +95,20 @@ export function buildDataReport(
   days: string[],
   weights: { date: string; weightKg: number }[],
   totals: DayTotals[],
+  mealKcal: MealKcal[] = [],
 ): DataReport {
   const weightOf = new Map(weights.map((entry) => [entry.date, entry.weightKg]));
   const totalsOf = new Map(totals.map((day) => [day.date, day]));
+  const mealsOf = new Map<string, MealsKcal>();
+  for (const entry of mealKcal) {
+    const meals = mealsOf.get(entry.date) ?? emptyMeals();
+    meals[entry.meal] = Math.round(entry.kcal);
+    mealsOf.set(entry.date, meals);
+  }
   const rows = days.map((date): ReportDay => {
     const day = totalsOf.get(date);
     return {
+      meals: day ? (mealsOf.get(date) ?? emptyMeals()) : null,
       date,
       weightKg: weightOf.get(date) ?? null,
       food: day
@@ -101,6 +129,13 @@ export function buildDataReport(
   const mean = (pick: (food: Macros) => number) =>
     average(withFood.map(pick)) ?? 0;
   const weightAverage = average(withWeight);
+  const withMeals = rows.flatMap((row) => (row.meals ? [row.meals] : []));
+  const mealAverages = emptyMeals();
+  for (const meal of MEALS) {
+    mealAverages[meal] = Math.round(
+      average(withMeals.map((meals) => meals[meal] ?? 0)) ?? 0,
+    );
+  }
 
   return {
     from: days[0],
@@ -119,6 +154,7 @@ export function buildDataReport(
               carbsG: round1(mean((food) => food.carbsG)),
               fatG: round1(mean((food) => food.fatG)),
             },
+      meals: withMeals.length === 0 ? null : mealAverages,
     },
   };
 }
@@ -165,6 +201,7 @@ export function reportRows(report: DataReport): Cell[][] {
     date: string,
     weightKg: number | null,
     food: Macros | null,
+    meals: MealsKcal | null,
   ): Cell[] => [
     label,
     date,
@@ -173,6 +210,7 @@ export function reportRows(report: DataReport): Cell[][] {
     food?.proteinG ?? null,
     food?.carbsG ?? null,
     food?.fatG ?? null,
+    ...MEALS.map((meal) => meals?.[meal] ?? null),
   ];
   return [
     [`Peso e dieta: ${formatDateRange(report.from, report.to)}`],
@@ -185,6 +223,7 @@ export function reportRows(report: DataReport): Cell[][] {
       "Proteína (g)",
       "Carbos (g)",
       "Gordura (g)",
+      ...MEALS.map((meal) => `${MEAL_LABELS[meal]} (kcal)`),
     ],
     ...report.days.map((day) =>
       line(
@@ -192,9 +231,20 @@ export function reportRows(report: DataReport): Cell[][] {
         day.date,
         day.weightKg,
         day.food,
+        day.meals,
       ),
     ),
-    line("Média", "", report.average.weightKg, report.average.food),
+    line(
+      "Média",
+      "",
+      report.average.weightKg,
+      report.average.food,
+      report.average.meals,
+    ),
+    [],
+    [
+      "Kcal por refeição: vazio = nada registado nessa refeição. A média conta essas refeições como 0, por isso as refeições somam as kcal médias.",
+    ],
   ];
 }
 

@@ -12,6 +12,7 @@ import {
   createFood,
   deleteFoodEntry,
   getDailyTotals,
+  getMealKcalTotals,
   getDayEntries,
   getDietGoals,
   getFoodById,
@@ -276,5 +277,20 @@ describe("diet repository", () => {
       { date: "2026-10-05", kcal: 570, proteinG: 19.5, carbsG: 100.5, fatG: 10.5 },
       { date: "2026-10-07", kcal: 760, proteinG: 26, carbsG: 134, fatG: 14 },
     ]);
+  });
+
+  it("sums the kcal of each meal of each day between two dates", async () => {
+    await addFoodEntry(db, { date: "2026-10-04", meal: "lunch", food: oats, amount: 100 });
+    await addFoodEntry(db, { date: "2026-10-05", meal: "breakfast", food: oats, amount: 100 });
+    await addFoodEntry(db, { date: "2026-10-05", meal: "lunch", food: oats, amount: 100 });
+    await addFoodEntry(db, { date: "2026-10-05", meal: "lunch", food: oats, amount: 50 });
+
+    expect(await getMealKcalTotals(db, "2026-10-05", "2026-10-11")).toEqual(
+      expect.arrayContaining([
+        { date: "2026-10-05", meal: "breakfast", kcal: 380 },
+        { date: "2026-10-05", meal: "lunch", kcal: 570 },
+      ]),
+    );
+    expect(await getMealKcalTotals(db, "2026-10-05", "2026-10-11")).toHaveLength(2);
   });
 });

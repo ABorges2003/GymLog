@@ -303,7 +303,7 @@ Com uma meta vês **1,25 L de 2,5 L** e um ✓ quando a atinges. A água é guar
 1. No topo vês de quando a quando tens registos (ex.: *Tens registos de 3 de outubro a 18 de outubro de 2026*).
 2. Escolhe os dias: **Tudo**, **Semana passada** (de segunda a domingo), **Últimos 30 dias** ou **Escolher datas** (as datas **De** e **Até**).
 3. Um resumo mostra quantos dias, pesagens e dias com dieta isso tem, e as médias por dia.
-4. Toca em **Exportar Excel**: é criado um ficheiro .xlsx com uma linha por dia e as médias, e abre-se o menu de partilha para o guardares no telemóvel ou o enviares.
+4. Toca em **Exportar Excel**: é criado um ficheiro .xlsx com uma linha por dia (peso, kcal, proteína, carbos, gordura e as kcal de cada refeição, sem os alimentos) e as médias, e abre-se o menu de partilha para o guardares no telemóvel ou o enviares.
 
 Nada a mais é guardado: o ficheiro é feito a partir dos teus registos de cada vez.
 

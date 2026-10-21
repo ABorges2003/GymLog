@@ -8,7 +8,7 @@ import {
   scaleMacros,
   type FoodValues,
 } from "@/lib/diet";
-import type { DayTotals } from "@/lib/data-report";
+import type { DayTotals, MealKcal } from "@/lib/data-report";
 import {
   MEALS,
   type DietGoals,
@@ -357,6 +357,23 @@ export async function setWaterGoalMl(
     db,
     "water_goal_ml",
     ml === null ? null : String(Math.round(ml)),
+  );
+}
+
+// Kcal eaten in each meal of each day from `from` to `to` (both included).
+// Meals with nothing logged are not listed.
+export async function getMealKcalTotals(
+  db: SQLiteDatabase,
+  from: string,
+  to: string,
+): Promise<MealKcal[]> {
+  return db.getAllAsync<MealKcal>(
+    `SELECT date, meal, SUM(kcal) AS kcal
+     FROM food_entries
+     WHERE date BETWEEN ? AND ?
+     GROUP BY date, meal ORDER BY date`,
+    from,
+    to,
   );
 }
 

@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { Alert } from "react-native";
 
 import { getBodyWeightBetween } from "@/db/repositories/body-weight";
-import { getDailyTotals } from "@/db/repositories/diet";
+import { getDailyTotals, getMealKcalTotals } from "@/db/repositories/diet";
 import { getDataRange } from "@/db/repositories/reports";
 import {
   buildDataReport,
@@ -35,11 +35,12 @@ export function useDataExport() {
       const days = daysBetween(range.from, range.to);
       const from = days[0];
       const to = days[days.length - 1];
-      const [weights, totals] = await Promise.all([
+      const [weights, totals, mealKcal] = await Promise.all([
         getBodyWeightBetween(db, from, to),
         getDailyTotals(db, from, to),
+        getMealKcalTotals(db, from, to),
       ]);
-      return buildDataReport(days, weights, totals);
+      return buildDataReport(days, weights, totals, mealKcal);
     },
     [db],
   );
@@ -64,7 +65,7 @@ export function useDataExport() {
       file.write(
         buildXlsx("Peso e dieta", reportRows(report), {
           boldRows: reportBoldRows(report),
-          columnWidths: [8, 12, 10, 8, 13, 11, 12],
+          columnWidths: [8, 12, 10, 8, 13, 11, 12, 22, 23, 15, 23, 15, 13],
         }),
       );
       if (!(await Sharing.isAvailableAsync())) {

@@ -303,7 +303,7 @@ With a goal you see **1,25 L de 2,5 L** and a ✓ when you reach it. Water is sa
 1. At the top you see from when to when you have data (e.g. *Tens registos de 3 de outubro a 18 de outubro de 2026*).
 2. Choose the days: **Tudo** (everything), **Semana passada** (last week, Monday to Sunday), **Últimos 30 dias** (last 30 days) or **Escolher datas** (pick the **De** / from and **Até** / to dates).
 3. A summary shows how many days, weigh-ins and days with food that is, and the daily averages.
-4. Tap **Exportar Excel**: an .xlsx file with one row per day and the averages is made, and the share menu opens to save it to the phone or send it.
+4. Tap **Exportar Excel**: an .xlsx file is made with one row per day (weight, kcal, protein, carbs, fat and the kcal of each meal, without the foods) and the averages, and the share menu opens to save it to the phone or send it.
 
 Nothing extra is stored: the file is made from your logs each time.
 
