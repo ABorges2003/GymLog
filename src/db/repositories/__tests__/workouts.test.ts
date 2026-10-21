@@ -15,6 +15,7 @@ import {
   finishWorkout,
   getActiveWorkout,
   getFinishedExerciseEntries,
+  getRoutineStructureChanges,
   getWorkoutDetail,
   setAssistedReps,
   startWorkoutFromRoutine,
@@ -541,5 +542,45 @@ describe("workouts repository", () => {
       });
       expect(detail?.exercises[1].progression).toBeNull();
     });
+  });
+});
+
+describe("getRoutineStructureChanges", () => {
+  it("offers the sets of a workout where a back-off became a top set", async () => {
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const detail = await getWorkoutDetail(db, workoutId);
+    const backoff = detail!.exercises[0].sets[3];
+    await updateWorkoutSet(db, backoff.id, set("top", 5, 102.5));
+    await finishWorkout(db, workoutId);
+
+    // Finishing keeps the routine's structure: the back-off is still there.
+    const [bench] = await getRoutineExercises(db, routineId);
+    expect(bench.sets.map((item) => item.setType)).toEqual([
+      "warmup",
+      "feeder",
+      "top",
+      "backoff",
+    ]);
+
+    const finished = await getWorkoutDetail(db, workoutId);
+    const changes = await getRoutineStructureChanges(db, finished!);
+    expect(changes).toHaveLength(1);
+    expect(changes[0].routineExerciseId).toBe(bench.id);
+    expect(changes[0].sets).toEqual([...benchSets.slice(0, 3), set("top", 5, 102.5)]);
+
+    await setRoutineExerciseSets(db, bench.id, changes[0].sets);
+    const [kept] = await getRoutineExercises(db, routineId);
+    expect(kept.sets).toEqual(changes[0].sets);
+    expect(await getRoutineStructureChanges(db, finished!)).toEqual([]);
+  });
+
+  it("offers nothing when only the values changed", async () => {
+    const workoutId = await startWorkoutFromRoutine(db, routineId);
+    const detail = await getWorkoutDetail(db, workoutId);
+    const top = detail!.exercises[0].sets[2];
+    await updateWorkoutSet(db, top.id, set("top", 6, 105));
+    await finishWorkout(db, workoutId);
+    const finished = await getWorkoutDetail(db, workoutId);
+    expect(await getRoutineStructureChanges(db, finished!)).toEqual([]);
   });
 });

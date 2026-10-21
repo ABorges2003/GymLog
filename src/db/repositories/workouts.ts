@@ -11,7 +11,13 @@ import {
 } from "@/db/repositories/routines";
 import type { ExerciseEntry, LoggedSet } from "@/lib/progress";
 import { DEFAULT_SETS, normalizeSet, setTypeHasAssistedReps } from "@/lib/sets";
-import { buildWorkoutSets, planAfterWorkout } from "@/lib/workouts";
+import {
+  buildWorkoutSets,
+  hasValues,
+  planAfterWorkout,
+  sameStructure,
+  structureFromWorkout,
+} from "@/lib/workouts";
 import type { Progression } from "@/types/routine";
 import type { PlannedSet, SetType } from "@/types/set";
 import type { Workout, WorkoutDetail, WorkoutExercise } from "@/types/workout";
@@ -304,6 +310,39 @@ export async function finishWorkout(
       }
     }
   });
+}
+
+// A routine exercise whose sets were changed during a workout (sets added,
+// removed or with another type). Finishing the workout keeps the routine's
+// structure, so the user can choose to keep the new one (see
+// structureFromWorkout).
+export type RoutineStructureChange = {
+  routineExerciseId: string;
+  exerciseName: string;
+  sets: PlannedSet[];
+};
+
+export async function getRoutineStructureChanges(
+  db: SQLiteDatabase,
+  detail: WorkoutDetail,
+): Promise<RoutineStructureChange[]> {
+  const changes: RoutineStructureChange[] = [];
+  for (const item of detail.exercises) {
+    if (!item.routineExerciseId || !hasValues(item.sets)) continue;
+    const routineExercise = await getRoutineExerciseById(
+      db,
+      item.routineExerciseId,
+    );
+    if (!routineExercise || sameStructure(routineExercise.sets, item.sets)) {
+      continue;
+    }
+    changes.push({
+      routineExerciseId: item.routineExerciseId,
+      exerciseName: item.exercise.name,
+      sets: structureFromWorkout(routineExercise.sets, item.sets),
+    });
+  }
+  return changes;
 }
 
 // Deletes a workout; its exercises and sets are deleted by ON DELETE CASCADE.

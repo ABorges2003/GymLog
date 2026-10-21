@@ -145,9 +145,10 @@ Tap **+ Nota para a próxima semana** (note for next week), or the note itself: 
 ### 4.4 Finish or cancel
 
 - **✓ Terminar** (Finish): the workout is saved and **what you did is copied into the routine**: weights, reps, failure 🔥 and reps with help ✋ (the routine shows e.g. **100 kg × 6 +2 com ajuda**). Next time the workout starts with them; if you do it without help that day, just remove the **+2**. A **Resumo** (summary) shows how long the workout took, the number of exercises and sets, the total volume, your progressions (with a green ↑ badge when you went up) and, under **Séries**, the top sets and back-offs you did (e.g. **12 kg × 5 +1 com ajuda**). The exercise history (the chart icon) also shows the reps done with help.
+- If you changed the sets of an exercise during the workout (added or removed a set, or changed its type, e.g. a back-off into a top set), the routine keeps its sets. The summary then shows a **Séries alteradas** (Changed sets) card with those exercises; tap **Guardar estas séries na rotina** (Keep these sets in the routine) on each one you want to keep as it was today.
 - **Cancelar** (Cancel): the workout is deleted and **nothing changes** in the routine.
 
-<p align="center"><img src="images/06-resumo.jpg" width="280" alt="Summary after finishing a workout"></p>
+<p align="center"><img src="images/06-resumo.jpg" width="280" alt="Summary after finishing a workout"> <img src="images/29-series-alteradas.jpg" width="280" alt="Changed sets card in the summary, with the button to keep them in the routine"></p>
 
 ---
 
@@ -423,7 +424,7 @@ No. `100 kg × 6 +1` counts the same as `100 kg × 6`: the +1 is only a reminder
 Yes: send them the APK file (e.g. by WhatsApp or Google Drive). Their data stays on their phone and they start with an empty app; they can add the example exercises and foods (see 9.3) so they don't start from zero.
 
 **I did an extra top set one day. Is it added to the routine?**
-No. The routine's structure (how many sets and of which type) only changes in the routine's set editor. A workout only updates the weights and reps.
+Not on its own: a workout only updates the weights and reps. If you want to keep it, tap **Guardar estas séries na rotina** in the summary at the end of the workout (see 4.4), or change the sets in the routine's set editor.
 
 **Why is the 📊 icon of an exercise red?**
 That exercise hasn't gone up or down yet. It turns green the first time you change the top set's weight or reps and finish the workout.

@@ -145,9 +145,10 @@ Toca em **+ Nota para a próxima semana**, ou na própria nota: abre-se um popup
 ### 4.4 Terminar ou cancelar
 
 - **✓ Terminar**: o treino fica guardado e **o que fizeste é copiado para a rotina**: pesos, reps, falha 🔥 e reps com ajuda ✋ (a rotina mostra, por exemplo, **100 kg × 6 +2 com ajuda**). Da próxima vez o treino começa com eles; se nesse dia o fizeres sem ajuda, basta tirar o **+2**. Um **Resumo** mostra quanto tempo durou o treino, o número de exercícios e de séries, o volume total, as tuas progressões (com uma etiqueta verde ↑ quando subiste) e, em **Séries**, os top sets e back-offs que fizeste (ex.: **12 kg × 5 +1 com ajuda**). O histórico do exercício (o ícone do gráfico) também mostra as reps com ajuda.
+- Se mudaste as séries de um exercício durante o treino (acrescentaste ou apagaste uma série, ou mudaste o tipo, por exemplo um back-off para top set), a rotina mantém as suas séries. O resumo mostra então um cartão **Séries alteradas** com esses exercícios; toca em **Guardar estas séries na rotina** em cada um que queiras manter como fizeste hoje.
 - **Cancelar**: o treino é apagado e **nada muda** na rotina.
 
-<p align="center"><img src="images/06-resumo.jpg" width="280" alt="Resumo depois de terminar um treino"></p>
+<p align="center"><img src="images/06-resumo.jpg" width="280" alt="Resumo depois de terminar um treino"> <img src="images/29-series-alteradas.jpg" width="280" alt="Cartão Séries alteradas no resumo, com o botão para as guardar na rotina"></p>
 
 ---
 
@@ -423,7 +424,7 @@ Não. `100 kg × 6 +1` conta o mesmo que `100 kg × 6`: o +1 é só um lembrete.
 Sim: envia-lhe o ficheiro APK (ex.: por WhatsApp ou Google Drive). Os dados dele ficam no telemóvel dele e começa com a app vazia; pode adicionar os exercícios e alimentos de exemplo (vê 9.3) para não começar do zero.
 
 **Um dia fiz um top set a mais. Entra na rotina?**
-Não. A estrutura da rotina (quantas séries e de que tipo) só muda no editor das séries da rotina. Um treino só atualiza os pesos e as reps.
+Não sozinho: um treino só atualiza os pesos e as reps. Se o quiseres manter, toca em **Guardar estas séries na rotina** no resumo do fim do treino (vê 4.4), ou muda as séries no editor da rotina.
 
 **Porque é que o ícone 📊 de um exercício está vermelho?**
 Esse exercício ainda não subiu nem desceu. Fica verde da primeira vez que mudares o peso ou as reps do top set e terminares o treino.

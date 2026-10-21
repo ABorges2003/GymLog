@@ -2,6 +2,8 @@ import {
   buildWorkoutSets,
   mergeIntoPlanned,
   planAfterWorkout,
+  sameStructure,
+  structureFromWorkout,
 } from "@/lib/workouts";
 import type { PlannedSet } from "@/types/set";
 
@@ -192,5 +194,64 @@ describe("planAfterWorkout", () => {
 
   it("merges into a plan that already has values", () => {
     expect(planAfterWorkout(planned, planned).replaceStructure).toBe(false);
+  });
+});
+
+describe("sameStructure", () => {
+  it("is true when only the values changed", () => {
+    expect(
+      sameStructure(
+        planned,
+        planned.map((set) => ({ ...set, weightKg: 1 })),
+      ),
+    ).toBe(true);
+  });
+
+  it("is false when a set changed type, or was added or removed", () => {
+    const changed = planned.map((set) =>
+      set.setType === "backoff" ? { ...set, setType: "top" as const } : set,
+    );
+    expect(sameStructure(planned, changed)).toBe(false);
+    expect(sameStructure(planned, planned.slice(0, 3))).toBe(false);
+    expect(sameStructure(planned, [...planned, planned[3]])).toBe(false);
+  });
+});
+
+describe("structureFromWorkout", () => {
+  it("takes the sets as done, a back-off turned into a top set included", () => {
+    const done: PlannedSet[] = [
+      ...planned.slice(0, 3),
+      { setType: "top", reps: 5, weightKg: 102.5, toFailure: false },
+    ];
+    expect(structureFromWorkout(planned, done)).toEqual(done);
+  });
+
+  it("keeps the routine's values for empty sets of the same type", () => {
+    const done: PlannedSet[] = [
+      { setType: "warmup", reps: null, weightKg: null, toFailure: false },
+      { setType: "feeder", reps: null, weightKg: 80, toFailure: false },
+      { setType: "top", reps: null, weightKg: null, toFailure: false },
+    ];
+    expect(structureFromWorkout(planned, done)).toEqual(planned.slice(0, 3));
+  });
+
+  it("leaves empty a new set whose type differs from the routine's", () => {
+    const done: PlannedSet[] = [
+      ...planned.slice(0, 3),
+      { setType: "top", reps: null, weightKg: null, toFailure: false },
+    ];
+    expect(structureFromWorkout(planned, done)[3]).toEqual({
+      setType: "top",
+      reps: null,
+      weightKg: null,
+      toFailure: false,
+    });
+  });
+
+  it("keeps the reps done with help on top sets", () => {
+    const done: PlannedSet[] = [
+      { setType: "top", reps: 7, weightKg: 45, toFailure: false, assistedReps: 1 },
+    ];
+    expect(structureFromWorkout([], done)).toEqual(done);
   });
 });

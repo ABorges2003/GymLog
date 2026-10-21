@@ -101,3 +101,45 @@ export function planAfterWorkout(
   }
   return { sets: mergeIntoPlanned(planned, done), replaceStructure: false };
 }
+
+// Whether a workout exercise has the same sets as its routine exercise: same
+// number of sets, with the same type in each position.
+export function sameStructure(
+  planned: PlannedSet[],
+  done: PlannedSet[],
+): boolean {
+  return (
+    planned.length === done.length &&
+    planned.every((set, index) => set.setType === done[index].setType)
+  );
+}
+
+// The routine sets when the user keeps the structure of the workout (sets
+// added, removed or with another type): the sets as they were done. A value
+// left empty in the workout keeps the routine's one when the set in that
+// position has the same type.
+export function structureFromWorkout(
+  planned: PlannedSet[],
+  done: PlannedSet[],
+): PlannedSet[] {
+  return done.map((doneSet, index) => {
+    const plannedSet = planned[index];
+    const set: PlannedSet = {
+      setType: doneSet.setType,
+      reps: doneSet.reps,
+      weightKg: doneSet.weightKg,
+      toFailure: doneSet.toFailure,
+      assistedReps: doneSet.assistedReps ?? null,
+    };
+    if (plannedSet?.setType !== doneSet.setType) return normalizeSet(set);
+    return normalizeSet({
+      ...set,
+      weightKg: set.weightKg ?? plannedSet.weightKg,
+      reps: set.reps === null && !set.toFailure ? plannedSet.reps : set.reps,
+      toFailure:
+        set.reps === null && !set.toFailure
+          ? plannedSet.toFailure
+          : set.toFailure,
+    });
+  });
+}

@@ -55,11 +55,12 @@ Mais capturas no [guia de utilização](docs/user-guide.pt.md).
 | Exercícios favoritos | Marcar exercícios com estrela para aparecerem primeiro nas listas |
 | Rotinas | Uma por cada treino da semana (ex.: Push, Pull, Pernas): exercícios por ordem e séries planeadas (W/F/T/B, peso, reps). A rotina feita mais recentemente aparece primeiro, com o dia em que foi feita pela última vez |
 | Nota para a próxima semana | Por exercício: verde "aumentar carga", amarelo "em princípio aumentar" ou vermelho "diminuir carga" (sem nota mantém o peso) |
-| Registo do treino | Começar a partir de uma rotina, já preenchido com os últimos pesos; mudar peso e reps (meias reps permitidas), adicionar ou tirar séries, adicionar exercícios (também entram na rotina). Terminar copia o que foi feito para a rotina |
+| Registo do treino | Começar a partir de uma rotina, já preenchido com os últimos pesos; mudar peso e reps (meias reps permitidas), adicionar ou tirar séries, adicionar exercícios (também entram na rotina). Terminar copia os pesos e as reps feitos para a rotina |
 | Back-off até à falha | Uma chama em cada back-off (na rotina e no treino) marca-o como feito até à falha em vez de um número de reps ("85 kg × falha") |
 | Reps com ajuda | Um ícone de mão no fim de cada top set regista as reps feitas com ajuda ("100 kg × 6 +2"). Tal como os pesos, passam para a rotina e o treino seguinte começa com elas; nunca contam como progresso |
 | Cronómetro do treino | O cabeçalho do treino mostra há quanto tempo estás a treinar (⏱ 42:13) |
 | Resumo do treino | Depois de terminar: duração, exercícios, séries, volume, progressões e os top sets e back-offs feitos ("12 kg × 5 +1 com ajuda") |
+| Séries alteradas | Se as séries de um exercício mudaram durante o treino (uma série a mais ou a menos, ou um back-off passado a top set), o resumo pergunta se as queres guardar na rotina; se não, a rotina fica como estava |
 | Histórico do exercício | Ícone em cada exercício: popup com as progressões (▲ verde) e regressões (▼ vermelho), top set antes → depois, por rotina |
 | Progresso do exercício | Gráfico do peso do top set ao longo do tempo, por exercício e rotina: só os treinos em que o top set subiu ou desceu |
 | Registo do peso | Um registo por dia (hoje ou dias passados); guardar de novo no mesmo dia atualiza-o |

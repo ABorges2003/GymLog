@@ -55,11 +55,12 @@ More screenshots in the [user guide](docs/user-guide.md).
 | Favorite exercises | Star exercises so they appear first in lists |
 | Routines | One per weekly workout (e.g. Push, Pull, Legs): exercises in order and planned sets (W/F/T/B, weight, reps). The routine done most recently is listed first, with the day it was last done |
 | Note for next week | Per exercise: green "increase the weight", yellow "probably increase" or red "decrease the weight" (no note keeps the weight) |
-| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets, add exercises (they are added to the routine too). Finishing copies what was done into the routine |
+| Workout logging | Start from a routine, already filled with the last weights; edit weight and reps (half reps allowed), add or remove sets, add exercises (they are added to the routine too). Finishing copies the weights and reps done into the routine |
 | Back-off to failure | A flame on each back-off set (in the routine and in the workout) marks it done to failure instead of a number of reps ("85 kg × falha") |
 | Assisted reps | A hand icon at the end of each top set logs the reps done with help ("100 kg × 6 +2"). Like the weights, they pass to the routine and the next workout starts with them; they never count as progress |
 | Workout timer | The header of the workout shows how long you have been training (⏱ 42:13) |
 | Workout summary | After finishing: duration, exercises, sets, volume, progressions and the top/back-off sets done ("12 kg × 5 +1 com ajuda") |
+| Changed sets | If the sets of an exercise were changed during the workout (a set added or removed, or a back-off turned into a top set), the summary offers to keep them in the routine; otherwise the routine stays as it was |
 | Exercise history | Icon on each exercise: popup with its progressions (green ▲) and regressions (red ▼), top set before → after, per routine |
 | Exercise progress | Chart of the top set weight over time, per exercise and routine: only the workouts where the top set went up or down |
 | Body weight log | One entry per day (today or past days); saving the same day again updates it |

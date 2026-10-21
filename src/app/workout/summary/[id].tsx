@@ -1,8 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import { CountUpText } from "@/components/count-up-text";
 import { PressableScale } from "@/components/pressable-scale";
 import { ProgressChangeRow } from "@/components/progress-change-row";
 import { SetTypeBadge } from "@/components/set-type-badge";
+import type { RoutineStructureChange } from "@/db/repositories/workouts";
 import { useWorkoutSummary } from "@/hooks/use-workout-summary";
 import { formatElapsed, formatLongDate } from "@/lib/dates";
 import { formatVolume } from "@/lib/progress";
@@ -69,13 +71,72 @@ function Stat({
   );
 }
 
+// An exercise whose sets changed during the workout, with a button to keep
+// the new sets in the routine.
+function StructureChangeRow({
+  change,
+  onKeep,
+}: {
+  change: RoutineStructureChange;
+  onKeep: (change: RoutineStructureChange) => Promise<void>;
+}) {
+  const c = useColors();
+  const styles = useThemedStyles(createStyles);
+  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+
+  async function keep() {
+    setState("saving");
+    try {
+      await onKeep(change);
+      setState("saved");
+    } catch {
+      setState("idle");
+      Alert.alert("Erro", "Não foi possível guardar as séries na rotina.");
+    }
+  }
+
+  return (
+    <View style={styles.exercise}>
+      <Text style={styles.exerciseName}>{change.exerciseName}</Text>
+      {change.sets.map((set, index) => (
+        <View key={index} style={styles.setRow}>
+          <SetTypeBadge setType={set.setType} size={24} />
+          <Text style={styles.setText}>
+            {formatSetValues(set)}
+            <Text style={styles.assisted}>
+              {formatAssistedReps(set.assistedReps)}
+            </Text>
+          </Text>
+        </View>
+      ))}
+      {state === "saved" ? (
+        <View style={styles.keptRow}>
+          <Ionicons name="checkmark-circle" size={18} color={c.success} />
+          <Text style={styles.keptText}>Guardado na rotina</Text>
+        </View>
+      ) : (
+        <PressableScale
+          onPress={keep}
+          disabled={state === "saving"}
+          style={styles.keepButton}
+          accessibilityRole="button"
+        >
+          <Text style={styles.keepButtonText}>
+            {state === "saving" ? "A guardar…" : "Guardar estas séries na rotina"}
+          </Text>
+        </PressableScale>
+      )}
+    </View>
+  );
+}
+
 // Shown right after a workout is finished.
 export default function WorkoutSummaryScreen() {
   const c = useColors();
   const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { summary, error } = useWorkoutSummary(id);
+  const { summary, error, keepStructure } = useWorkoutSummary(id);
 
   if (error) {
     return (
@@ -93,7 +154,7 @@ export default function WorkoutSummaryScreen() {
     );
   }
 
-  const { detail, totals, changes } = summary;
+  const { detail, totals, changes, structureChanges } = summary;
   const ups = changes.filter((change) => change.direction === "up").length;
 
   return (
@@ -163,6 +224,26 @@ export default function WorkoutSummaryScreen() {
             index={2}
           />
         </View>
+
+        {structureChanges.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.duration(300).delay(CARDS_DELAY)}
+            style={styles.card}
+          >
+            <Text style={styles.cardTitle}>Séries alteradas</Text>
+            <Text style={styles.empty}>
+              Mudaste as séries destes exercícios no treino. A rotina ficou
+              como estava; guarda as de hoje se as quiseres manter.
+            </Text>
+            {structureChanges.map((change) => (
+              <StructureChangeRow
+                key={change.routineExerciseId}
+                change={change}
+                onKeep={keepStructure}
+              />
+            ))}
+          </Animated.View>
+        )}
 
         <Animated.View
           entering={FadeInDown.duration(300).delay(CARDS_DELAY)}
@@ -378,6 +459,30 @@ function createStyles(c: ThemeColors) {
     assisted: {
       fontWeight: "600",
       color: c.accent,
+    },
+    keepButton: {
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: spacing.xs,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: c.primarySoft,
+    },
+    keepButtonText: {
+      ...type.bodyStrong,
+      color: c.onPrimarySoft,
+    },
+    keptRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      minHeight: 44,
+      marginTop: spacing.xs,
+    },
+    keptText: {
+      ...type.bodyStrong,
+      color: c.success,
     },
     empty: {
       ...type.subhead,
